@@ -1,9 +1,9 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "blocks/log_oak",
-		"1": "trafficcontrol:blocks/generic",
-		"particle": "trafficcontrol:blocks/generic"
+		"0": "minecraft:block/oak_log",
+		"1": "trafficcontrol:block/generic",
+		"particle": "trafficcontrol:block/generic"
 	},
 	"elements": [
 		{
@@ -21,71 +21,71 @@
 		},
 		{
 			"name": "TopBumperTop",
-			"from": [5.5, 14, 4],
-			"to": [6.5, 16, 12],
-			"rotation": {"angle": -45, "axis": "z", "origin": [6.5, 16, 4]},
+			"from": [5.5, 14, 0],
+			"to": [6.5, 16, 16],
+			"rotation": {"angle": -45, "axis": "z", "origin": [6.5, 16, 8]},
 			"faces": {
 				"north": {"uv": [0, 0, 1, 2], "texture": "#1"},
-				"east": {"uv": [0, 0, 8, 2], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 2], "texture": "#1"},
 				"south": {"uv": [0, 0, 1, 2], "texture": "#1"},
-				"west": {"uv": [0, 2, 8, 4], "texture": "#1"},
-				"up": {"uv": [0, 0, 1, 8], "texture": "#1"},
-				"down": {"uv": [0, 0, 1, 8], "texture": "#1"}
+				"west": {"uv": [0, 2, 16, 4], "texture": "#1"},
+				"up": {"uv": [0, 0, 1, 16], "texture": "#1"},
+				"down": {"uv": [0, 0, 1, 16], "texture": "#1"}
 			}
 		},
 		{
 			"name": "TopBumperBottom",
-			"from": [4.4, 12, 4],
-			"to": [5.4, 15, 12],
-			"rotation": {"angle": 45, "axis": "z", "origin": [4.5, 14, 4]},
+			"from": [4.4, 12, 0],
+			"to": [5.4, 15, 16],
+			"rotation": {"angle": 45, "axis": "z", "origin": [4.5, 14, 8]},
 			"faces": {
 				"north": {"uv": [0, 0, 1, 3], "texture": "#1"},
-				"east": {"uv": [0, 0, 8, 3], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 3], "texture": "#1"},
 				"south": {"uv": [0, 0, 1, 3], "texture": "#1"},
-				"west": {"uv": [2, 2, 10, 5], "texture": "#1"},
-				"up": {"uv": [0, 0, 1, 8], "texture": "#1"},
-				"down": {"uv": [0, 0, 1, 8], "texture": "#1"}
+				"west": {"uv": [2, 2, 16, 5], "texture": "#1"},
+				"up": {"uv": [0, 0, 1, 16], "texture": "#1"},
+				"down": {"uv": [0, 0, 1, 16], "texture": "#1"}
 			}
 		},
 		{
 			"name": "BottomBumperTop",
-			"from": [5.5, 8, 4],
-			"to": [6.5, 10, 12],
-			"rotation": {"angle": -45, "axis": "z", "origin": [6.5, 10, 4]},
+			"from": [5.5, 8, 0],
+			"to": [6.5, 10, 16],
+			"rotation": {"angle": -45, "axis": "z", "origin": [6.5, 10, 8]},
 			"faces": {
 				"north": {"uv": [0, 0, 1, 2], "texture": "#1"},
-				"east": {"uv": [0, 0, 8, 2], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 2], "texture": "#1"},
 				"south": {"uv": [0, 0, 1, 2], "texture": "#1"},
-				"west": {"uv": [0, 6, 8, 8], "texture": "#1"},
-				"up": {"uv": [0, 0, 1, 8], "texture": "#1"},
-				"down": {"uv": [0, 0, 1, 8], "texture": "#1"}
+				"west": {"uv": [0, 6, 16, 8], "texture": "#1"},
+				"up": {"uv": [0, 0, 1, 16], "texture": "#1"},
+				"down": {"uv": [0, 0, 1, 16], "texture": "#1"}
 			}
 		},
 		{
 			"name": "BottomBumperBottom",
-			"from": [4.4, 6, 4],
-			"to": [5.4, 9, 12],
-			"rotation": {"angle": 45, "axis": "z", "origin": [4.5, 8, 4]},
+			"from": [4.4, 6, 0],
+			"to": [5.4, 9, 16],
+			"rotation": {"angle": 45, "axis": "z", "origin": [4.5, 8, 8]},
 			"faces": {
 				"north": {"uv": [0, 0, 1, 3], "texture": "#1"},
-				"east": {"uv": [0, 0, 8, 3], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 3], "texture": "#1"},
 				"south": {"uv": [0, 0, 1, 3], "texture": "#1"},
-				"west": {"uv": [7, 0, 15, 3], "texture": "#1"},
-				"up": {"uv": [0, 0, 1, 8], "texture": "#1"},
-				"down": {"uv": [0, 0, 1, 8], "texture": "#1"}
+				"west": {"uv": [7, 0, 16, 3], "texture": "#1"},
+				"up": {"uv": [0, 0, 1, 16], "texture": "#1"},
+				"down": {"uv": [0, 0, 1, 16], "texture": "#1"}
 			}
 		},
 		{
 			"name": "BackingPlate",
-			"from": [5.5, 10, 4],
-			"to": [6.5, 13.2, 12],
+			"from": [5.5, 10, 0],
+			"to": [6.5, 13.2, 16],
 			"faces": {
 				"north": {"uv": [0, 0, 1, 3.2], "texture": "#1"},
-				"east": {"uv": [0, 0, 8, 3.2], "texture": "#1"},
+				"east": {"uv": [0, 0, 16, 3.2], "texture": "#1"},
 				"south": {"uv": [0, 0, 0, 3.2], "texture": "#1"},
-				"west": {"uv": [6, 1, 14, 4.2], "texture": "#1"},
-				"up": {"uv": [0, 0, 1, 8], "texture": "#1"},
-				"down": {"uv": [0, 0, 1, 8], "texture": "#1"}
+				"west": {"uv": [0, 1, 16, 4.2], "texture": "#1"},
+				"up": {"uv": [0, 0, 1, 16], "texture": "#1"},
+				"down": {"uv": [0, 0, 1, 16], "texture": "#1"}
 			}
 		},
 		{

@@ -1,65 +1,40 @@
 package com.clussmanproductions.trafficcontrol;
 
-import org.apache.logging.log4j.Logger;
+// In Python you'd write: import logging
+// Java uses a logger library called SLF4J - same concept as Python's logging module
+import org.slf4j.Logger;
+import com.mojang.logging.LogUtils;
 
-import com.clussmanproductions.trafficcontrol.proxy.CommonProxy;
-import com.clussmanproductions.trafficcontrol.signs.SignRepository;
+// These are NeoForge imports - like importing from a framework (e.g., from flask import Flask)
+import net.neoforged.bus.api.IEventBus;
+import net.neoforged.fml.ModContainer;
+import net.neoforged.fml.common.Mod;
 
-import net.minecraft.creativetab.CreativeTabs;
-import net.minecraft.init.Blocks;
-import net.minecraft.item.ItemStack;
-import net.minecraftforge.fml.common.Loader;
-import net.minecraftforge.fml.common.Mod;
-import net.minecraftforge.fml.common.SidedProxy;
-import net.minecraftforge.fml.common.event.FMLInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
-import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
-
-@Mod(modid = ModTrafficControl.MODID, version = ModTrafficControl.VERSION, name = "Traffic Control", useMetadata = true)
+// @Mod is a "decorator" (Java calls them "annotations")
+// In Python terms: @app.route("/") marks a function as a route handler
+// @Mod marks this class as the mod entry point
+@Mod(ModTrafficControl.MODID)
 public class ModTrafficControl {
-	public static final String MODID = "trafficcontrol";
-	public static final String VERSION = "1.1.1";
-	public static boolean IR_INSTALLED = false;
-	public static boolean OC_INSTALLED = false;
-	public static CreativeTabs CREATIVE_TAB = new CreativeTabs("Traffic Control") {
 
-		@Override
-		public ItemStack getTabIconItem() {
-			// TODO Auto-generated method stub
-			return new ItemStack(ModBlocks.cone);
-		}
-	};
-	public static final double MAX_RENDER_DISTANCE = 262144; // Optifine's max render distance is 32 chunks.  (32 x 16) ^ 2 = 262144
+    // "public static final String" = a constant
+    // Python equivalent: MODID = "trafficcontrol"  (but truly immutable)
+    public static final String MODID = "trafficcontrol";
 
-	@SidedProxy(clientSide = "com.clussmanproductions.trafficcontrol.proxy.ClientProxy", serverSide = "com.clussmanproductions.trafficcontrol.proxy.ServerProxy")
-	public static CommonProxy proxy;
+    // Logger - same as: logger = logging.getLogger(__name__)
+    public static final Logger LOGGER = LogUtils.getLogger();
 
-	@Mod.Instance
-	public static ModTrafficControl instance;
+    // The constructor - like Python's __init__(self)
+    // NeoForge automatically passes modEventBus and modContainer (dependency injection)
+    // Python equivalent: def __init__(self, event_bus, container):
+    public ModTrafficControl(IEventBus modEventBus, ModContainer modContainer) {
+        LOGGER.info("Traffic Control mod is loading!");
 
-	public static Logger logger;
-	
-	public SignRepository signRepo;
-
-	@Mod.EventHandler
-	public void preInit(FMLPreInitializationEvent e)
-	{
-		OC_INSTALLED = Loader.isModLoaded("opencomputers");
-		logger = e.getModLog();
-		proxy.preInit(e);
-	}
-
-	@Mod.EventHandler
-	public void init(FMLInitializationEvent e)
-	{
-		proxy.init(e);
-	}
-
-	@Mod.EventHandler
-	public void postInit(FMLPostInitializationEvent e)
-	{
-		proxy.postInit(e);
-
-		IR_INSTALLED = Loader.isModLoaded("immersiverailroading");
-	}
+        // Register our blocks and items with NeoForge
+        // This is like telling the framework "here are my things, add them to the game"
+        // In Python terms: app.register_blueprint(blocks_blueprint)
+        ModBlocks.BLOCKS.register(modEventBus);
+        ModItems.ITEMS.register(modEventBus);
+        ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
+        ModCreativeTab.CREATIVE_TABS.register(modEventBus);
+    }
 }

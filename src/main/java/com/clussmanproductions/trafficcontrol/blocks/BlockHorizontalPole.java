@@ -1,112 +1,83 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
-import com.clussmanproductions.trafficcontrol.ModTrafficControl;
+import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyDirection;
-import net.minecraft.block.state.BlockFaceShape;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.Item;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelLoader;
-import net.minecraftforge.fml.relauncher.Side;
-import net.minecraftforge.fml.relauncher.SideOnly;
+public class BlockHorizontalPole extends Block implements EntityBlock, IHorizontalPoleConnectable {
 
-public class BlockHorizontalPole extends Block implements IHorizontalPoleConnectable {
-	public static PropertyDirection FACING = PropertyDirection.create("facing", EnumFacing.Plane.HORIZONTAL); 
-	public BlockHorizontalPole()
-	{
-		super(Material.IRON);
-		setRegistryName("horizontal_pole");
-		setUnlocalizedName(ModTrafficControl.MODID + ".horizontal_pole");
-		setCreativeTab(ModTrafficControl.CREATIVE_TAB);
-		setHardness(2f);
-	}
-	
-	@SideOnly(Side.CLIENT)
-	public void initModel()
-	{
-		ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(this), 0, new ModelResourceLocation(getRegistryName(), "inventory"));
-	}
-	
-	@Override
-    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) 
-	{
-        if (face == EnumFacing.UP)
-        {
-            return BlockFaceShape.UNDEFINED;
-        }
-        return super.getBlockFaceShape(worldIn, state, pos, face);
+    public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
+
+    // Shapes matching the actual pole model dimensions
+    private static final VoxelShape SHAPE_NS = Block.box(5.5, 5.5, 0, 10.5, 10.5, 16);
+    private static final VoxelShape SHAPE_EW = Block.box(0, 5.5, 5.5, 16, 10.5, 10.5);
+
+    public BlockHorizontalPole(BlockBehaviour.Properties properties) {
+        super(properties);
+        this.registerDefaultState(this.stateDefinition.any().setValue(ROTATION, 0));
     }
-	
-	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, FACING);
-	}
-	
-	@Override
-	public int getMetaFromState(IBlockState state) {
-		return state.getValue(FACING).getHorizontalIndex();
-	}
-	
-	@Override
-	public IBlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(FACING, EnumFacing.getHorizontal(meta));
-	}
-	
-	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY,
-			float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
-		return getDefaultState().withProperty(FACING, placer.getHorizontalFacing());
-	}
-	
-	@Override
-	public boolean causesSuffocation(IBlockState state) {
-		return false;
-	}
-	
-	@Override
-	public boolean isNormalCube(IBlockState state, IBlockAccess world, BlockPos pos) {
-		return false;
-	}
-	
-	@Override
-	public boolean isOpaqueCube(IBlockState state) {
-		return false;
-	}
-	
-	@Override
-	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-		switch(state.getValue(FACING))
-		{
-			case NORTH:
-			case SOUTH:
-				return new AxisAlignedBB(0.4375, 0.4375, 0, 0.5625, 0.5625, 1);
-			case EAST:
-			case WEST:
-				return new AxisAlignedBB(0, 0.4375, 0.4375, 1, 0.5625, 0.5625);
-		}
-		
-		return FULL_BLOCK_AABB;
-	}
-	
-	@Override
-	public float getAmbientOcclusionLightValue(IBlockState state) {
-		return 1;
-	}
 
-	@Override
-	public boolean canConnectHorizontalPole(IBlockState state, EnumFacing fromFacing) {
-		EnumFacing myFacing = state.getValue(FACING);
-		return myFacing.equals(fromFacing) || myFacing.getOpposite().equals(fromFacing);
-	}
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(ROTATION);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(ROTATION,
+                RotationSegment.convertToSegment(context.getRotation() + 180.0F));
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        int rotation = state.getValue(ROTATION);
+        int snapped = ((rotation + 2) % 16) / 4;
+        return (snapped == 1 || snapped == 3) ? SHAPE_EW : SHAPE_NS;
+    }
+
+    @Override
+    public VoxelShape getCollisionShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return getShape(state, level, pos, context);
+    }
+
+    @Override
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.INVISIBLE;
+    }
+
+    @Override
+    public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new RotatableBlockEntity(pos, state);
+    }
+
+    @Override
+    public boolean canConnectHorizontalPole(BlockState state, Direction fromDirection) {
+        int rotation = state.getValue(ROTATION);
+        int snapped = ((rotation + 2) % 16) / 4;
+        boolean isNS = (snapped == 0 || snapped == 2);
+        boolean isEW = (snapped == 1 || snapped == 3);
+
+        if (isNS) {
+            return fromDirection == Direction.NORTH || fromDirection == Direction.SOUTH;
+        }
+        if (isEW) {
+            return fromDirection == Direction.EAST || fromDirection == Direction.WEST;
+        }
+        return false;
+    }
 }

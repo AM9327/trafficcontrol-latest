@@ -1,0 +1,26 @@
+license="${mod_license}"
+
+[[mods]]
+modId="${mod_id}"
+version="${mod_version}"
+displayName="${mod_name}"
+logoFile="assets/logo.png"
+credits="KillerMapper for making this the first time and creating many of the wonderful road sign textures. The_Epicness9000, AM9327, RavenholmZombie, South Texas Railfan for community sign submissions."
+authors="CSX8600, KillerMapper AM9327"
+description='''
+Control traffic in Minecraft using signs, railroad crossings, traffic lights, and more!
+'''
+
+[[dependencies.${mod_id}]]
+    modId="neoforge"
+    type="required"
+    versionRange="[${neo_version},)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.${mod_id}]]
+    modId="minecraft"
+    type="required"
+    versionRange="${minecraft_version_range}"
+    ordering="NONE"
+    side="BOTH"

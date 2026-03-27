@@ -1,96 +1,63 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
-import com.clussmanproductions.trafficcontrol.ModTrafficControl;
-import com.clussmanproductions.trafficcontrol.util.CustomAngleCalculator;
+import com.clussmanproductions.trafficcontrol.ModBlockEntities;
+import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.util.Mth;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyInteger;
-import net.minecraft.block.state.BlockFaceShape;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.Item;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelLoader;
+public class BlockCone extends Block implements EntityBlock {
 
-public class BlockCone extends Block {
-	public static PropertyInteger ROTATION = PropertyInteger.create("rotation", 0, 15);
-	public BlockCone()
-	{
-		super(Material.ROCK);
-		setRegistryName("cone");
-		setUnlocalizedName(ModTrafficControl.MODID + ".cone");
-		setLightOpacity(1);
-        setHardness(1f);
-        setHarvestLevel("pickaxe", 0);
-		setCreativeTab(ModTrafficControl.CREATIVE_TAB);
-	}
+    // Use vanilla's ROTATION_16 property (same as signs, banners, skulls)
+    public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
 
-	public void initModel()
-	{
-		ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(this), 0, new ModelResourceLocation(getRegistryName(), "inventory"));
-	}
-	
-	@Override
-    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) 
-	{
-        if (face == EnumFacing.UP)
-        {
-            return BlockFaceShape.UNDEFINED;
-        }
-        return super.getBlockFaceShape(worldIn, state, pos, face);
+    private static final VoxelShape SHAPE = Block.box(5, 0, 5, 11, 16, 11);
+
+    public BlockCone(BlockBehaviour.Properties properties) {
+        super(properties);
+        this.registerDefaultState(this.stateDefinition.any().setValue(ROTATION, 0));
     }
 
-	@Override
-	public boolean isOpaqueCube(IBlockState state) {
-		return false;
-	}
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(ROTATION);
+    }
 
-	@Override
-	public boolean isNormalCube(IBlockState state, IBlockAccess world, BlockPos pos) {
-		return false;
-	}
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(ROTATION,
+                RotationSegment.convertToSegment(context.getRotation() + 180.0F));
+    }
 
-	@Override
-	public float getAmbientOcclusionLightValue(IBlockState state) {
-		return 1;
-	}
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
+    }
 
-	@Override
-	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-		return new AxisAlignedBB(0.3,0,0.3,0.7,1,0.7);
-	}
+    // Return INVISIBLE so the normal block renderer doesn't draw anything.
+    // Our RotatableBlockEntityRenderer handles all rendering with free rotation.
+    @Override
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.INVISIBLE;
+    }
 
-	@Override
-	public boolean causesSuffocation(IBlockState state) {
-		return false;
-	}
-
-	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, ROTATION);
-	}
-
-	@Override
-	public int getMetaFromState(IBlockState state) {
-		return state.getValue(ROTATION);
-	}
-
-	@Override
-	public IBlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(ROTATION, meta);
-	}
-
-	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY,
-			float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
-		return getDefaultState().withProperty(ROTATION, CustomAngleCalculator.getRotationForYaw(placer.rotationYaw));
-	}
+    // Create a block entity so the BER can render us
+    @Override
+    public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new RotatableBlockEntity(pos, state);
+    }
 }

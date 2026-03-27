@@ -1,9 +1,9 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.util.EnumFacing;
+import net.minecraft.core.Direction;
+import net.minecraft.world.level.block.state.BlockState;
 
 public interface IHorizontalPoleConnectable {
 
-	boolean canConnectHorizontalPole(IBlockState state, EnumFacing fromFacing);
+    boolean canConnectHorizontalPole(BlockState state, Direction fromDirection);
 }

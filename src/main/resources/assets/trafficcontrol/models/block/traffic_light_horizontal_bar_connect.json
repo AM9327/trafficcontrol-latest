@@ -1,0 +1,22 @@
+{
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
+	"textures": {
+		"0": "trafficcontrol:block/generic"
+	},
+	"elements": [
+		{
+			"name": "Horizontal Bar Connect",
+			"from": [7, 7, 0],
+			"to": [9, 9, 2],
+			"faces": {
+				"north": {"uv": [8, 11, 10, 13], "texture": "#0"},
+				"east": {"uv": [4, 9, 11, 11], "texture": "#0"},
+				"south": {"uv": [6, 5, 8, 7], "texture": "#0"},
+				"west": {"uv": [4, 7, 11, 9], "texture": "#0"},
+				"up": {"uv": [8, 7, 10, 14], "texture": "#0"},
+				"down": {"uv": [8, 5, 10, 12], "texture": "#0"}
+			}
+		}
+	]
+}

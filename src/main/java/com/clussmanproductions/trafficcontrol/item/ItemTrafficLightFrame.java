@@ -1,59 +1,32 @@
 package com.clussmanproductions.trafficcontrol.item;
 
-import java.util.List;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.entity.EquipmentSlotGroup;
+import net.minecraft.world.entity.ai.attributes.AttributeModifier;
+import net.minecraft.world.entity.ai.attributes.Attributes;
+import net.minecraft.world.item.BlockItem;
+import net.minecraft.world.item.Item;
+import net.minecraft.world.item.component.ItemAttributeModifiers;
+import net.minecraft.world.level.block.Block;
 
-import com.clussmanproductions.trafficcontrol.ModBlocks;
-import com.clussmanproductions.trafficcontrol.blocks.BlockBaseTrafficLight;
-import com.clussmanproductions.trafficcontrol.gui.GuiProxy;
+/**
+ * A frame item that places a traffic light block when used.
+ * Grants extended block interaction range when held so players can
+ * place traffic lights on elevated poles more easily.
+ */
+public class ItemTrafficLightFrame extends BlockItem {
 
-import net.minecraft.client.util.ITooltipFlag;
-import net.minecraft.item.ItemStack;
-import net.minecraft.world.World;
-import net.minecraftforge.items.CapabilityItemHandler;
-import net.minecraftforge.items.IItemHandler;
+    private static final double EXTRA_RANGE = 3.5;
 
-public class ItemTrafficLightFrame extends BaseItemTrafficLightFrame {
-
-	public ItemTrafficLightFrame()
-	{
-		super("traffic_light_frame");
-	}
-	
-	@Override
-	protected int getGuiID() {
-		return GuiProxy.GUI_IDs.TRAFFIC_LIGHT_FRAME;
-	}
-
-	@Override
-	public int getBulbCount() {
-		return 3;
-	}
-
-	@Override
-	public void addInformation(ItemStack stack, World worldIn, List<String> tooltip, ITooltipFlag flagIn) {
-		IItemHandler handler = stack.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY, null);
-		ItemStack subStack = handler.getStackInSlot(0);
-		if (subStack != ItemStack.EMPTY)
-		{
-			tooltip.add("Top: " + subStack.getItem().getItemStackDisplayName(subStack));
-		}
-		
-		subStack = handler.getStackInSlot(1);
-		if (subStack != ItemStack.EMPTY)
-		{
-			tooltip.add("Middle: " + subStack.getItem().getItemStackDisplayName(subStack));
-		}
-		
-		subStack = handler.getStackInSlot(2);
-		if (subStack != ItemStack.EMPTY)
-		{
-			tooltip.add("Bottom: " + subStack.getItem().getItemStackDisplayName(subStack));
-		}
-	}
-
-	@Override
-	protected BlockBaseTrafficLight getBaseBlockTrafficLight() {
-		return ModBlocks.traffic_light;
-	}
-	
+    public ItemTrafficLightFrame(Block block, Item.Properties properties) {
+        super(block, properties.attributes(
+                ItemAttributeModifiers.builder()
+                        .add(Attributes.BLOCK_INTERACTION_RANGE,
+                                new AttributeModifier(
+                                        Identifier.withDefaultNamespace("traffic_light_range"),
+                                        EXTRA_RANGE,
+                                        AttributeModifier.Operation.ADD_VALUE),
+                                EquipmentSlotGroup.MAINHAND)
+                        .build()));
+    }
 }

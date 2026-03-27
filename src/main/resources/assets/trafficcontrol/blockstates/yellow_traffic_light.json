@@ -1,0 +1,5 @@
+{
+    "variants": {
+        "": { "model": "trafficcontrol:block/yellow_traffic_light" }
+    }
+}

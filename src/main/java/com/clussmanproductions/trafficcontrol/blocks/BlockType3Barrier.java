@@ -1,19 +1,60 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
-import com.clussmanproductions.trafficcontrol.ModBlocks;
+import com.clussmanproductions.trafficcontrol.ModBlockEntities;
+import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
-import net.minecraft.block.Block;
+public class BlockType3Barrier extends Block implements EntityBlock {
 
-public class BlockType3Barrier extends BlockType3BarrierBase {
+    public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
 
-	@Override
-	protected String getName() {
-		return "type_3_barrier";
-	}
+    // 2px wide, 23px tall (matches old code), centered on z axis
+    private static final VoxelShape SHAPE = Block.box(0, 0, 7, 16, 23, 9);
 
-	@Override
-	public Block getBlockInstance() {
-		return ModBlocks.type_3_barrier;
-	}
+    public BlockType3Barrier(BlockBehaviour.Properties properties) {
+        super(properties);
+        this.registerDefaultState(this.stateDefinition.any().setValue(ROTATION, 0));
+    }
 
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(ROTATION);
+    }
+
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return this.defaultBlockState().setValue(ROTATION,
+                RotationSegment.convertToSegment(context.getRotation() + 180.0F));
+    }
+
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        return SHAPE;
+    }
+
+    @Override
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.INVISIBLE;
+    }
+
+    @Override
+    public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new RotatableBlockEntity(pos, state);
+    }
 }

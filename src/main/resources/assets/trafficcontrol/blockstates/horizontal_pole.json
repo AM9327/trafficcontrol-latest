@@ -1,17 +1,5 @@
 {
-    "forge_marker": 1,
-    "defaults": {
-        "model": "trafficcontrol:horizontal_pole"
-    },
     "variants": {
-        "normal": [{}],
-        "inventory": [{}],
-        "facing":
-        {
-            "north": {},
-            "west": { "y": 90 },
-            "south": {},
-            "east": { "y": 90 }
-        }
+        "": { "model": "trafficcontrol:block/horizontal_pole" }
     }
 }

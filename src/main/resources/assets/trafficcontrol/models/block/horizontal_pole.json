@@ -1,14 +1,15 @@
 {
+	"format_version": "1.21.11",
 	"credit": "Model generated using MrCrayfish's Model Creator (http://mrcrayfish.com/modelcreator/)",
 	"textures": {
-		"0": "trafficcontrol:blocks/generic",
-		"particle": "trafficcontrol:blocks/generic"
+		"0": "trafficcontrol:block/generic",
+		"particle": "trafficcontrol:block/generic"
 	},
 	"elements": [
 		{
 			"name": "Cube",
-			"from": [7, 7, 0],
-			"to": [9, 9, 16],
+			"from": [7, 7, -9],
+			"to": [9, 9, 25],
 			"faces": {
 				"north": {"uv": [8, 9, 10, 11], "texture": "#0"},
 				"east": {"uv": [0, 11, 16, 13], "texture": "#0"},
@@ -35,7 +36,7 @@
 			"scale": [0.4, 0.4, 0.4]
 		},
 		"firstperson_lefthand": {
-			"rotation": [0, 225, 0],
+			"rotation": [0, -135, 0],
 			"scale": [0.4, 0.4, 0.4]
 		},
 		"ground": {
@@ -43,7 +44,7 @@
 			"scale": [0.25, 0.25, 0.25]
 		},
 		"gui": {
-			"rotation": [30, 225, 0],
+			"rotation": [30, -135, 0],
 			"scale": [0.625, 0.625, 0.625]
 		},
 		"fixed": {

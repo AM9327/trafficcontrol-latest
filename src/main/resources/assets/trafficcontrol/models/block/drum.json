@@ -1,10 +1,10 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "trafficcontrol:blocks/cone/conebasebottom",
-		"1": "trafficcontrol:blocks/cone/barreltop",
-		"2": "trafficcontrol:blocks/cone/cone",
-		"particle": "trafficcontrol:blocks/cone/cone"
+		"0": "trafficcontrol:block/cone/conebasebottom",
+		"1": "trafficcontrol:block/cone/barreltop",
+		"2": "trafficcontrol:block/cone/cone",
+		"particle": "trafficcontrol:block/cone/cone"
 	},
 	"elements": [
 		{

@@ -1,136 +1,82 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
-import com.clussmanproductions.trafficcontrol.ModTrafficControl;
-import com.clussmanproductions.trafficcontrol.util.CustomAngleCalculator;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.util.RandomSource;
+import net.minecraft.world.item.context.BlockPlaceContext;
+import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.LevelReader;
+import net.minecraft.world.level.ScheduledTickAccess;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
+import net.minecraft.world.phys.shapes.VoxelShape;
 
-import net.minecraft.block.Block;
-import net.minecraft.block.material.Material;
-import net.minecraft.block.properties.PropertyBool;
-import net.minecraft.block.properties.PropertyInteger;
-import net.minecraft.block.state.BlockFaceShape;
-import net.minecraft.block.state.BlockStateContainer;
-import net.minecraft.block.state.IBlockState;
-import net.minecraft.client.renderer.block.model.ModelResourceLocation;
-import net.minecraft.entity.EntityLivingBase;
-import net.minecraft.item.Item;
-import net.minecraft.util.EnumFacing;
-import net.minecraft.util.EnumHand;
-import net.minecraft.util.math.AxisAlignedBB;
-import net.minecraft.util.math.BlockPos;
-import net.minecraft.world.IBlockAccess;
-import net.minecraft.world.World;
-import net.minecraftforge.client.model.ModelLoader;
+public class BlockCrossingGatePole extends Block {
 
-public class BlockCrossingGatePole extends Block implements IHorizontalPoleConnectable {
-	public static PropertyBool NORTH = PropertyBool.create("north");
-	public static PropertyBool WEST = PropertyBool.create("west");
-	public static PropertyBool SOUTH = PropertyBool.create("south");
-	public static PropertyBool EAST = PropertyBool.create("east");
-	public static PropertyInteger ROTATION = PropertyInteger.create("rotation", 0, 15);
+    public static final BooleanProperty NORTH = BooleanProperty.create("north");
+    public static final BooleanProperty SOUTH = BooleanProperty.create("south");
+    public static final BooleanProperty EAST = BooleanProperty.create("east");
+    public static final BooleanProperty WEST = BooleanProperty.create("west");
 
-	public BlockCrossingGatePole()
-	{
-		super(Material.IRON);
-		setRegistryName("crossing_gate_pole");
-		setUnlocalizedName(ModTrafficControl.MODID + ".crossing_gate_pole");
-		setCreativeTab(ModTrafficControl.CREATIVE_TAB);
-		setLightOpacity(1);
-		setHardness(2f);
-	}
+    private static final VoxelShape POLE = Block.box(7, 0, 7, 9, 16, 9);
+    private static final VoxelShape NORTH_ARM = Block.box(7, 7, 0, 9, 9, 7);
+    private static final VoxelShape SOUTH_ARM = Block.box(7, 7, 9, 9, 9, 16);
+    private static final VoxelShape EAST_ARM = Block.box(9, 7, 7, 16, 9, 9);
+    private static final VoxelShape WEST_ARM = Block.box(0, 7, 7, 7, 9, 9);
 
-	public void initModel()
-	{
-		ModelLoader.setCustomModelResourceLocation(Item.getItemFromBlock(this), 0, new ModelResourceLocation(getRegistryName(), "inventory"));
-	}
-	
-	@Override
-    public BlockFaceShape getBlockFaceShape(IBlockAccess worldIn, IBlockState state, BlockPos pos, EnumFacing face) 
-	{
-        if (face == EnumFacing.UP)
-        {
-            return BlockFaceShape.UNDEFINED;
-        }
-        return super.getBlockFaceShape(worldIn, state, pos, face);
+    public BlockCrossingGatePole(BlockBehaviour.Properties properties) {
+        super(properties);
+        this.registerDefaultState(this.stateDefinition.any()
+                .setValue(NORTH, false)
+                .setValue(SOUTH, false)
+                .setValue(EAST, false)
+                .setValue(WEST, false));
     }
 
-	@Override
-	protected BlockStateContainer createBlockState() {
-		return new BlockStateContainer(this, ROTATION, NORTH, WEST, SOUTH, EAST);
-	}
+    @Override
+    protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
+        builder.add(NORTH, SOUTH, EAST, WEST);
+    }
 
-	@Override
-	public IBlockState getActualState(IBlockState state, IBlockAccess worldIn, BlockPos pos) {
-		int rotation = state.getValue(ROTATION);
-		boolean isCardinal = CustomAngleCalculator.isCardinal(rotation);
-		EnumFacing myFacing = CustomAngleCalculator.getFacingFromRotation(rotation);
+    @Override
+    public BlockState getStateForPlacement(BlockPlaceContext context) {
+        return updateConnections(this.defaultBlockState(), context.getLevel(), context.getClickedPos());
+    }
 
-		boolean north = isCardinal && getStateIsValidForSubModel(pos, worldIn, myFacing);
-		boolean west = isCardinal && getStateIsValidForSubModel(pos, worldIn, myFacing.rotateYCCW());
-		boolean south = isCardinal && getStateIsValidForSubModel(pos, worldIn, myFacing.getOpposite());
-		boolean east = isCardinal && getStateIsValidForSubModel(pos, worldIn, myFacing.rotateY());
+    @Override
+    protected BlockState updateShape(BlockState state, LevelReader level, ScheduledTickAccess scheduledTickAccess,
+                                     BlockPos pos, Direction direction, BlockPos neighborPos,
+                                     BlockState neighborState, RandomSource random) {
+        return updateConnections(state, level, pos);
+    }
 
-		return state
-				.withProperty(NORTH, north)
-				.withProperty(WEST, west)
-				.withProperty(SOUTH, south)
-				.withProperty(EAST, east);
-	}
-	
-	private boolean getStateIsValidForSubModel(BlockPos pos, IBlockAccess world, EnumFacing direction)
-	{
-		IBlockState otherState = world.getBlockState(pos.offset(direction));
-		if (otherState.getBlock() instanceof IHorizontalPoleConnectable)
-		{
-			return ((IHorizontalPoleConnectable)otherState.getBlock()).canConnectHorizontalPole(otherState, direction.getOpposite());
-		}
-		
-		return false;
-	}
+    private BlockState updateConnections(BlockState state, LevelReader level, BlockPos pos) {
+        return state
+                .setValue(NORTH, shouldConnect(level, pos, Direction.NORTH))
+                .setValue(SOUTH, shouldConnect(level, pos, Direction.SOUTH))
+                .setValue(EAST, shouldConnect(level, pos, Direction.EAST))
+                .setValue(WEST, shouldConnect(level, pos, Direction.WEST));
+    }
 
-	@Override
-	public int getMetaFromState(IBlockState state) {
-		return CustomAngleCalculator.rotationToMeta(state.getValue(ROTATION));
-	}
+    private boolean shouldConnect(LevelReader level, BlockPos pos, Direction direction) {
+        Block neighbor = level.getBlockState(pos.relative(direction)).getBlock();
+        return neighbor instanceof BlockHorizontalPole
+                || neighbor instanceof BlockTrafficLight
+                || neighbor instanceof BlockCrossingGatePole;
+    }
 
-	@Override
-	public IBlockState getStateFromMeta(int meta) {
-		return getDefaultState().withProperty(ROTATION, CustomAngleCalculator.metaToRotation(meta));
-	}
-
-	@Override
-	public boolean isOpaqueCube(IBlockState state) {
-		return false;
-	}
-
-	@Override
-	public boolean isFullCube(IBlockState state) {
-		return false;
-	}
-
-	@Override
-	public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess source, BlockPos pos) {
-		return new AxisAlignedBB(0.4325, 0, 0.4325, 0.5575, 1, 0.5575);
-	}
-
-	@Override
-	public boolean causesSuffocation(IBlockState state) {
-		return false;
-	}
-
-	@Override
-	public float getAmbientOcclusionLightValue(IBlockState state)
-	{
-		return 1;
-	}
-
-	@Override
-	public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing facing, float hitX, float hitY,
-			float hitZ, int meta, EntityLivingBase placer, EnumHand hand) {
-		return getDefaultState().withProperty(ROTATION, CustomAngleCalculator.getRotationForYaw(placer.rotationYaw));
-	}
-
-	@Override
-	public boolean canConnectHorizontalPole(IBlockState state, EnumFacing fromFacing) {
-		return CustomAngleCalculator.isCardinal(state.getValue(ROTATION));
-	}
+    @Override
+    public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        VoxelShape shape = POLE;
+        if (state.getValue(NORTH)) shape = Shapes.or(shape, NORTH_ARM);
+        if (state.getValue(SOUTH)) shape = Shapes.or(shape, SOUTH_ARM);
+        if (state.getValue(EAST)) shape = Shapes.or(shape, EAST_ARM);
+        if (state.getValue(WEST)) shape = Shapes.or(shape, WEST_ARM);
+        return shape;
+    }
 }

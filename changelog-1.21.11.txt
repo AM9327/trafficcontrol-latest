@@ -1,0 +1,36 @@
+Traffic Control Mod - Session Changelog (2026-03-26)
+====================================================
+
+### Commits
+1. Started porting Traffic Control mod from Forge 1.12.2 to NeoForge 1.21.11
+2. Added changes to changelog-1.21.11
+3. Added some functionality to the horizontal pole (WIP)
+
+### Traffic Light Frame Variants
+- Added yellow traffic light frame variants (7 shapes: triple, single, double, quad, five, T, doghouse)
+- Added orange traffic light frame variants (7 shapes: triple, single, double, quad, five, T, doghouse)
+- Total: 21 frame items across black, yellow, and orange color families
+- Frame item IDs changed from old mod format to new naming convention:
+  - Black: traffic_light_frame, traffic_light_1_frame, traffic_light_2_frame, etc.
+  - Yellow: yellow_traffic_light_frame, yellow_traffic_light_1_frame, etc.
+  - Orange: orange_traffic_light_frame, orange_traffic_light_1_frame, etc.
+- Frames now use ItemTrafficLightFrame class (extends BlockItem) instead of simple BlockItem
+
+### Ghost Block Preview
+- Added GhostBlockRenderer.java — renders a translucent (40% opacity) preview of the traffic light at the placement position whenever the player holds a traffic light frame item
+- Shows at any position the player is looking at, not just near poles
+- Dynamically shows/hides the horizontal bar based on whether poles are adjacent to the placement position
+- Works for both main hand and offhand
+- Applies correct rotation matching player facing direction
+- Limited to 10 blocks max render distance
+- Handles both block hits and air/miss hits (for creative flying)
+
+### Extended Placement Range
+- Modified ItemTrafficLightFrame.java — added BLOCK_INTERACTION_RANGE attribute modifier (+3.5 blocks) so traffic lights can be placed from 8 blocks away (survival) / 8.5 blocks (creative) instead of the default 4.5/5
+
+### Horizontal Pole Hitbox
+- Updated BlockHorizontalPole.java — selection shape (outline/hitbox) now matches the actual thin pole dimensions, with collision shape matching (reverted from full block)
+
+### Horizontal Pole Model
+- Extended horizontal_pole.json dimensions (Z=-9 to Z=25) so the bar properly connects to traffic light frames in all directions
+- Signal arm bar in RotatableBlockEntityRenderer.java now uses horizontal_pole model for all directions
