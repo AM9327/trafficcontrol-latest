@@ -68,7 +68,6 @@ public class ModCreativeTab {
                         output.accept(ModItems.STAND.get());
                         output.accept(ModItems.CROSSING_GATE_POLE.get());
                         output.accept(ModItems.HORIZONTAL_POLE.get());
-                        output.accept(ModItems.SIGNAL_ARM.get());
                     })
                     .build());
 }

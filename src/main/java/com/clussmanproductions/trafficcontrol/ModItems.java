@@ -88,5 +88,4 @@ public class ModItems {
     public static final DeferredItem<BlockItem> STAND = ITEMS.registerSimpleBlockItem("stand", ModBlocks.STAND);
     public static final DeferredItem<BlockItem> CROSSING_GATE_POLE = ITEMS.registerSimpleBlockItem("crossing_gate_pole", ModBlocks.CROSSING_GATE_POLE);
     public static final DeferredItem<BlockItem> HORIZONTAL_POLE = ITEMS.registerSimpleBlockItem("horizontal_pole", ModBlocks.HORIZONTAL_POLE);
-    public static final DeferredItem<BlockItem> SIGNAL_ARM = ITEMS.registerSimpleBlockItem("signal_arm", ModBlocks.SIGNAL_ARM);
 }

@@ -53,3 +53,5 @@ Traffic Control Mod - Session Changelog (3/28/26) (11:30 PM)
 - Added short pole arm from TL toward crossing gate pole for CG-pole-mounted TLs
 - Fixed gap when TL is between HP and CG pole: TL no longer shifts when it has pole connections on both sides
 - HP now renders ext arms toward back-to-back TL pairs for proper pole connection (same as crossing_gate_pole)
+- Fixed bug: TL hitboxes now always visible/breakable even when holding a TL frame item
+- Removed signal_arm item from creative tab and item registry (block still exists for existing worlds)

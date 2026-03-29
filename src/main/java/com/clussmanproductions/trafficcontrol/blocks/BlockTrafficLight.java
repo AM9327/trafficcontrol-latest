@@ -117,16 +117,6 @@ public class BlockTrafficLight extends Block implements EntityBlock {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        // When player holds a TL frame, make all TLs transparent so clicks pass through
-        // for row placement (side-by-side and through poles)
-        if (context instanceof EntityCollisionContext entityContext) {
-            var entity = entityContext.getEntity();
-            if (entity instanceof Player player
-                    && player.getMainHandItem().getItem() instanceof ItemTrafficLightFrame) {
-                return Shapes.empty();
-            }
-        }
-
         int rotation = state.getValue(ROTATION);
         int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
         if (steps < 0) steps += 4;
