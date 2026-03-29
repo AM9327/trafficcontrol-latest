@@ -946,7 +946,7 @@
 		{
 			"name": "Back Pole",
 			"from": [7, 0, 7],
-			"to": [9, 16, 9],
+			"to": [9, 32, 9],
 			"faces": {
 				"north": {"uv": [0, 0, 2, 16], "texture": "#2"},
 				"east": {"uv": [2, 0, 4, 16], "texture": "#2"},

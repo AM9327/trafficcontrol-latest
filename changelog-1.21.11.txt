@@ -54,4 +54,9 @@ Traffic Control Mod - Session Changelog (3/28/26) (11:55 PM)
 - Fixed gap when TL is between HP and CG pole: TL no longer shifts when it has pole connections on both sides
 - HP now renders ext arms toward back-to-back TL pairs for proper pole connection (same as crossing_gate_pole)
 - Fixed bug: TL hitboxes now always visible/breakable even when holding a TL frame item
-- Removed signal_arm block, item, model, and blockstate entirely (no longer needed)
+- Removed signal_arm block, item, model, and blockstate (replaced by direct connections between traffic lights, crossing gate poles/bases, and horizontal poles)
+
+### Credits & Authors
+- Added Gamearoo to authors list and credits for contributing items and textures
+- Added AM9327 to credits for helping port the mod to the latest versions of Minecraft
+- Updated authors: CSX8600 (https://github.com/CSX8600), KillerMapper, Gamearoo (https://github.com/GamearooCode), AM9327 (https://github.com/AM9327)
