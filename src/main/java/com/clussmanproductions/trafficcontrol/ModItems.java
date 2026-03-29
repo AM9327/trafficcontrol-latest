@@ -89,6 +89,33 @@ public class ModItems {
     public static final DeferredItem<BlockItem> CROSSING_GATE_POLE = ITEMS.registerSimpleBlockItem("crossing_gate_pole", ModBlocks.CROSSING_GATE_POLE);
     public static final DeferredItem<BlockItem> HORIZONTAL_POLE = ITEMS.registerSimpleBlockItem("horizontal_pole", ModBlocks.HORIZONTAL_POLE);
 
+    // Crossing gate components
+    public static final DeferredItem<BlockItem> PEDESTRIAN_BUTTON = ITEMS.registerSimpleBlockItem("pedestrian_button", ModBlocks.PEDESTRIAN_BUTTON);
+    public static final DeferredItem<BlockItem> CROSSING_GATE_GATE = ITEMS.registerSimpleBlockItem("crossing_gate_gate", ModBlocks.CROSSING_GATE_GATE);
+    public static final DeferredItem<BlockItem> CROSSING_GATE_LAMPS = ITEMS.registerSimpleBlockItem("crossing_gate_lamps", ModBlocks.CROSSING_GATE_LAMPS);
+    public static final DeferredItem<BlockItem> CROSSING_GATE_CROSSBUCK = ITEMS.registerSimpleBlockItem("crossing_gate_crossbuck", ModBlocks.CROSSING_GATE_CROSSBUCK);
+
+    // Overhead components
+    public static final DeferredItem<BlockItem> OVERHEAD_POLE = ITEMS.registerSimpleBlockItem("overhead_pole", ModBlocks.OVERHEAD_POLE);
+    public static final DeferredItem<BlockItem> OVERHEAD = ITEMS.registerSimpleBlockItem("overhead", ModBlocks.OVERHEAD);
+    public static final DeferredItem<BlockItem> OVERHEAD_LAMPS = ITEMS.registerSimpleBlockItem("overhead_lamps", ModBlocks.OVERHEAD_LAMPS);
+    public static final DeferredItem<BlockItem> OVERHEAD_CROSSBUCK = ITEMS.registerSimpleBlockItem("overhead_crossbuck", ModBlocks.OVERHEAD_CROSSBUCK);
+
+    // Signs and signals
+    public static final DeferredItem<BlockItem> SIGN = ITEMS.registerSimpleBlockItem("sign", ModBlocks.SIGN);
+    public static final DeferredItem<BlockItem> WIG_WAG = ITEMS.registerSimpleBlockItem("wig_wag", ModBlocks.WIG_WAG);
+    public static final DeferredItem<BlockItem> SAFETRAN_TYPE_3 = ITEMS.registerSimpleBlockItem("safetran_type_3", ModBlocks.SAFETRAN_TYPE_3);
+    public static final DeferredItem<BlockItem> SAFETRAN_MECHANICAL = ITEMS.registerSimpleBlockItem("safetran_mechanical", ModBlocks.SAFETRAN_MECHANICAL);
+    public static final DeferredItem<BlockItem> WCH_MECHANICAL_BELL = ITEMS.registerSimpleBlockItem("wch_mechanical_bell", ModBlocks.WCH_MECHANICAL_BELL);
+    public static final DeferredItem<BlockItem> WCH_BELL = ITEMS.registerSimpleBlockItem("wch_bell", ModBlocks.WCH_BELL);
+    public static final DeferredItem<BlockItem> VERTICAL_WIG_WAG = ITEMS.registerSimpleBlockItem("vertical_wig_wag", ModBlocks.VERTICAL_WIG_WAG);
+    public static final DeferredItem<BlockItem> STREET_SIGN = ITEMS.registerSimpleBlockItem("street_sign", ModBlocks.STREET_SIGN);
+
+    // Traffic sensors
+    public static final DeferredItem<BlockItem> TRAFFIC_SENSOR_LEFT = ITEMS.registerSimpleBlockItem("traffic_sensor_left", ModBlocks.TRAFFIC_SENSOR_LEFT);
+    public static final DeferredItem<BlockItem> TRAFFIC_SENSOR_RIGHT = ITEMS.registerSimpleBlockItem("traffic_sensor_right", ModBlocks.TRAFFIC_SENSOR_RIGHT);
+    public static final DeferredItem<BlockItem> TRAFFIC_SENSOR_STRAIGHT = ITEMS.registerSimpleBlockItem("traffic_sensor_straight", ModBlocks.TRAFFIC_SENSOR_STRAIGHT);
+
     // Traffic Light Bulbs — basic colors
     public static final DeferredItem<Item> BULB_RED = ITEMS.registerSimpleItem("traffic_light_bulb_red", new Item.Properties().stacksTo(16));
     public static final DeferredItem<Item> BULB_YELLOW = ITEMS.registerSimpleItem("traffic_light_bulb_yellow", new Item.Properties().stacksTo(16));

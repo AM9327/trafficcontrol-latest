@@ -1,11 +1,11 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "trafficcontrol:blocks/generic",
-		"1": "trafficcontrol:blocks/black",
-		"particle": "trafficcontrol:blocks/generic",
-		"leftlamptex": "trafficcontrol:blocks/black",
-		"rightlamptex": "trafficcontrol:blocks/black"
+		"0": "trafficcontrol:block/generic",
+		"1": "trafficcontrol:block/black",
+		"particle": "trafficcontrol:block/generic",
+		"leftlamptex": "trafficcontrol:block/black",
+		"rightlamptex": "trafficcontrol:block/black"
 	},
 	"elements": [
 		{

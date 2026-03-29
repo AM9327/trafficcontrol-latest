@@ -36,5 +36,7 @@ public class ModTrafficControl {
         ModItems.ITEMS.register(modEventBus);
         ModBlockEntities.BLOCK_ENTITIES.register(modEventBus);
         ModCreativeTab.CREATIVE_TABS.register(modEventBus);
+
+        modEventBus.addListener(ClientSetup::onClientSetup);
     }
 }

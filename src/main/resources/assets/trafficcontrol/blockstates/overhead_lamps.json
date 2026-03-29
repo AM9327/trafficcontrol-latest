@@ -1,40 +1,5 @@
 {
-    "forge_marker": 1,
-    "defaults": {
-        "model": "trafficcontrol:overhead_lamps",
-        "textures":
-        {
-            "leftlamp": "trafficcontrol:blocks/lamp_off",
-            "rightlamp": "trafficcontrol:blocks/lamp_off"
-        }
-    },
     "variants": {
-        "normal": [{}],
-        "inventory": [{ "model": "trafficcontrol:overhead_lamps_master" }],
-        "facing":
-        {
-            "north": {},
-            "west": { "y": 90 },
-            "south": { "y": 180 },
-            "east": { "y": 270 }
-        },
-        "state":
-        {
-            "off": {},
-            "flash1": 
-            {
-                "textures":
-                {
-                    "leftlamp": "trafficcontrol:blocks/red" 
-                }
-            },
-            "flash2": 
-            {
-                "textures":
-                {
-                     "rightlamp": "trafficcontrol:blocks/red"
-                }
-            }
-        }
+        "": { "model": "trafficcontrol:block/overhead_lamps" }
     }
 }

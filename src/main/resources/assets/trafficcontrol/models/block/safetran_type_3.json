@@ -1,10 +1,10 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "trafficcontrol:blocks/generic",
-		"1": "trafficcontrol:blocks/transparent",
-		"2": "trafficcontrol:blocks/bell_cage",
-		"particle": "trafficcontrol:blocks/generic"
+		"0": "trafficcontrol:block/generic",
+		"1": "trafficcontrol:block/transparent",
+		"2": "trafficcontrol:block/bell_cage",
+		"particle": "trafficcontrol:block/generic"
 	},
 	"elements": [
 		{

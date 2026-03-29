@@ -4,6 +4,7 @@ import com.clussmanproductions.trafficcontrol.ModTrafficControl;
 import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGateBase;
 import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGatePole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
+import com.clussmanproductions.trafficcontrol.blocks.BlockSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSignalArm;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLight;
 import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
@@ -112,6 +113,19 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         int rotation = state.hasProperty(BlockStateProperties.ROTATION_16)
                 ? state.getValue(BlockStateProperties.ROTATION_16) : 0;
 
+        // Sign: find adjacent connectable blocks to render arms toward
+        if (state.getBlock() instanceof BlockSign) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                if (neighbor instanceof BlockHorizontalPole
+                        || neighbor instanceof BlockCrossingGatePole
+                        || neighbor instanceof BlockCrossingGateBase
+                        || neighbor instanceof BlockTrafficLight) {
+                    renderState.signalArmTrafficLightDirs.add(dir);
+                }
+            }
+        }
+
         // Signal arm: find adjacent traffic lights to render bars toward
         if (state.getBlock() instanceof BlockSignalArm) {
             for (Direction dir : Direction.Plane.HORIZONTAL) {
@@ -133,7 +147,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
                     adjacentTLRotations.put(dir, neighborState.getValue(BlockStateProperties.ROTATION_16));
                 } else if (neighbor instanceof BlockCrossingGatePole
-                        || neighbor instanceof BlockCrossingGateBase) {
+                        || neighbor instanceof BlockCrossingGateBase
+                        || neighbor instanceof BlockSign) {
                     renderState.signalArmTrafficLightDirs.add(dir);
                 }
             }
@@ -206,9 +221,10 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
                 if (neighbor instanceof BlockCrossingGatePole
-                        || neighbor instanceof BlockCrossingGateBase) {
+                        || neighbor instanceof BlockCrossingGateBase
+                        || neighbor instanceof BlockSign) {
                     renderState.onCrossingGateBase = true;
-                    // Render horizontal bar toward crossing gate pole to bridge the gap
+                    // Render horizontal bar toward crossing gate pole/sign to bridge the gap
                     if (!dir.equals(poleDir)) {
                         renderState.horizontalPoleDirs.add(dir);
                     }
@@ -286,26 +302,30 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         float poleShiftAmount = 9.0f / 16.0f; // 9 pixels toward pole
 
         // --- Render body (rotated) ---
-        poseStack.pushPose();
+        // Skip for BlockSign — it uses RenderShape.MODEL so the blockstate handles base rendering
+        boolean isSign = state.getBlock() instanceof BlockSign;
+        if (!isSign) {
+            poseStack.pushPose();
 
-        // World-space shift toward pole (applied after rotation in transform order)
-        if (shiftToPole) {
-            Direction poleDir = renderState.horizontalBarDirection;
-            poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
-                    poleDir.getStepZ() * poleShiftAmount);
+            // World-space shift toward pole (applied after rotation in transform order)
+            if (shiftToPole) {
+                Direction poleDir = renderState.horizontalBarDirection;
+                poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
+                        poleDir.getStepZ() * poleShiftAmount);
+            }
+
+            poseStack.translate(0.5f, 0.0f, 0.5f);
+            poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+            poseStack.translate(-0.5f, 0.0f, -0.5f);
+
+            nodeCollector.submitBlockModel(
+                    poseStack, renderType, bodyModel,
+                    1.0f, 1.0f, 1.0f,
+                    renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+            );
+
+            poseStack.popPose();
         }
-
-        poseStack.translate(0.5f, 0.0f, 0.5f);
-        poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
-        poseStack.translate(-0.5f, 0.0f, -0.5f);
-
-        nodeCollector.submitBlockModel(
-                poseStack, renderType, bodyModel,
-                1.0f, 1.0f, 1.0f,
-                renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
-        );
-
-        poseStack.popPose();
 
         // --- Bridge: render connect model at the pole block position to fill the gap ---
         if (sideBySide && renderState.sideBySidePoleDirection != null && connectModel != null) {
@@ -447,7 +467,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         // Signal arm / horizontal pole: render ext arm toward each adjacent traffic light
-        if ((state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole)
+        if ((state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole || state.getBlock() instanceof BlockSign)
                 && !renderState.signalArmTrafficLightDirs.isEmpty()) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             boolean isHorizPole = state.getBlock() instanceof BlockHorizontalPole;

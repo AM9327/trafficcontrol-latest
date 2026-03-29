@@ -1,6 +1,6 @@
 {
     "parent": "item/generated",
     "textures": {
-        "layer0": "trafficcontrol:items/street_sign"
+        "layer0": "trafficcontrol:item/street_sign"
     }
 }

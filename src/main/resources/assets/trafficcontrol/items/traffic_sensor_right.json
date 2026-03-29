@@ -1,0 +1,6 @@
+{
+    "model": {
+        "type": "minecraft:model",
+        "model": "trafficcontrol:block/traffic_sensor_right"
+    }
+}

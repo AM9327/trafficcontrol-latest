@@ -70,7 +70,8 @@ public class BlockCrossingGatePole extends Block {
         Block neighbor = level.getBlockState(pos.relative(direction)).getBlock();
         return neighbor instanceof BlockHorizontalPole
                 || neighbor instanceof BlockTrafficLight
-                || neighbor instanceof BlockCrossingGatePole;
+                || neighbor instanceof BlockCrossingGatePole
+                || neighbor instanceof BlockSign;
     }
 
     @Override

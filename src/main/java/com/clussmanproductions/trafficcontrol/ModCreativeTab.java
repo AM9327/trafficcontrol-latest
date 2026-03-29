@@ -68,6 +68,21 @@ public class ModCreativeTab {
                         output.accept(ModItems.STAND.get());
                         output.accept(ModItems.CROSSING_GATE_POLE.get());
                         output.accept(ModItems.HORIZONTAL_POLE.get());
+                        // After poles
+                        output.accept(ModItems.PEDESTRIAN_BUTTON.get());
+                        output.accept(ModItems.CROSSING_GATE_GATE.get());
+                        output.accept(ModItems.CROSSING_GATE_LAMPS.get());
+                        output.accept(ModItems.OVERHEAD_POLE.get());
+                        output.accept(ModItems.OVERHEAD.get());
+                        output.accept(ModItems.OVERHEAD_LAMPS.get());
+                        output.accept(ModItems.OVERHEAD_CROSSBUCK.get());
+                        output.accept(ModItems.SIGN.get());
+                        output.accept(ModItems.WIG_WAG.get());
+                        output.accept(ModItems.SAFETRAN_TYPE_3.get());
+                        output.accept(ModItems.SAFETRAN_MECHANICAL.get());
+                        output.accept(ModItems.WCH_MECHANICAL_BELL.get());
+                        output.accept(ModItems.WCH_BELL.get());
+                        output.accept(ModItems.VERTICAL_WIG_WAG.get());
                         // Traffic Light Bulbs
                         output.accept(ModItems.BULB_RED.get());
                         output.accept(ModItems.BULB_YELLOW.get());
@@ -87,6 +102,12 @@ public class ModCreativeTab {
                         output.accept(ModItems.BULB_NO_LEFT_TURN.get());
                         output.accept(ModItems.BULB_TUNNEL_GREEN.get());
                         output.accept(ModItems.BULB_TUNNEL_RED.get());
+                        // Street sign after bulbs
+                        output.accept(ModItems.STREET_SIGN.get());
+                        // Traffic sensors after street sign
+                        output.accept(ModItems.TRAFFIC_SENSOR_LEFT.get());
+                        output.accept(ModItems.TRAFFIC_SENSOR_STRAIGHT.get());
+                        output.accept(ModItems.TRAFFIC_SENSOR_RIGHT.get());
                     })
                     .build());
 }

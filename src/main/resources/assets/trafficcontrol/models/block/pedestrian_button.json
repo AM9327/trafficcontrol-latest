@@ -1,12 +1,12 @@
 {
     "__comment": "Model generated using MrCrayfish's Model Creator (http://mrcrayfish.com/modelcreator/)",
     "textures": {
-        "particle": "trafficcontrol:blocks/generic",
-        "0": "trafficcontrol:blocks/generic",
-        "1": "trafficcontrol:blocks/yellow",
-        "2": "trafficcontrol:blocks/chrome",
-        "3": "trafficcontrol:blocks/generic",
-        "4": "trafficcontrol:blocks/crosswalk_sign"
+        "particle": "trafficcontrol:block/generic",
+        "0": "trafficcontrol:block/generic",
+        "1": "trafficcontrol:block/yellow",
+        "2": "trafficcontrol:block/chrome",
+        "3": "trafficcontrol:block/generic",
+        "4": "trafficcontrol:block/crosswalk_sign"
     },
     "elements": [
         {

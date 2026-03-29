@@ -87,7 +87,8 @@ public class BlockHorizontalPole extends Block implements EntityBlock, IHorizont
         return neighbor instanceof BlockTrafficLight
                 || neighbor instanceof BlockCrossingGatePole
                 || neighbor instanceof BlockCrossingGateBase
-                || neighbor instanceof BlockHorizontalPole;
+                || neighbor instanceof BlockHorizontalPole
+                || neighbor instanceof BlockSign;
     }
 
     @Override

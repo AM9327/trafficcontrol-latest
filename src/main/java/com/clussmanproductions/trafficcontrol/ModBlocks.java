@@ -7,6 +7,7 @@ import com.clussmanproductions.trafficcontrol.blocks.BlockConcreteBarrier;
 import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGateBase;
 import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGatePole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
+import com.clussmanproductions.trafficcontrol.blocks.BlockSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSignalArm;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLight;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficRail;
@@ -139,4 +140,31 @@ public class ModBlocks {
     public static final DeferredBlock<Block> CROSSING_GATE_POLE = BLOCKS.registerBlock("crossing_gate_pole", BlockCrossingGatePole::new, POLE_PROPS);
     public static final DeferredBlock<Block> HORIZONTAL_POLE = BLOCKS.registerBlock("horizontal_pole", BlockHorizontalPole::new, POLE_PROPS);
     public static final DeferredBlock<Block> SIGNAL_ARM = BLOCKS.registerBlock("signal_arm", BlockSignalArm::new, POLE_PROPS);
+
+    // Placeholder blocks — these use simple Block for now until dedicated classes are ported
+    private static final BlockBehaviour.Properties PLACEHOLDER_PROPS = BlockBehaviour.Properties.of()
+            .strength(1f)
+            .sound(SoundType.METAL)
+            .noOcclusion()
+            .forceSolidOn();
+
+    public static final DeferredBlock<Block> PEDESTRIAN_BUTTON = BLOCKS.registerBlock("pedestrian_button", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_GATE_GATE = BLOCKS.registerBlock("crossing_gate_gate", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_GATE_LAMPS = BLOCKS.registerBlock("crossing_gate_lamps", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_GATE_CROSSBUCK = BLOCKS.registerBlock("crossing_gate_crossbuck", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> OVERHEAD_POLE = BLOCKS.registerBlock("overhead_pole", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> OVERHEAD = BLOCKS.registerBlock("overhead", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> OVERHEAD_LAMPS = BLOCKS.registerBlock("overhead_lamps", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> OVERHEAD_CROSSBUCK = BLOCKS.registerBlock("overhead_crossbuck", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> SIGN = BLOCKS.registerBlock("sign", BlockSign::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> WIG_WAG = BLOCKS.registerBlock("wig_wag", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> SAFETRAN_TYPE_3 = BLOCKS.registerBlock("safetran_type_3", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> SAFETRAN_MECHANICAL = BLOCKS.registerBlock("safetran_mechanical", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> WCH_MECHANICAL_BELL = BLOCKS.registerBlock("wch_mechanical_bell", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> WCH_BELL = BLOCKS.registerBlock("wch_bell", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> VERTICAL_WIG_WAG = BLOCKS.registerBlock("vertical_wig_wag", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> STREET_SIGN = BLOCKS.registerBlock("street_sign", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> TRAFFIC_SENSOR_LEFT = BLOCKS.registerBlock("traffic_sensor_left", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> TRAFFIC_SENSOR_RIGHT = BLOCKS.registerBlock("traffic_sensor_right", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> TRAFFIC_SENSOR_STRAIGHT = BLOCKS.registerBlock("traffic_sensor_straight", Block::new, PLACEHOLDER_PROPS);
 }

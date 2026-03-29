@@ -64,6 +64,7 @@ public class ModBlockEntities {
                             ModBlocks.CROSSING_GATE_BASE.get(),
                             ModBlocks.STAND.get(),
                             ModBlocks.HORIZONTAL_POLE.get(),
-                            ModBlocks.SIGNAL_ARM.get()
+                            ModBlocks.SIGNAL_ARM.get(),
+                            ModBlocks.SIGN.get()
                     ));
 }

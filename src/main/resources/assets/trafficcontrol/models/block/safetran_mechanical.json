@@ -1,11 +1,11 @@
 {
 	"credit": "Made by RavenholmZombie using Blockbench",
 	"textures": {
-		"0": "trafficcontrol:blocks/wch_base",
-		"1": "trafficcontrol:blocks/wch_bell",
-		"2": "trafficcontrol:blocks/wch_top",
-		"3": "trafficcontrol:blocks/safetran_plate",
-		"particle": "trafficcontrol:blocks/wch_base"
+		"0": "trafficcontrol:block/wch_base",
+		"1": "trafficcontrol:block/wch_bell",
+		"2": "trafficcontrol:block/wch_top",
+		"3": "trafficcontrol:block/safetran_plate",
+		"particle": "trafficcontrol:block/wch_base"
 	},
 	"elements": [
 		{
