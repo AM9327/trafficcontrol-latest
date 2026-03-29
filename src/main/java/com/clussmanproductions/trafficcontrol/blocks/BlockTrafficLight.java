@@ -87,8 +87,7 @@ public class BlockTrafficLight extends Block implements EntityBlock {
             if (neighborBlock instanceof BlockCrossingGatePole ||
                 neighborBlock instanceof BlockHorizontalPole ||
                 neighborBlock instanceof BlockCrossingGateBase ||
-                neighborBlock instanceof BlockTrafficLight ||
-                neighborBlock instanceof BlockSignalArm) {
+                neighborBlock instanceof BlockTrafficLight) {
                 hasBar = true;
             }
             if (poleDir == null && (neighborBlock instanceof BlockCrossingGatePole

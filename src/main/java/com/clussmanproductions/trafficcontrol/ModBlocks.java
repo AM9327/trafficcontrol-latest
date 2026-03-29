@@ -7,7 +7,6 @@ import com.clussmanproductions.trafficcontrol.blocks.BlockConcreteBarrier;
 import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGateBase;
 import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGatePole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
-import com.clussmanproductions.trafficcontrol.blocks.BlockSignalArm;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLight;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficRail;
 import com.clussmanproductions.trafficcontrol.blocks.BlockType3Barrier;
@@ -138,5 +137,4 @@ public class ModBlocks {
     public static final DeferredBlock<Block> STAND = BLOCKS.registerBlock("stand", BlockCrossingGateBase::new, POLE_PROPS);
     public static final DeferredBlock<Block> CROSSING_GATE_POLE = BLOCKS.registerBlock("crossing_gate_pole", BlockCrossingGatePole::new, POLE_PROPS);
     public static final DeferredBlock<Block> HORIZONTAL_POLE = BLOCKS.registerBlock("horizontal_pole", BlockHorizontalPole::new, POLE_PROPS);
-    public static final DeferredBlock<Block> SIGNAL_ARM = BLOCKS.registerBlock("signal_arm", BlockSignalArm::new, POLE_PROPS);
 }
