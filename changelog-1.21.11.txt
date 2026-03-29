@@ -52,3 +52,4 @@ Traffic Control Mod - Session Changelog (3/28/26) (9:10 PM)
 - Removed redundant full-length bar from TL toward horizontal pole (HP already renders short arm, TL shift bridges the gap)
 - Added short pole arm from TL toward crossing gate pole for CG-pole-mounted TLs
 - Fixed gap when TL is between HP and CG pole: TL no longer shifts when it has pole connections on both sides
+- HP now renders ext arms toward back-to-back TL pairs for proper pole connection (same as crossing_gate_pole)
