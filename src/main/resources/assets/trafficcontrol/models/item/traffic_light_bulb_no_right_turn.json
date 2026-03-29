@@ -2,6 +2,6 @@
 	"parent": "trafficcontrol:item/traffic_light_bulb",
 	"textures":
 	{
-		"lampTex": "trafficcontrol:blocks/no_right_turn"
+		"lampTex": "trafficcontrol:block/no_right_turn"
 	}
 }

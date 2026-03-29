@@ -1,0 +1,6 @@
+{
+    "model": {
+        "type": "minecraft:model",
+        "model": "trafficcontrol:item/traffic_light_bulb_yellow_arrow_left"
+    }
+}

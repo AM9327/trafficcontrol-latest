@@ -1,8 +1,8 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "trafficcontrol:blocks/black",
-		"2": "trafficcontrol:blocks/generic"
+		"0": "trafficcontrol:block/black",
+		"2": "trafficcontrol:block/generic"
 	},
 	"elements": [
 		{

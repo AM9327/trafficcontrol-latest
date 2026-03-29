@@ -68,6 +68,25 @@ public class ModCreativeTab {
                         output.accept(ModItems.STAND.get());
                         output.accept(ModItems.CROSSING_GATE_POLE.get());
                         output.accept(ModItems.HORIZONTAL_POLE.get());
+                        // Traffic Light Bulbs
+                        output.accept(ModItems.BULB_RED.get());
+                        output.accept(ModItems.BULB_YELLOW.get());
+                        output.accept(ModItems.BULB_GREEN.get());
+                        output.accept(ModItems.BULB_RED_ARROW_LEFT.get());
+                        output.accept(ModItems.BULB_YELLOW_ARROW_LEFT.get());
+                        output.accept(ModItems.BULB_GREEN_ARROW_LEFT.get());
+                        output.accept(ModItems.BULB_RED_ARROW_RIGHT.get());
+                        output.accept(ModItems.BULB_YELLOW_ARROW_RIGHT.get());
+                        output.accept(ModItems.BULB_GREEN_ARROW_RIGHT.get());
+                        output.accept(ModItems.BULB_STRAIGHT_RED.get());
+                        output.accept(ModItems.BULB_STRAIGHT_YELLOW.get());
+                        output.accept(ModItems.BULB_STRAIGHT_GREEN.get());
+                        output.accept(ModItems.BULB_CROSS.get());
+                        output.accept(ModItems.BULB_DONT_CROSS.get());
+                        output.accept(ModItems.BULB_NO_RIGHT_TURN.get());
+                        output.accept(ModItems.BULB_NO_LEFT_TURN.get());
+                        output.accept(ModItems.BULB_TUNNEL_GREEN.get());
+                        output.accept(ModItems.BULB_TUNNEL_RED.get());
                     })
                     .build());
 }

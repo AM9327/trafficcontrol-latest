@@ -88,4 +88,36 @@ public class ModItems {
     public static final DeferredItem<BlockItem> STAND = ITEMS.registerSimpleBlockItem("stand", ModBlocks.STAND);
     public static final DeferredItem<BlockItem> CROSSING_GATE_POLE = ITEMS.registerSimpleBlockItem("crossing_gate_pole", ModBlocks.CROSSING_GATE_POLE);
     public static final DeferredItem<BlockItem> HORIZONTAL_POLE = ITEMS.registerSimpleBlockItem("horizontal_pole", ModBlocks.HORIZONTAL_POLE);
+
+    // Traffic Light Bulbs — basic colors
+    public static final DeferredItem<Item> BULB_RED = ITEMS.registerSimpleItem("traffic_light_bulb_red", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_YELLOW = ITEMS.registerSimpleItem("traffic_light_bulb_yellow", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_GREEN = ITEMS.registerSimpleItem("traffic_light_bulb_green", new Item.Properties().stacksTo(16));
+
+    // Traffic Light Bulbs — left arrows
+    public static final DeferredItem<Item> BULB_RED_ARROW_LEFT = ITEMS.registerSimpleItem("traffic_light_bulb_red_arrow_left", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_YELLOW_ARROW_LEFT = ITEMS.registerSimpleItem("traffic_light_bulb_yellow_arrow_left", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_GREEN_ARROW_LEFT = ITEMS.registerSimpleItem("traffic_light_bulb_green_arrow_left", new Item.Properties().stacksTo(16));
+
+    // Traffic Light Bulbs — right arrows
+    public static final DeferredItem<Item> BULB_RED_ARROW_RIGHT = ITEMS.registerSimpleItem("traffic_light_bulb_red_arrow_right", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_YELLOW_ARROW_RIGHT = ITEMS.registerSimpleItem("traffic_light_bulb_yellow_arrow_right", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_GREEN_ARROW_RIGHT = ITEMS.registerSimpleItem("traffic_light_bulb_green_arrow_right", new Item.Properties().stacksTo(16));
+
+    // Traffic Light Bulbs — straight arrows
+    public static final DeferredItem<Item> BULB_STRAIGHT_RED = ITEMS.registerSimpleItem("traffic_light_bulb_straight_red", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_STRAIGHT_YELLOW = ITEMS.registerSimpleItem("traffic_light_bulb_straight_yellow", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_STRAIGHT_GREEN = ITEMS.registerSimpleItem("traffic_light_bulb_straight_green", new Item.Properties().stacksTo(16));
+
+    // Traffic Light Bulbs — pedestrian signals
+    public static final DeferredItem<Item> BULB_CROSS = ITEMS.registerSimpleItem("traffic_light_bulb_cross", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_DONT_CROSS = ITEMS.registerSimpleItem("traffic_light_bulb_dont_cross", new Item.Properties().stacksTo(16));
+
+    // Traffic Light Bulbs — no turn
+    public static final DeferredItem<Item> BULB_NO_RIGHT_TURN = ITEMS.registerSimpleItem("traffic_light_bulb_no_right_turn", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_NO_LEFT_TURN = ITEMS.registerSimpleItem("traffic_light_bulb_no_left_turn", new Item.Properties().stacksTo(16));
+
+    // Traffic Light Bulbs — tunnel
+    public static final DeferredItem<Item> BULB_TUNNEL_GREEN = ITEMS.registerSimpleItem("traffic_light_bulb_tunnelgreen", new Item.Properties().stacksTo(16));
+    public static final DeferredItem<Item> BULB_TUNNEL_RED = ITEMS.registerSimpleItem("traffic_light_bulb_tunnelred", new Item.Properties().stacksTo(16));
 }
