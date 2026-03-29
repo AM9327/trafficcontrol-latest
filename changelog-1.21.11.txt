@@ -56,6 +56,19 @@ Traffic Control Mod - Session Changelog (3/29/26) (1:09 AM)
 - Fixed bug: TL hitboxes now always visible/breakable even when holding a TL frame item
 - Removed signal_arm block, item, model, and blockstate (replaced by direct connections between traffic lights, crossing gate poles/bases, and horizontal poles)
 
+### Traffic Light Bulbs
+- Added all 18 traffic light bulb items as separate registered items (NeoForge 1.21 no longer supports metadata-based item variants)
+- Basic bulbs: Red, Yellow, Green
+- Left arrow bulbs: Red, Yellow, Green Arrow Left
+- Right arrow bulbs: Red, Yellow, Green Arrow Right
+- Straight arrow bulbs: Straight Red, Straight Yellow, Straight Green
+- Pedestrian bulbs: Cross, Don't Cross
+- No turn bulbs: No Right Turn, No Left Turn
+- Tunnel bulbs: Tunnel Green, Tunnel Red (restored from v0.4.1)
+- Fixed texture paths from blocks/ to block/ for NeoForge 1.21 compatibility
+- Added item definition files in assets/trafficcontrol/items/ (required by NeoForge 1.21)
+- All bulbs appear in the Traffic Control creative tab with 3D models and textures
+
 ### Credits & Authors
 - Added Gamearoo to authors list and credits for contributing items and textures
 - Added AM9327 to credits for helping port the mod to the latest versions of Minecraft
