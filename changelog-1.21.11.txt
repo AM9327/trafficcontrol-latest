@@ -1,4 +1,4 @@
-Traffic Control Mod - Session Changelog (3/29/26) (1:09 AM)
+Traffic Control Mod - Session Changelog (3/29/26) (3:38 AM)
 ====================================================
 
 ### Commits
@@ -68,6 +68,23 @@ Traffic Control Mod - Session Changelog (3/29/26) (1:09 AM)
 - Fixed texture paths from blocks/ to block/ for NeoForge 1.21 compatibility
 - Added item definition files in assets/trafficcontrol/items/ (required by NeoForge 1.21)
 - All bulbs appear in the Traffic Control creative tab with 3D models and textures
+
+### New Creative Tab Items
+- Added 19 placeholder blocks to the creative tab: Pedestrian Button, Crossing Gate, Crossing Lamps, Crossing Gate Crossbuck, Overhead (Pole), Overhead, Overhead Lamps, Overhead Crossbuck, Sign, Upper Quadrant Wig Wag, Lower Quadrant Wig Wag, SafeTran Type 3 Electronic Bell, SafeTran Mechanical Bell, WCH Mechanical Bell, WCH Electronic Bell, Street Sign, Traffic Sensor (Left), Traffic Sensor (Straight), Traffic Sensor (Right)
+- Fixed all old Forge blockstates to NeoForge 1.21 format
+- Fixed texture paths from blocks/ to block/ for all new block models
+- Added sensor display transforms matching old mod's inventory rendering
+- Street sign uses flat 2D item model with item/generated parent
+
+### Sign Block (WIP)
+- Created BlockSign class with HorizontalDirectionalBlock for N/S/E/W facing
+- Sign faces toward the player when placed
+- Circular sign face uses cutout rendering for transparent corners
+- Sign is a block entity that renders arms toward adjacent HP, CG poles, CG bases, and traffic lights
+- HP and CG poles render arms toward signs
+- Traffic lights render bars toward signs
+- Added ClientSetup for programmatic cutout render layer
+- Still needs improvements: sign texture selection, full tile entity renderer port
 
 ### Credits & Authors
 - Added Gamearoo to authors list and credits for contributing items and textures
