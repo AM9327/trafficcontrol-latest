@@ -46,6 +46,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":horizontal_bar_connect");
     public static final StandaloneModelKey<BlockStateModel> TRAFFIC_LIGHT_CONNECT_MODEL_KEY =
             new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":traffic_light_connect");
+    public static final StandaloneModelKey<BlockStateModel> SIGNAL_ARM_BAR_MODEL_KEY =
+            new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":signal_arm_bar");
+    public static final StandaloneModelKey<BlockStateModel> TRAFFIC_LIGHT_PAIRED_MODEL_KEY =
+            new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":traffic_light_paired");
+    public static final StandaloneModelKey<BlockStateModel> TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY =
+            new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":traffic_light_pole_arm");
 
     // PoseStack Y rotations for each cardinal direction
     private static final float[] DIR_ROTATIONS = new float[4];
@@ -84,11 +90,19 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         renderState.horizontalBarDirection = null;
-        renderState.connectsToTrafficLight = false;
+        renderState.mountedOnPole = false;
+        renderState.mountedOnHorizontalPole = false;
+        renderState.pairedAcrossPole = false;
+        renderState.adjacentTrafficLightConnection = false;
+        renderState.hasAdjacentTrafficLight = false;
         renderState.signalArmBarDirection = null;
+        renderState.signalArmConnectsToLight = false;
         renderState.onCrossingGateBase = false;
         renderState.hasSideBySideNeighbor = false;
         renderState.sideBySidePoleDirection = null;
+        renderState.horizontalPoleDirs.clear();
+        renderState.signalArmTrafficLightDirs.clear();
+        renderState.nonCardinalTLDirs.clear();
 
         Level level = blockEntity.getLevel();
         if (level == null) return;
@@ -97,46 +111,117 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         int rotation = state.hasProperty(BlockStateProperties.ROTATION_16)
                 ? state.getValue(BlockStateProperties.ROTATION_16) : 0;
 
-        // Find horizontal bar direction and detect paired-across-pole state
-        if (state.getBlock() instanceof BlockTrafficLight
-                && state.hasProperty(BlockTrafficLight.HAS_HORIZONTAL_BAR)
-                && state.getValue(BlockTrafficLight.HAS_HORIZONTAL_BAR)) {
+        // Signal arm: find adjacent traffic lights to render bars toward
+        if (state.getBlock() instanceof BlockSignalArm) {
             for (Direction dir : Direction.Plane.HORIZONTAL) {
                 Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
-                if (isPoleBlock(neighbor)) {
-                    renderState.horizontalBarDirection = dir;
-                    // Check for paired light on the other side of the pole
-                    BlockPos beyondPole = pos.relative(dir, 2);
-                    BlockState beyondState = level.getBlockState(beyondPole);
-                    if (beyondState.getBlock() instanceof BlockTrafficLight
-                            && beyondState.hasProperty(BlockStateProperties.ROTATION_16)) {
-                        int beyondRot = beyondState.getValue(BlockStateProperties.ROTATION_16);
-                        // Opposite facing = rotation differs by 8 (180 degrees)
-                        if (Math.abs(beyondRot - rotation) == 8) {
-                            renderState.connectsToTrafficLight = true; // paired across pole
+                if (neighbor instanceof BlockTrafficLight) {
+                    renderState.signalArmTrafficLightDirs.add(dir);
+                }
+            }
+        }
+
+        // Horizontal pole: find adjacent traffic lights and crossing gate poles to render ext arms toward
+        if (state.getBlock() instanceof BlockHorizontalPole) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockState neighborState = level.getBlockState(pos.relative(dir));
+                Block neighbor = neighborState.getBlock();
+                if (neighbor instanceof BlockTrafficLight) {
+                    renderState.signalArmTrafficLightDirs.add(dir);
+                    // Check if TL is non-cardinal (not facing exactly N/S/E/W)
+                    if (neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                        int tlRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
+                        if (tlRot % 4 != 0) {
+                            renderState.nonCardinalTLDirs.add(dir);
                         }
                     }
+                } else if (neighbor instanceof BlockCrossingGatePole
+                        || neighbor instanceof BlockCrossingGateBase) {
+                    renderState.signalArmTrafficLightDirs.add(dir);
+                }
+            }
+        }
+
+        // --- Traffic light: detect neighbors with clean separated flags ---
+        Direction poleDir = null;
+
+        if (state.getBlock() instanceof BlockTrafficLight) {
+            // 1. Find adjacent pole — prefer horizontal pole over crossing gate pole for row alignment
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                if (neighbor instanceof BlockHorizontalPole) {
+                    renderState.mountedOnPole = true;
+                    renderState.mountedOnHorizontalPole = true;
+                    poleDir = dir;
+                    renderState.horizontalBarDirection = dir;
                     break;
                 }
-                // Bar toward different-rotation traffic lights (4-way, lights adjacent)
+            }
+            // Fallback: if no horizontal pole, look for crossing gate pole
+            if (poleDir == null) {
+                for (Direction dir : Direction.Plane.HORIZONTAL) {
+                    Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                    if (isVerticalPoleBlock(neighbor)) {
+                        renderState.mountedOnPole = true;
+                        renderState.mountedOnHorizontalPole = false;
+                        poleDir = dir;
+                        renderState.horizontalBarDirection = dir;
+                        break;
+                    }
+                }
+            }
+
+            // 2. Check for true back-to-back pair (pairedAcrossPole)
+            if (poleDir != null && state.hasProperty(BlockStateProperties.ROTATION_16)) {
+                BlockPos beyondPole = pos.relative(poleDir, 2);
+                BlockState beyondState = level.getBlockState(beyondPole);
+                if (beyondState.getBlock() instanceof BlockTrafficLight
+                        && beyondState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                    int beyondRot = beyondState.getValue(BlockStateProperties.ROTATION_16);
+                    if (Math.abs(beyondRot - rotation) == 8) {
+                        renderState.pairedAcrossPole = true;
+                    }
+                }
+            }
+
+            // 3. Check signal arms, horizontal poles, adjacent traffic lights, crossing_gate info
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                if (neighbor instanceof BlockSignalArm) {
+                    renderState.signalArmBarDirection = dir;
+                    Block beyondArm = level.getBlockState(pos.relative(dir, 2)).getBlock();
+                    if (beyondArm instanceof BlockTrafficLight) {
+                        renderState.signalArmConnectsToLight = true;
+                    }
+                }
+                if (neighbor instanceof BlockCrossingGatePole
+                        || neighbor instanceof BlockCrossingGateBase) {
+                    renderState.onCrossingGateBase = true;
+                    // Render horizontal bar toward crossing gate pole to bridge the gap
+                    if (!dir.equals(poleDir)) {
+                        renderState.horizontalPoleDirs.add(dir);
+                    }
+                }
+                // Horizontal pole: don't add to horizontalPoleDirs — the HP renders
+                // its own bar toward the TL from its side, avoiding poke-through
+                if (neighbor instanceof BlockHorizontalPole) {
+                    if (renderState.horizontalBarDirection == null) {
+                        renderState.horizontalBarDirection = dir;
+                    }
+                }
+                // Adjacent traffic light: also track for bar rendering (TL-to-TL connection)
                 if (neighbor instanceof BlockTrafficLight) {
+                    renderState.hasAdjacentTrafficLight = true;
+                    renderState.horizontalPoleDirs.add(dir);
+                    if (renderState.horizontalBarDirection == null) {
+                        renderState.horizontalBarDirection = dir;
+                    }
                     BlockState neighborState = level.getBlockState(pos.relative(dir));
                     int neighborRot = neighborState.hasProperty(BlockStateProperties.ROTATION_16)
                             ? neighborState.getValue(BlockStateProperties.ROTATION_16) : 0;
                     if (neighborRot != rotation) {
-                        renderState.horizontalBarDirection = dir;
-                        renderState.connectsToTrafficLight = true;
-                        break;
+                        renderState.adjacentTrafficLightConnection = true;
                     }
-                }
-                // Signal arm adjacent — traffic light renders the connecting bar
-                if (neighbor instanceof BlockSignalArm) {
-                    renderState.signalArmBarDirection = dir;
-                }
-                // Detect crossing_gate_pole/base adjacent — determines bar model
-                if (neighbor instanceof BlockCrossingGatePole
-                        || neighbor instanceof BlockCrossingGateBase) {
-                    renderState.onCrossingGateBase = true;
                 }
             }
         }
@@ -146,6 +231,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         return block instanceof BlockCrossingGatePole
                 || block instanceof BlockHorizontalPole
                 || block instanceof BlockCrossingGateBase;
+    }
+
+    private static boolean isVerticalPoleBlock(Block block) {
+        return block instanceof BlockCrossingGatePole
+                || block instanceof BlockHorizontalPole;
     }
 
     @Override
@@ -162,7 +252,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         boolean isTrafficLight = state.getBlock() instanceof BlockTrafficLight;
         boolean sideBySide = isTrafficLight && renderState.hasSideBySideNeighbor;
 
-        // Pick body model: connect model for side-by-side, base model otherwise
+        // Pick body model: always use the block's own model so all variants render correctly
         BlockStateModel bodyModel = baseModel;
         BlockStateModel connectModel = null;
         if (sideBySide) {
@@ -174,8 +264,23 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
 
+        // --- Pole-mounted shift ---
+        // Shift toward pole only when there's no adjacent traffic light (side-by-side row)
+        // When TLs are adjacent, keep centered so frames connect flush
+        boolean shiftToPole = isTrafficLight && renderState.mountedOnPole
+                && renderState.horizontalBarDirection != null
+                && !renderState.hasAdjacentTrafficLight;
+        float poleShiftAmount = 9.0f / 16.0f; // 9 pixels toward pole
+
         // --- Render body (rotated) ---
         poseStack.pushPose();
+
+        // World-space shift toward pole (applied after rotation in transform order)
+        if (shiftToPole) {
+            Direction poleDir = renderState.horizontalBarDirection;
+            poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
+                    poleDir.getStepZ() * poleShiftAmount);
+        }
 
         poseStack.translate(0.5f, 0.0f, 0.5f);
         poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
@@ -208,21 +313,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             poseStack.popPose();
         }
 
-        // Horizontal bar — skip for traffic lights (use placed signal_arm blocks instead)
+        // Horizontal bar — for non-TLs, use horizontalBarDirection
         if (renderState.horizontalBarDirection != null && !sideBySide && !isTrafficLight) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             float barYRot = DIR_ROTATIONS[renderState.horizontalBarDirection.get2DDataValue()];
-
-            StandaloneModelKey<BlockStateModel> barKey;
-            if (isTrafficLight) {
-                // N/S bar direction uses the full-length horizontal_pole model
-                boolean barIsNS = (barYRot == 0 || barYRot == 180);
-                barKey = barIsNS ? HORIZONTAL_POLE_MODEL_KEY : HORIZONTAL_BAR_MODEL_KEY;
-            } else {
-                barKey = (renderState.rotationDegrees % 90 == 0)
-                        ? HORIZONTAL_BAR_MODEL_KEY : HORIZONTAL_BAR_MODEL_KEY;
-            }
-            BlockStateModel barModel = modelManager.getStandaloneModel(barKey);
+            BlockStateModel barModel = modelManager.getStandaloneModel(HORIZONTAL_POLE_MODEL_KEY);
             if (barModel != null) {
                 poseStack.pushPose();
                 if (barYRot != 0) {
@@ -239,13 +334,91 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // Traffic light bar: on crossing_gate_base → signal_arm connector, else → horizontal_pole
-        if (isTrafficLight && !sideBySide && renderState.signalArmBarDirection != null) {
+        // Traffic lights: render bar toward each adjacent horizontal pole
+        if (isTrafficLight && !renderState.horizontalPoleDirs.isEmpty()) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
-            float barYRot = DIR_ROTATIONS[renderState.signalArmBarDirection.get2DDataValue()];
-            StandaloneModelKey<BlockStateModel> barKey = HORIZONTAL_POLE_MODEL_KEY;
-            BlockStateModel barModel = modelManager.getStandaloneModel(barKey);
+            for (Direction dir : renderState.horizontalPoleDirs) {
+                // If there's a connection on the opposite side (pole or another horizontal pole),
+                // use the full-length model so the bar passes through the TL frame.
+                // Otherwise use the short arm (TL is at the end of a run).
+                Direction opposite = dir.getOpposite();
+                boolean hasOppositeConnection = renderState.mountedOnPole
+                        || renderState.horizontalPoleDirs.contains(opposite);
+
+                StandaloneModelKey<BlockStateModel> barKey = hasOppositeConnection
+                        ? HORIZONTAL_POLE_MODEL_KEY : SIGNAL_ARM_BAR_MODEL_KEY;
+                BlockStateModel barModel = modelManager.getStandaloneModel(barKey);
+                if (barModel != null) {
+                    float barYRot2 = DIR_ROTATIONS[dir.get2DDataValue()];
+                    poseStack.pushPose();
+                    // Shift bar with the body so it stays connected when pole-mounted
+                    if (shiftToPole) {
+                        Direction poleDir2 = renderState.horizontalBarDirection;
+                        poseStack.translate(poleDir2.getStepX() * poleShiftAmount, 0,
+                                poleDir2.getStepZ() * poleShiftAmount);
+                    }
+                    if (barYRot2 != 0) {
+                        poseStack.translate(0.5f, 0.0f, 0.5f);
+                        poseStack.mulPose(Axis.YP.rotationDegrees(barYRot2));
+                        poseStack.translate(-0.5f, 0.0f, -0.5f);
+                    }
+                    nodeCollector.submitBlockModel(
+                            poseStack, renderType, barModel,
+                            1.0f, 1.0f, 1.0f,
+                            renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+                    );
+                    poseStack.popPose();
+                }
+            }
+        }
+
+        // Traffic light to pole (single, not paired): render connecting bar
+        // Only render for horizontal poles — CG poles handle the connection via their
+        // own blockstate ext arm, and the TL bar would poke through the body's side
+        // Skip for non-cardinal rotations — the bar clips through the angled body
+        boolean isCardinalRotation = ((int) renderState.rotationDegrees % 90) == 0;
+        if (isTrafficLight && !sideBySide && renderState.mountedOnPole
+                && renderState.mountedOnHorizontalPole
+                && !renderState.pairedAcrossPole
+                && renderState.horizontalBarDirection != null
+                && renderState.signalArmBarDirection == null
+                && isCardinalRotation) {
+            ModelManager modelManager = Minecraft.getInstance().getModelManager();
+            BlockStateModel barModel = modelManager.getStandaloneModel(SIGNAL_ARM_BAR_MODEL_KEY);
             if (barModel != null) {
+                float barYRot = DIR_ROTATIONS[renderState.horizontalBarDirection.get2DDataValue()];
+                poseStack.pushPose();
+                {
+                    // Shift bar half as much as the body so it bridges from
+                    // the body's back face into the CG pole block without poking
+                    Direction poleDir = renderState.horizontalBarDirection;
+                    float barShift = poleShiftAmount / 2.0f;
+                    poseStack.translate(poleDir.getStepX() * barShift, 0,
+                            poleDir.getStepZ() * barShift);
+                }
+                if (barYRot != 0) {
+                    poseStack.translate(0.5f, 0.0f, 0.5f);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(barYRot));
+                    poseStack.translate(-0.5f, 0.0f, -0.5f);
+                }
+                nodeCollector.submitBlockModel(
+                        poseStack, renderType, barModel,
+                        1.0f, 1.0f, 1.0f,
+                        renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+                );
+                poseStack.popPose();
+            }
+        }
+
+        // Traffic light paired across pole: no arm needed, frame is shifted to the pole
+
+        // Traffic light to signal_arm: render bar when another traffic light is beyond the arm
+        if (isTrafficLight && !sideBySide && renderState.signalArmBarDirection != null
+                && renderState.signalArmConnectsToLight) {
+            ModelManager modelManager = Minecraft.getInstance().getModelManager();
+            BlockStateModel barModel = modelManager.getStandaloneModel(SIGNAL_ARM_BAR_MODEL_KEY);
+            if (barModel != null) {
+                float barYRot = DIR_ROTATIONS[renderState.signalArmBarDirection.get2DDataValue()];
                 poseStack.pushPose();
                 if (barYRot != 0) {
                     poseStack.translate(0.5f, 0.0f, 0.5f);
@@ -260,5 +433,38 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 poseStack.popPose();
             }
         }
+
+        // Signal arm / horizontal pole: render ext arm toward each adjacent traffic light
+        if ((state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole)
+                && !renderState.signalArmTrafficLightDirs.isEmpty()) {
+            ModelManager modelManager = Minecraft.getInstance().getModelManager();
+            boolean isHorizPole = state.getBlock() instanceof BlockHorizontalPole;
+            for (Direction dir : renderState.signalArmTrafficLightDirs) {
+                // For HP toward non-cardinal TLs, use short arm so bar doesn't poke through
+                StandaloneModelKey<BlockStateModel> modelKey;
+                if (isHorizPole && renderState.nonCardinalTLDirs.contains(dir)) {
+                    modelKey = TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY;
+                } else {
+                    modelKey = isHorizPole ? HORIZONTAL_POLE_MODEL_KEY : SIGNAL_ARM_BAR_MODEL_KEY;
+                }
+                BlockStateModel poleModel = modelManager.getStandaloneModel(modelKey);
+                if (poleModel != null) {
+                    float barYRot = DIR_ROTATIONS[dir.get2DDataValue()];
+                    poseStack.pushPose();
+                    if (barYRot != 0) {
+                        poseStack.translate(0.5f, 0.0f, 0.5f);
+                        poseStack.mulPose(Axis.YP.rotationDegrees(barYRot));
+                        poseStack.translate(-0.5f, 0.0f, -0.5f);
+                    }
+                    nodeCollector.submitBlockModel(
+                            poseStack, renderType, poleModel,
+                            1.0f, 1.0f, 1.0f,
+                            renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+                    );
+                    poseStack.popPose();
+                }
+            }
+        }
+
     }
 }

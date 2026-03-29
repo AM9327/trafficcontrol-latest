@@ -1,8 +1,10 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
+import com.clussmanproductions.trafficcontrol.item.ItemTrafficLightFrame;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
@@ -13,6 +15,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -72,6 +75,21 @@ public class BlockCrossingGatePole extends Block {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        // When player holds a TL frame and there's a horizontal pole adjacent,
+        // become transparent so clicks reach the HP behind
+        if (context instanceof EntityCollisionContext entityContext) {
+            var entity = entityContext.getEntity();
+            if (entity instanceof Player player
+                    && player.getMainHandItem().getItem() instanceof ItemTrafficLightFrame) {
+                for (Direction dir : Direction.Plane.HORIZONTAL) {
+                    if (level.getBlockState(pos.relative(dir)).getBlock() instanceof BlockHorizontalPole) {
+                        return Shapes.empty();
+                    }
+                }
+                return Shapes.block();
+            }
+        }
+
         VoxelShape shape = POLE;
         if (state.getValue(NORTH)) shape = Shapes.or(shape, NORTH_ARM);
         if (state.getValue(SOUTH)) shape = Shapes.or(shape, SOUTH_ARM);

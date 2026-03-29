@@ -34,3 +34,18 @@ Traffic Control Mod - Session Changelog (2026-03-26)
 ### Horizontal Pole Model
 - Extended horizontal_pole.json dimensions (Z=-9 to Z=25) so the bar properly connects to traffic light frames in all directions
 - Signal arm bar in RotatableBlockEntityRenderer.java now uses horizontal_pole model for all directions
+
+### Traffic Light Placement (WIP) (Beta 1)
+- Traffic lights can be mounted on crossing gate poles, horizontal poles, and crossing gate bases
+- Pole-mounted TLs shift 9/16 toward the pole for flush mounting
+- Side-by-side TL rows connect flush (no pole shift when adjacent TLs detected)
+- Back-to-back TL pairs across a pole block are detected and handled
+- TLs become transparent (click-through) when holding a TL frame for easy row placement
+- Hitbox uses split top/bottom shapes for solo pole-mounted TLs, normal shapes for side-by-side rows
+- HP placement logic in ItemTrafficLightFrame finds empty positions around horizontal poles
+- CG_POLE connects to BlockHorizontalPole, BlockTrafficLight, BlockCrossingGatePole via blockstate arms
+- HP connects to BlockTrafficLight, BlockCrossingGatePole, BlockCrossingGateBase, BlockHorizontalPole
+- HP renders ext arms toward adjacent TLs, CG poles, and CG bases
+- Non-cardinal TL rotations use short pole arm model (traffic_light_pole_arm) to prevent bar poke-through
+- TL-to-pole connecting bar skipped for non-cardinal rotations to avoid clipping through angled body
+- Added new models: signal_arm_bar.json, traffic_light_paired.json, traffic_light_pole_arm.json

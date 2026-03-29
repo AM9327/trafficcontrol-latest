@@ -1,7 +1,10 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
+import com.clussmanproductions.trafficcontrol.item.ItemTrafficLightFrame;
 import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.block.Block;
@@ -15,6 +18,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.RotationSegment;
 import net.minecraft.world.phys.shapes.CollisionContext;
+import net.minecraft.world.phys.shapes.EntityCollisionContext;
+import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
@@ -42,6 +47,19 @@ public class BlockCrossingGateBase extends Block implements EntityBlock {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
+        // When player holds a TL frame and there's a horizontal pole adjacent,
+        // become transparent so clicks reach the HP behind
+        if (context instanceof EntityCollisionContext entityContext) {
+            var entity = entityContext.getEntity();
+            if (entity instanceof Player player
+                    && player.getMainHandItem().getItem() instanceof ItemTrafficLightFrame) {
+                for (Direction dir : Direction.Plane.HORIZONTAL) {
+                    if (level.getBlockState(pos.relative(dir)).getBlock() instanceof BlockHorizontalPole) {
+                        return Shapes.empty();
+                    }
+                }
+            }
+        }
         return SHAPE;
     }
 
