@@ -144,13 +144,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 Direction opposite = dir.getOpposite();
                 boolean isBackToBack = adjacentTLRotations.containsKey(opposite)
                         && Math.abs(adjacentTLRotations.get(opposite) - tlRot) == 8;
-                if (!isBackToBack) {
-                    renderState.signalArmTrafficLightDirs.add(dir);
-                    if (tlRot % 4 != 0) {
-                        renderState.nonCardinalTLDirs.add(dir);
-                    } else {
-                        renderState.cardinalTLDirs.add(dir);
-                    }
+                renderState.signalArmTrafficLightDirs.add(dir);
+                if (tlRot % 4 != 0) {
+                    renderState.nonCardinalTLDirs.add(dir);
+                } else {
+                    renderState.cardinalTLDirs.add(dir);
                 }
             }
         }
