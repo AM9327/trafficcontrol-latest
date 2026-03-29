@@ -1,4 +1,4 @@
-Traffic Control Mod - Session Changelog (3/28/26) (9:10 PM)
+Traffic Control Mod - Session Changelog (3/28/26) (11:30 PM)
 ====================================================
 
 ### Commits
@@ -35,7 +35,7 @@ Traffic Control Mod - Session Changelog (3/28/26) (9:10 PM)
 - Extended horizontal_pole.json dimensions (Z=-9 to Z=25) so the bar properly connects to traffic light frames in all directions
 - Signal arm bar in RotatableBlockEntityRenderer.java now uses horizontal_pole model for all directions
 
-### Traffic Light Placement (WIP) (Beta 1.1)
+### Traffic Light Placement (WIP) (Beta 1.2)
 - Traffic lights can be mounted on crossing gate poles, horizontal poles, and crossing gate bases
 - Pole-mounted TLs shift 9/16 toward the pole for flush mounting
 - Side-by-side TL rows connect flush (no pole shift when adjacent TLs detected)
