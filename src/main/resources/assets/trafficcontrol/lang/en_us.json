@@ -45,5 +45,6 @@
     "block.trafficcontrol.stand": "Stand",
     "block.trafficcontrol.crossing_gate_pole": "Pole",
     "block.trafficcontrol.horizontal_pole": "Horizontal Pole",
+    "block.trafficcontrol.signal_arm": "Signal Arm",
     "itemGroup.trafficcontrol": "Traffic Control"
 }
