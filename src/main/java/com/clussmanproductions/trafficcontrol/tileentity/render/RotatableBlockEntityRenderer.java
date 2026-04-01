@@ -105,6 +105,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.signalArmTrafficLightDirs.clear();
         renderState.nonCardinalTLDirs.clear();
         renderState.cardinalTLDirs.clear();
+        renderState.signDirs.clear();
 
         Level level = blockEntity.getLevel();
         if (level == null) return;
@@ -150,6 +151,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         || neighbor instanceof BlockCrossingGateBase
                         || neighbor instanceof BlockSign) {
                     renderState.signalArmTrafficLightDirs.add(dir);
+                    if (neighbor instanceof BlockSign) {
+                        renderState.signDirs.add(dir);
+                    }
                 }
             }
             // Second pass: add TLs, but skip back-to-back pairs (opposite dirs, rotation diff of 8)
@@ -466,22 +470,25 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // Signal arm / horizontal pole: render ext arm toward each adjacent traffic light
+        // Signal arm / horizontal pole / sign: render ext arm toward each adjacent block
         if ((state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole || state.getBlock() instanceof BlockSign)
                 && !renderState.signalArmTrafficLightDirs.isEmpty()) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             boolean isHorizPole = state.getBlock() instanceof BlockHorizontalPole;
             for (Direction dir : renderState.signalArmTrafficLightDirs) {
-                // For HP toward any TL, use short arm — TL renders its own bar from its side
-                // For HP toward CG poles/bases, use full pole model
                 boolean isTowardTL = isHorizPole
                         && (renderState.nonCardinalTLDirs.contains(dir)
                             || renderState.cardinalTLDirs.contains(dir));
                 StandaloneModelKey<BlockStateModel> modelKey;
                 if (isTowardTL) {
                     modelKey = TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY;
+                } else if (isHorizPole && renderState.signDirs.contains(dir)) {
+                    modelKey = TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY;
                 } else {
-                    modelKey = isHorizPole ? HORIZONTAL_POLE_MODEL_KEY : SIGNAL_ARM_BAR_MODEL_KEY;
+                    boolean isSignBlock = state.getBlock() instanceof BlockSign;
+                    modelKey = isHorizPole ? HORIZONTAL_POLE_MODEL_KEY
+                            : isSignBlock ? TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY
+                            : SIGNAL_ARM_BAR_MODEL_KEY;
                 }
                 BlockStateModel poleModel = modelManager.getStandaloneModel(modelKey);
                 if (poleModel != null) {

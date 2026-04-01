@@ -1,4 +1,4 @@
-Traffic Control Mod - Session Changelog (3/29/26) (3:38 AM)
+Traffic Control Mod - Session Changelog (3/31/26) (10:55 PM)
 ====================================================
 
 ### Commits
@@ -84,6 +84,8 @@ Traffic Control Mod - Session Changelog (3/29/26) (3:38 AM)
 - HP and CG poles render arms toward signs
 - Traffic lights render bars toward signs
 - Added ClientSetup for programmatic cutout render layer
+- Fixed sign pole showing through cutout sign face by removing pole's front-facing face
+- HP and sign use short arm model (traffic_light_pole_arm) for connections to avoid poke-through
 - Still needs improvements: sign texture selection, full tile entity renderer port
 
 ### Credits & Authors

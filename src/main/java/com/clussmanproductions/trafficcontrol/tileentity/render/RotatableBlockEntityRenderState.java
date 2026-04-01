@@ -52,4 +52,7 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
 
     // Horizontal pole: directions toward adjacent cardinal TLs (use short arm model)
     public List<Direction> cardinalTLDirs = new ArrayList<>();
+
+    // Horizontal pole: directions toward adjacent signs (use short arm to avoid poking through)
+    public List<Direction> signDirs = new ArrayList<>();
 }
