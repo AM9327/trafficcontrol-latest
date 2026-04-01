@@ -55,4 +55,7 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
 
     // Horizontal pole: directions toward adjacent signs (use short arm to avoid poking through)
     public List<Direction> signDirs = new ArrayList<>();
+
+    // Crossing gate pole: directions with connection arms
+    public List<Direction> cgPoleArmDirs = new ArrayList<>();
 }

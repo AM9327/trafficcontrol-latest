@@ -1,8 +1,5 @@
 {
     "variants": {
-        "facing=north": { "model": "trafficcontrol:block/sign_item" },
-        "facing=south": { "model": "trafficcontrol:block/sign_item", "y": 180 },
-        "facing=west": { "model": "trafficcontrol:block/sign_item", "y": 270 },
-        "facing=east": { "model": "trafficcontrol:block/sign_item", "y": 90 }
+        "": { "model": "trafficcontrol:block/sign_item" }
     }
 }

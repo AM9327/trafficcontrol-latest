@@ -2,7 +2,6 @@ package com.clussmanproductions.trafficcontrol.blocks;
 
 import com.clussmanproductions.trafficcontrol.ModBlockEntities;
 import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
-import com.mojang.serialization.MapCodec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.item.context.BlockPlaceContext;
@@ -10,40 +9,38 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
-import net.minecraft.world.level.block.HorizontalDirectionalBlock;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
-public class BlockSign extends HorizontalDirectionalBlock implements IHorizontalPoleConnectable, EntityBlock {
+public class BlockSign extends Block implements IHorizontalPoleConnectable, EntityBlock {
 
-    public static final MapCodec<BlockSign> CODEC = simpleCodec(BlockSign::new);
-
-    @Override
-    protected MapCodec<? extends HorizontalDirectionalBlock> codec() {
-        return CODEC;
-    }
+    public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
 
     private static final VoxelShape SHAPE = Block.box(6, 0, 6, 10, 16, 10);
 
     public BlockSign(BlockBehaviour.Properties properties) {
         super(properties);
-        this.registerDefaultState(this.stateDefinition.any().setValue(FACING, Direction.NORTH));
+        this.registerDefaultState(this.stateDefinition.any().setValue(ROTATION, 0));
     }
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(FACING);
+        builder.add(ROTATION);
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return this.defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        return this.defaultBlockState().setValue(ROTATION,
+                RotationSegment.convertToSegment(context.getRotation()));
     }
 
     @Override
@@ -58,7 +55,7 @@ public class BlockSign extends HorizontalDirectionalBlock implements IHorizontal
 
     @Override
     protected RenderShape getRenderShape(BlockState state) {
-        return RenderShape.MODEL;
+        return RenderShape.INVISIBLE;
     }
 
     @Override

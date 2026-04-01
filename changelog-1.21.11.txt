@@ -1,4 +1,4 @@
-Traffic Control Mod - Session Changelog (3/31/26) (10:55 PM)
+Traffic Control Mod - Session Changelog (4/1/26) (12:00 AM)
 ====================================================
 
 ### Commits
@@ -77,16 +77,20 @@ Traffic Control Mod - Session Changelog (3/31/26) (10:55 PM)
 - Street sign uses flat 2D item model with item/generated parent
 
 ### Sign Block (WIP)
-- Created BlockSign class with HorizontalDirectionalBlock for N/S/E/W facing
-- Sign faces toward the player when placed
-- Circular sign face uses cutout rendering for transparent corners
-- Sign is a block entity that renders arms toward adjacent HP, CG poles, CG bases, and traffic lights
-- HP and CG poles render arms toward signs
-- Traffic lights render bars toward signs
-- Added ClientSetup for programmatic cutout render layer
-- Fixed sign pole showing through cutout sign face by removing pole's front-facing face
+- BlockSign now uses ROTATION_16 for 16-direction rotation (was HorizontalDirectionalBlock with 4 directions)
+- Sign faces toward the player when placed, supports all 16 angles like traffic lights
+- RenderShape.INVISIBLE — block entity renderer handles body + arms with cutout render type
+- Sign face moved to z=5 (in front of pole at z=7-9) to prevent pole showing through cutout transparency
 - HP and sign use short arm model (traffic_light_pole_arm) for connections to avoid poke-through
+- Sign inventory icon uses flat 2D circle texture instead of 3D block model
 - Still needs improvements: sign texture selection, full tile entity renderer port
+
+### Crossing Gate Pole
+- BlockCrossingGatePole now uses ROTATION_16 for 16-direction rotation
+- Implements EntityBlock with RotatableBlockEntity (registered in ModBlockEntities)
+- RenderShape.INVISIBLE — block entity renderer handles body + connection arms
+- Connection arms rendered via BE renderer using traffic_light_pole_arm model based on NORTH/SOUTH/EAST/WEST properties
+- Keeps existing auto-connect behavior for adjacent blocks (HP, TL, CG poles, signs)
 
 ### Credits & Authors
 - Added Gamearoo to authors list and credits for contributing items and textures

@@ -1,6 +1,7 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
 import com.clussmanproductions.trafficcontrol.item.ItemTrafficLightFrame;
+import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
@@ -10,17 +11,25 @@ import net.minecraft.world.level.BlockGetter;
 import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.ScheduledTickAccess;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.EntityBlock;
+import net.minecraft.world.level.block.RenderShape;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.block.state.properties.IntegerProperty;
+import net.minecraft.world.level.block.state.properties.RotationSegment;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.EntityCollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
+import org.jspecify.annotations.Nullable;
 
-public class BlockCrossingGatePole extends Block {
+public class BlockCrossingGatePole extends Block implements EntityBlock {
 
+    public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
     public static final BooleanProperty NORTH = BooleanProperty.create("north");
     public static final BooleanProperty SOUTH = BooleanProperty.create("south");
     public static final BooleanProperty EAST = BooleanProperty.create("east");
@@ -35,6 +44,7 @@ public class BlockCrossingGatePole extends Block {
     public BlockCrossingGatePole(BlockBehaviour.Properties properties) {
         super(properties);
         this.registerDefaultState(this.stateDefinition.any()
+                .setValue(ROTATION, 0)
                 .setValue(NORTH, false)
                 .setValue(SOUTH, false)
                 .setValue(EAST, false)
@@ -43,12 +53,14 @@ public class BlockCrossingGatePole extends Block {
 
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
-        builder.add(NORTH, SOUTH, EAST, WEST);
+        builder.add(ROTATION, NORTH, SOUTH, EAST, WEST);
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        return updateConnections(this.defaultBlockState(), context.getLevel(), context.getClickedPos());
+        BlockState state = this.defaultBlockState().setValue(ROTATION,
+                RotationSegment.convertToSegment(context.getRotation() + 180.0F));
+        return updateConnections(state, context.getLevel(), context.getClickedPos());
     }
 
     @Override
@@ -76,8 +88,6 @@ public class BlockCrossingGatePole extends Block {
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
-        // When player holds a TL frame and there's a horizontal pole adjacent,
-        // become transparent so clicks reach the HP behind
         if (context instanceof EntityCollisionContext entityContext) {
             var entity = entityContext.getEntity();
             if (entity instanceof Player player
@@ -97,5 +107,15 @@ public class BlockCrossingGatePole extends Block {
         if (state.getValue(EAST)) shape = Shapes.or(shape, EAST_ARM);
         if (state.getValue(WEST)) shape = Shapes.or(shape, WEST_ARM);
         return shape;
+    }
+
+    @Override
+    protected RenderShape getRenderShape(BlockState state) {
+        return RenderShape.INVISIBLE;
+    }
+
+    @Override
+    public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
+        return new RotatableBlockEntity(pos, state);
     }
 }

@@ -106,6 +106,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.nonCardinalTLDirs.clear();
         renderState.cardinalTLDirs.clear();
         renderState.signDirs.clear();
+        renderState.cgPoleArmDirs.clear();
 
         Level level = blockEntity.getLevel();
         if (level == null) return;
@@ -125,6 +126,14 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     renderState.signalArmTrafficLightDirs.add(dir);
                 }
             }
+        }
+
+        // Crossing gate pole: read connection state for arm rendering
+        if (state.getBlock() instanceof BlockCrossingGatePole) {
+            if (state.getValue(BlockCrossingGatePole.NORTH)) renderState.cgPoleArmDirs.add(Direction.NORTH);
+            if (state.getValue(BlockCrossingGatePole.SOUTH)) renderState.cgPoleArmDirs.add(Direction.SOUTH);
+            if (state.getValue(BlockCrossingGatePole.EAST)) renderState.cgPoleArmDirs.add(Direction.EAST);
+            if (state.getValue(BlockCrossingGatePole.WEST)) renderState.cgPoleArmDirs.add(Direction.WEST);
         }
 
         // Signal arm: find adjacent traffic lights to render bars toward
@@ -278,7 +287,10 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
     ) {
         BlockState state = renderState.blockState;
         BlockStateModel baseModel = this.blockRenderer.getBlockModel(state);
-        RenderType renderType = RenderTypes.entitySolidZOffsetForward(TextureAtlas.LOCATION_BLOCKS);
+        boolean isSign = state.getBlock() instanceof BlockSign;
+        RenderType renderType = isSign
+                ? RenderTypes.entityCutout(TextureAtlas.LOCATION_BLOCKS)
+                : RenderTypes.entitySolidZOffsetForward(TextureAtlas.LOCATION_BLOCKS);
 
         boolean isTrafficLight = state.getBlock() instanceof BlockTrafficLight;
         boolean sideBySide = isTrafficLight && renderState.hasSideBySideNeighbor;
@@ -306,9 +318,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         float poleShiftAmount = 9.0f / 16.0f; // 9 pixels toward pole
 
         // --- Render body (rotated) ---
-        // Skip for BlockSign — it uses RenderShape.MODEL so the blockstate handles base rendering
-        boolean isSign = state.getBlock() instanceof BlockSign;
-        if (!isSign) {
+        {
             poseStack.pushPose();
 
             // World-space shift toward pole (applied after rotation in transform order)
@@ -501,6 +511,29 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                     nodeCollector.submitBlockModel(
                             poseStack, renderType, poleModel,
+                            1.0f, 1.0f, 1.0f,
+                            renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+                    );
+                    poseStack.popPose();
+                }
+            }
+        }
+
+        // Crossing gate pole: render connection arms
+        if (state.getBlock() instanceof BlockCrossingGatePole && !renderState.cgPoleArmDirs.isEmpty()) {
+            ModelManager modelManager = Minecraft.getInstance().getModelManager();
+            BlockStateModel armModel = modelManager.getStandaloneModel(TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY);
+            if (armModel != null) {
+                for (Direction dir : renderState.cgPoleArmDirs) {
+                    float barYRot = DIR_ROTATIONS[dir.get2DDataValue()];
+                    poseStack.pushPose();
+                    if (barYRot != 0) {
+                        poseStack.translate(0.5f, 0.0f, 0.5f);
+                        poseStack.mulPose(Axis.YP.rotationDegrees(barYRot));
+                        poseStack.translate(-0.5f, 0.0f, -0.5f);
+                    }
+                    nodeCollector.submitBlockModel(
+                            poseStack, renderType, armModel,
                             1.0f, 1.0f, 1.0f,
                             renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
                     );

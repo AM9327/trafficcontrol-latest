@@ -1,0 +1,6 @@
+{
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "trafficcontrol:block/signs/df35999e-5ec7-4829-af99-e3bfd6c51c42/circle/circle0"
+    }
+}
