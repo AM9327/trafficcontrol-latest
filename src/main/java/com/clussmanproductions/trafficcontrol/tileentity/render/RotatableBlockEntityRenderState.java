@@ -2,6 +2,7 @@ package com.clussmanproductions.trafficcontrol.tileentity.render;
 
 import net.minecraft.client.renderer.blockentity.state.BlockEntityRenderState;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -9,6 +10,10 @@ import java.util.List;
 
 public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
     public float rotationDegrees = 0;
+
+    // Sign texture rendering
+    public @Nullable Identifier signFrontTexture = null;
+    public @Nullable Identifier signBackTexture = null;
     public @Nullable Direction horizontalBarDirection = null;
 
     // --- Separate, non-overlapping state flags ---

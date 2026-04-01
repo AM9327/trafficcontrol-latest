@@ -7,8 +7,11 @@ import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSignalArm;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLight;
+import com.clussmanproductions.trafficcontrol.signs.Sign;
 import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
+import com.clussmanproductions.trafficcontrol.tileentity.SignBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.SubmitNodeCollector;
@@ -21,10 +24,12 @@ import net.minecraft.client.renderer.rendertype.RenderType;
 import net.minecraft.client.renderer.rendertype.RenderTypes;
 import net.minecraft.client.renderer.state.CameraRenderState;
 import net.minecraft.client.renderer.texture.OverlayTexture;
+import net.minecraft.client.renderer.texture.SimpleTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.resources.model.ModelManager;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
@@ -32,6 +37,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.RotationSegment;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.client.model.standalone.StandaloneModelKey;
+import org.joml.Matrix4f;
+import org.joml.Vector3f;
 import org.jspecify.annotations.Nullable;
 
 public class RotatableBlockEntityRenderer implements BlockEntityRenderer<RotatableBlockEntity, RotatableBlockEntityRenderState> {
@@ -107,6 +114,21 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.cardinalTLDirs.clear();
         renderState.signDirs.clear();
         renderState.cgPoleArmDirs.clear();
+        renderState.signFrontTexture = null;
+        renderState.signBackTexture = null;
+
+        // Extract sign textures from SignBlockEntity
+        if (blockEntity instanceof SignBlockEntity signBE && signBE.getSignId() != null) {
+            Sign sign = ModTrafficControl.SIGN_REPO.getSignByID(signBE.getSignId());
+            if (sign != null) {
+                renderState.signFrontTexture = sign.getFrontTexture();
+                renderState.signBackTexture = sign.getBackTexture();
+                ensureTextureLoaded(renderState.signFrontTexture);
+                if (renderState.signBackTexture != null) {
+                    ensureTextureLoaded(renderState.signBackTexture);
+                }
+            }
+        }
 
         Level level = blockEntity.getLevel();
         if (level == null) return;
@@ -116,11 +138,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 ? state.getValue(BlockStateProperties.ROTATION_16) : 0;
 
         // Sign: find adjacent connectable blocks to render arms toward
+        // Skip HPs — the HP renders its own bar toward the sign
         if (state.getBlock() instanceof BlockSign) {
             for (Direction dir : Direction.Plane.HORIZONTAL) {
                 Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
-                if (neighbor instanceof BlockHorizontalPole
-                        || neighbor instanceof BlockCrossingGatePole
+                if (neighbor instanceof BlockCrossingGatePole
                         || neighbor instanceof BlockCrossingGateBase
                         || neighbor instanceof BlockTrafficLight) {
                     renderState.signalArmTrafficLightDirs.add(dir);
@@ -419,11 +441,10 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // Traffic light to pole: when mounted on a horizontal pole, no bar needed
-        // from the TL side — the HP already renders a traffic_light_pole_arm toward
-        // the TL, and the TL body is shifted 9/16 toward the pole (9 + 7 = 16).
-        // When mounted on a crossing gate pole, render a short arm from the TL side
-        // to bridge the gap between the shifted TL body and the CG pole's ext arm.
+        // TL/Sign to pole: when mounted on a horizontal pole, no bar needed
+        // from the TL/sign side — the HP already renders a traffic_light_pole_arm toward
+        // it, and the body is shifted 9/16 toward the pole (9 + 7 = 16).
+        // When mounted on a crossing gate pole, render a short arm to bridge the gap.
         boolean isCardinalRotation = ((int) renderState.rotationDegrees % 90) == 0;
         if (isTrafficLight && !sideBySide && renderState.mountedOnPole
                 && !renderState.mountedOnHorizontalPole
@@ -542,5 +563,86 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
+        // --- Sign face rendering: draw sign texture as a quad ---
+        // Always render for sign blocks (use blank sign texture if none selected)
+        if (isSign) {
+            Identifier frontTex = renderState.signFrontTexture;
+            Identifier backTex = renderState.signBackTexture;
+
+            // Default to blank circle sign if none selected
+            if (frontTex == null) {
+                Sign blankSign = ModTrafficControl.SIGN_REPO.getSignByID(Sign.DEFAULT_BLANK_SIGN);
+                if (blankSign != null) {
+                    frontTex = blankSign.getFrontTexture();
+                    backTex = blankSign.getBackTexture();
+                    ensureTextureLoaded(frontTex);
+                    if (backTex != null) ensureTextureLoaded(backTex);
+                }
+            }
+
+            if (frontTex != null) {
+                int light = renderState.lightCoords;
+                int overlay = OverlayTexture.NO_OVERLAY;
+
+                // Front face: faces -z (north), visible from the front of the sign
+                {
+                    RenderType signRenderType = RenderTypes.entityCutout(frontTex);
+                    poseStack.pushPose();
+                    poseStack.translate(0.5f, 0.0f, 0.5f);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+                    poseStack.translate(-0.5f, 0.0f, -0.5f);
+
+                    nodeCollector.submitCustomGeometry(poseStack, signRenderType, (pose, consumer) -> {
+                        Matrix4f matrix = pose.pose();
+                        Vector3f normal = pose.transformNormal(0, 0, -1, new Vector3f());
+                        float z = 0.431f;
+                        // Reversed winding for -z facing normal
+                        consumer.addVertex(matrix, 1, 1, z).setColor(255, 255, 255, 255)
+                                .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(normal.x, normal.y, normal.z);
+                        consumer.addVertex(matrix, 1, 0, z).setColor(255, 255, 255, 255)
+                                .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(normal.x, normal.y, normal.z);
+                        consumer.addVertex(matrix, 0, 0, z).setColor(255, 255, 255, 255)
+                                .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(normal.x, normal.y, normal.z);
+                        consumer.addVertex(matrix, 0, 1, z).setColor(255, 255, 255, 255)
+                                .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(normal.x, normal.y, normal.z);
+                    });
+
+                    poseStack.popPose();
+                }
+
+                // Back face: faces +z (south), visible from behind the sign
+                if (backTex != null) {
+                    RenderType backRenderType = RenderTypes.entityCutout(backTex);
+                    poseStack.pushPose();
+                    poseStack.translate(0.5f, 0.0f, 0.5f);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+                    poseStack.translate(-0.5f, 0.0f, -0.5f);
+
+                    nodeCollector.submitCustomGeometry(poseStack, backRenderType, (pose, consumer) -> {
+                        Matrix4f matrix = pose.pose();
+                        Vector3f normal = pose.transformNormal(0, 0, 1, new Vector3f());
+                        float z = 0.441f;
+                        consumer.addVertex(matrix, 0, 1, z).setColor(255, 255, 255, 255)
+                                .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(normal.x, normal.y, normal.z);
+                        consumer.addVertex(matrix, 0, 0, z).setColor(255, 255, 255, 255)
+                                .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(normal.x, normal.y, normal.z);
+                        consumer.addVertex(matrix, 1, 0, z).setColor(255, 255, 255, 255)
+                                .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(normal.x, normal.y, normal.z);
+                        consumer.addVertex(matrix, 1, 1, z).setColor(255, 255, 255, 255)
+                                .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(normal.x, normal.y, normal.z);
+                    });
+
+                    poseStack.popPose();
+                }
+            }
+        }
+
+    }
+
+    private static void ensureTextureLoaded(Identifier location) {
+        var texManager = Minecraft.getInstance().getTextureManager();
+        if (texManager.getTexture(location) == null) {
+            texManager.register(location, new SimpleTexture(location));
+        }
     }
 }

@@ -1,5 +1,5 @@
-Traffic Control Mod - Session Changelog (4/1/26) (12:00 AM)
-====================================================
+Traffic Control Mod 1.21.11-2.0.0 (Beta) - Session Changelog (4/1/26) (12:00 AM)
+================================================================================
 
 ### Commits
 1. Started porting Traffic Control mod from Forge 1.12.2 to NeoForge 1.21.11
@@ -76,14 +76,39 @@ Traffic Control Mod - Session Changelog (4/1/26) (12:00 AM)
 - Added sensor display transforms matching old mod's inventory rendering
 - Street sign uses flat 2D item model with item/generated parent
 
-### Sign Block (WIP)
+### Sign Block
 - BlockSign now uses ROTATION_16 for 16-direction rotation (was HorizontalDirectionalBlock with 4 directions)
 - Sign faces toward the player when placed, supports all 16 angles like traffic lights
 - RenderShape.INVISIBLE — block entity renderer handles body + arms with cutout render type
-- Sign face moved to z=5 (in front of pole at z=7-9) to prevent pole showing through cutout transparency
-- HP and sign use short arm model (traffic_light_pole_arm) for connections to avoid poke-through
 - Sign inventory icon uses flat 2D circle texture instead of 3D block model
-- Still needs improvements: sign texture selection, full tile entity renderer port
+- Separated block model (sign_block.json, pole only) from item model (sign_item.json, pole + static face)
+
+### Sign GUI
+- Ported sign selection GUI from 1.12.2 GuiScreen to NeoForge 1.21 Screen API
+- Right-click sign block to open GUI with searchable grid of all 900+ sign textures
+- Search box filters signs by name in real-time using EditBox with setResponder
+- Sign grid renders 32×32 thumbnails with 4-column layout and scroll support
+- Mouse wheel scrolling and draggable scrollbar for navigating the full sign list
+- Blue hover highlight and green selection highlight (2px borders) on sign thumbnails
+- Hovered sign name displayed at bottom of grid panel
+- Left panel shows large preview of selected sign with name, type, and note text
+- Default blank circle sign rendered when no sign is selected
+- Sign selection saved to SignBlockEntity and synced to server via PacketUpdateSign on GUI close
+
+### Sign Renderer (Dynamic)
+- Sign face texture rendered dynamically by RotatableBlockEntityRenderer using submitCustomGeometry
+- Front face rendered with entityCutout render type at z=0.431, facing -z (north in local space)
+- Back face rendered 0.01 behind front face at z=0.441, facing +z (south in local space)
+- Both faces rotate with the block's ROTATION_16 property
+- Sign textures loaded on-demand via ensureTextureLoaded (registers SimpleTexture if not already loaded)
+- signFrontTexture and signBackTexture fields added to RotatableBlockEntityRenderState
+- Falls back to DEFAULT_BLANK_SIGN texture when no sign is selected on the block entity
+
+### Sign Pole Connections
+- Signs render short arms (traffic_light_pole_arm model) toward adjacent CG poles, CG bases, and traffic lights
+- Signs do NOT render arms toward horizontal poles — the HP renders its own short arm toward the sign
+- HP renders short arm (traffic_light_pole_arm) toward adjacent signs to avoid double-arm overlap
+- Still needs improvements: text line rendering on sign face
 
 ### Crossing Gate Pole
 - BlockCrossingGatePole now uses ROTATION_16 for 16-direction rotation

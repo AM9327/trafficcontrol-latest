@@ -1,5 +1,5 @@
 {
     "variants": {
-        "": { "model": "trafficcontrol:block/sign_item" }
+        "": { "model": "trafficcontrol:block/sign_block" }
     }
 }
