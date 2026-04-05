@@ -116,6 +116,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.signToSignDirs.clear();
         renderState.backToBackSignDir = null;
         renderState.backToBackTLDir = null;
+        renderState.extendPoleUp = false;
+        renderState.extendPoleDown = false;
         renderState.cgPoleArmDirs.clear();
         renderState.signFrontTexture = null;
         renderState.signBackTexture = null;
@@ -201,6 +203,15 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         }
                     }
                 }
+            }
+            // Check for CG pole/base above and below — extend vertical pole to connect
+            Block blockAbove = level.getBlockState(pos.above()).getBlock();
+            Block blockBelow = level.getBlockState(pos.below()).getBlock();
+            if (blockAbove instanceof BlockCrossingGatePole || blockAbove instanceof BlockCrossingGateBase) {
+                renderState.extendPoleUp = true;
+            }
+            if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
+                renderState.extendPoleDown = true;
             }
             // Collect connectable neighbors for arm rendering
             // Includes adjacent signs for sign-to-sign chaining on CG poles
@@ -385,6 +396,16 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
+
+            // 4. Check for CG pole/base above and below — extend vertical pole to connect
+            Block blockAbove = level.getBlockState(pos.above()).getBlock();
+            Block blockBelow = level.getBlockState(pos.below()).getBlock();
+            if (blockAbove instanceof BlockCrossingGatePole || blockAbove instanceof BlockCrossingGateBase) {
+                renderState.extendPoleUp = true;
+            }
+            if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
+                renderState.extendPoleDown = true;
+            }
         }
     }
 
@@ -482,6 +503,22 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
             );
             poseStack.popPose();
+        }
+
+        // --- Vertical pole extension for TLs/signs above/below CG poles ---
+        if ((isTrafficLight || isSign) && (renderState.extendPoleUp || renderState.extendPoleDown)) {
+            ModelManager modelManager = Minecraft.getInstance().getModelManager();
+            BlockStateModel poleModel = modelManager.getStandaloneModel(BACK_POLE_MODEL_KEY);
+            if (poleModel != null) {
+                // Render full-height pole at the TL's own position to fill gaps from short model pole
+                poseStack.pushPose();
+                nodeCollector.submitBlockModel(
+                        poseStack, renderType, poleModel,
+                        1.0f, 1.0f, 1.0f,
+                        renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+                );
+                poseStack.popPose();
+            }
         }
 
         // --- Bridge for back-to-back signs/TLs: signal arm bar between the two poles ---

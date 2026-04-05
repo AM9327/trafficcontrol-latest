@@ -23,6 +23,12 @@ public class ClientEvents {
     @SubscribeEvent
     public static void registerStandaloneModels(ModelEvent.RegisterStandalone event) {
         event.register(
+                RotatableBlockEntityRenderer.BACK_POLE_MODEL_KEY,
+                SimpleUnbakedStandaloneModel.blockStateModel(
+                        Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "block/back_pole")
+                )
+        );
+        event.register(
                 RotatableBlockEntityRenderer.HORIZONTAL_BAR_MODEL_KEY,
                 SimpleUnbakedStandaloneModel.blockStateModel(
                         Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "block/traffic_light_horizontal_bar")

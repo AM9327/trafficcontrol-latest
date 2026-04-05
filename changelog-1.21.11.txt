@@ -1,5 +1,5 @@
 Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/5/26) (12:25 PM)
-================================================================================
+======================================================================================================
 
 ### Commits
 1. Started porting Traffic Control mod from Forge 1.12.2 to NeoForge 1.21.11
@@ -133,7 +133,7 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Tooltip: "Hold SHIFT for more info" expands to full description
 - Sign GUI suppressed when holding screwdriver (block checks for screwdriver in hand)
 
-### Horizontal Traffic Light Frames (WIP)
+### Horizontal Traffic Light Frames (WIP) (Beta 1)
 - Added 9 new horizontal/sideways traffic light frame variants:
   - 3-bulb, 4-bulb, and 5-bulb sizes
   - Black, yellow, and orange colors
