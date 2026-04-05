@@ -133,7 +133,7 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta) - Session Changelog (4/5/26) (1:35 AM)
 - Tooltip: "Hold SHIFT for more info" expands to full description
 - Sign GUI suppressed when holding screwdriver (block checks for screwdriver in hand)
 
-### Horizontal Traffic Light Frames
+### Horizontal Traffic Light Frames (WIP)
 - Added 9 new horizontal/sideways traffic light frame variants:
   - 3-bulb, 4-bulb, and 5-bulb sizes
   - Black, yellow, and orange colors
