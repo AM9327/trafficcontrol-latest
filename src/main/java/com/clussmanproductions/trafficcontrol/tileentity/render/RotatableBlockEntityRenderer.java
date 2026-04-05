@@ -117,6 +117,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.signFrontTexture = null;
         renderState.signBackTexture = null;
 
+        // Lazily initialize sign repository on first render if needed
+        if (!ModTrafficControl.SIGN_REPO.isInitialized()) {
+            var resourceManager = Minecraft.getInstance().getResourceManager();
+            ModTrafficControl.SIGN_REPO.init(resourceManager);
+        }
+
         // Extract sign textures from SignBlockEntity
         if (blockEntity instanceof SignBlockEntity signBE && signBE.getSignId() != null) {
             Sign sign = ModTrafficControl.SIGN_REPO.getSignByID(signBE.getSignId());
@@ -137,9 +143,31 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         int rotation = state.hasProperty(BlockStateProperties.ROTATION_16)
                 ? state.getValue(BlockStateProperties.ROTATION_16) : 0;
 
-        // Sign: find adjacent connectable blocks to render arms toward
-        // Skip HPs — the HP renders its own bar toward the sign
+        // Sign: detect mounting pole and find adjacent connectable blocks
         if (state.getBlock() instanceof BlockSign) {
+            // First pass: prefer horizontal pole for mounting
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                if (neighbor instanceof BlockHorizontalPole) {
+                    renderState.mountedOnPole = true;
+                    renderState.mountedOnHorizontalPole = true;
+                    renderState.horizontalBarDirection = dir;
+                    break;
+                }
+            }
+            // Fallback: crossing gate pole
+            if (!renderState.mountedOnPole) {
+                for (Direction dir : Direction.Plane.HORIZONTAL) {
+                    Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                    if (neighbor instanceof BlockCrossingGatePole) {
+                        renderState.mountedOnPole = true;
+                        renderState.mountedOnHorizontalPole = false;
+                        renderState.horizontalBarDirection = dir;
+                        break;
+                    }
+                }
+            }
+            // Collect connectable neighbors for arm rendering
             for (Direction dir : Direction.Plane.HORIZONTAL) {
                 Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
                 if (neighbor instanceof BlockCrossingGatePole
@@ -147,6 +175,10 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         || neighbor instanceof BlockTrafficLight) {
                     renderState.signalArmTrafficLightDirs.add(dir);
                 }
+            }
+            // Add arm toward mounting HP only (not all adjacent HPs)
+            if (renderState.mountedOnHorizontalPole && renderState.horizontalBarDirection != null) {
+                renderState.signalArmTrafficLightDirs.add(renderState.horizontalBarDirection);
             }
         }
 
@@ -333,10 +365,13 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         // Shift toward pole only when there's no adjacent traffic light (side-by-side row)
         // and no other pole connections (e.g. CG pole on the opposite side).
         // When TLs are adjacent or between two poles, keep centered.
-        boolean shiftToPole = isTrafficLight && renderState.mountedOnPole
+        boolean shiftToPole = (isTrafficLight && renderState.mountedOnPole
                 && renderState.horizontalBarDirection != null
                 && !renderState.hasAdjacentTrafficLight
-                && renderState.horizontalPoleDirs.isEmpty();
+                && renderState.horizontalPoleDirs.isEmpty())
+                || (isSign && renderState.mountedOnPole
+                && !renderState.mountedOnHorizontalPole
+                && renderState.horizontalBarDirection != null);
         float poleShiftAmount = 9.0f / 16.0f; // 9 pixels toward pole
 
         // --- Render body (rotated) ---
@@ -382,8 +417,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             poseStack.popPose();
         }
 
-        // Horizontal bar — for non-TLs, use horizontalBarDirection
-        if (renderState.horizontalBarDirection != null && !sideBySide && !isTrafficLight) {
+        // Horizontal bar — for non-TLs/non-signs, use horizontalBarDirection
+        if (renderState.horizontalBarDirection != null && !sideBySide && !isTrafficLight && !isSign) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             float barYRot = DIR_ROTATIONS[renderState.horizontalBarDirection.get2DDataValue()];
             BlockStateModel barModel = modelManager.getStandaloneModel(HORIZONTAL_POLE_MODEL_KEY);
@@ -525,6 +560,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 if (poleModel != null) {
                     float barYRot = DIR_ROTATIONS[dir.get2DDataValue()];
                     poseStack.pushPose();
+                    // Shift arm with body when sign is shifted toward pole
+                    if (isSign && shiftToPole) {
+                        Direction poleDir = renderState.horizontalBarDirection;
+                        poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
+                                poleDir.getStepZ() * poleShiftAmount);
+                    }
                     if (barYRot != 0) {
                         poseStack.translate(0.5f, 0.0f, 0.5f);
                         poseStack.mulPose(Axis.YP.rotationDegrees(barYRot));
@@ -588,6 +629,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 {
                     RenderType signRenderType = RenderTypes.entityCutout(frontTex);
                     poseStack.pushPose();
+                    // Shift sign face with body toward pole
+                    if (shiftToPole) {
+                        Direction poleDir = renderState.horizontalBarDirection;
+                        poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
+                                poleDir.getStepZ() * poleShiftAmount);
+                    }
                     poseStack.translate(0.5f, 0.0f, 0.5f);
                     poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
                     poseStack.translate(-0.5f, 0.0f, -0.5f);
@@ -614,6 +661,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 if (backTex != null) {
                     RenderType backRenderType = RenderTypes.entityCutout(backTex);
                     poseStack.pushPose();
+                    // Shift back face with body toward pole
+                    if (shiftToPole) {
+                        Direction poleDir = renderState.horizontalBarDirection;
+                        poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
+                                poleDir.getStepZ() * poleShiftAmount);
+                    }
                     poseStack.translate(0.5f, 0.0f, 0.5f);
                     poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
                     poseStack.translate(-0.5f, 0.0f, -0.5f);

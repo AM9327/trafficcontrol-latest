@@ -99,6 +99,15 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+// Allow local processes to connect to X display (fixes "Authorization required" on Wayland+XWayland)
+tasks.matching { it.name.startsWith('run') }.configureEach {
+    doFirst {
+        try {
+            ['xhost', '+local:'].execute()
+        } catch (Exception ignored) {}
+    }
+}
+
 idea {
     module {
         downloadSources = true
