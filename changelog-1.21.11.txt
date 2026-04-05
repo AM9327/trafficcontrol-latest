@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 (Beta) - Session Changelog (4/5/26) (1:35 AM)
+Traffic Control Mod 1.21.11-2.0.0 - Session Changelog (4/6/26)
 ================================================================================
 
 ### Commits
