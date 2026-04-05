@@ -141,6 +141,9 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Registered as BlockTrafficLight with same placement behavior as vertical frames
 - Added to creative tab after orange doghouse frame
 
+### NeoForge Upgrade
+- Upgraded NeoForge from 21.11.38-beta to 21.11.42 stable
+
 ### Bug Fixes
 - Fixed SIGN_REPO.init() never called — lazy initialization in renderer on first render
 - Fixed X11 auth error on runClient — xhost +local: in build.gradle doFirst block
