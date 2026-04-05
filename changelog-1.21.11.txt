@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 - Session Changelog (4/6/26)
+Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/5/26) (12:25 PM)
 ================================================================================
 
 ### Commits
