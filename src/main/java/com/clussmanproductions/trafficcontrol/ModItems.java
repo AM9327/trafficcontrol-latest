@@ -85,6 +85,26 @@ public class ModItems {
     public static final DeferredItem<BlockItem> ORANGE_TL_DH_FRAME = ITEMS.registerItem("orange_traffic_light_doghouse_frame",
             p -> new ItemTrafficLightFrame(ModBlocks.ORANGE_TL_DH.get(), p.stacksTo(1)));
 
+    // Horizontal Traffic Light Frames
+    public static final DeferredItem<BlockItem> BLACK_TL_TRIPLE_HORIZ_FRAME = ITEMS.registerItem("traffic_light_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.BLACK_TL_TRIPLE_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> BLACK_TL_QUAD_HORIZ_FRAME = ITEMS.registerItem("traffic_light_4_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.BLACK_TL_QUAD_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> BLACK_TL_FIVE_HORIZ_FRAME = ITEMS.registerItem("traffic_light_5_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.BLACK_TL_FIVE_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> YELLOW_TL_TRIPLE_HORIZ_FRAME = ITEMS.registerItem("yellow_traffic_light_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.YELLOW_TL_TRIPLE_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> YELLOW_TL_QUAD_HORIZ_FRAME = ITEMS.registerItem("yellow_traffic_light_4_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.YELLOW_TL_QUAD_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> YELLOW_TL_FIVE_HORIZ_FRAME = ITEMS.registerItem("yellow_traffic_light_5_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.YELLOW_TL_FIVE_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> ORANGE_TL_TRIPLE_HORIZ_FRAME = ITEMS.registerItem("orange_traffic_light_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.ORANGE_TL_TRIPLE_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> ORANGE_TL_QUAD_HORIZ_FRAME = ITEMS.registerItem("orange_traffic_light_4_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.ORANGE_TL_QUAD_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> ORANGE_TL_FIVE_HORIZ_FRAME = ITEMS.registerItem("orange_traffic_light_5_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.ORANGE_TL_FIVE_HORIZ.get(), p.stacksTo(1)));
+
     public static final DeferredItem<BlockItem> CROSSING_GATE_BASE = ITEMS.registerSimpleBlockItem("crossing_gate_base", ModBlocks.CROSSING_GATE_BASE);
     public static final DeferredItem<BlockItem> STAND = ITEMS.registerSimpleBlockItem("stand", ModBlocks.STAND);
     public static final DeferredItem<BlockItem> CROSSING_GATE_POLE = ITEMS.registerSimpleBlockItem("crossing_gate_pole", ModBlocks.CROSSING_GATE_POLE);

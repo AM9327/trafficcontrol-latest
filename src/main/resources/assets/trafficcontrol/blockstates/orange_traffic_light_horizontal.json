@@ -1,0 +1,8 @@
+{
+    "variants": {
+        "horizontal_bar=false,paired=false": { "model": "trafficcontrol:block/traffic_light_horizontal" },
+        "horizontal_bar=true,paired=false": { "model": "trafficcontrol:block/traffic_light_horizontal" },
+        "horizontal_bar=false,paired=true": { "model": "trafficcontrol:block/traffic_light_horizontal" },
+        "horizontal_bar=true,paired=true": { "model": "trafficcontrol:block/traffic_light_horizontal" }
+    }
+}

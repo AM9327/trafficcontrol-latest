@@ -1,0 +1,861 @@
+{
+	"format_version": "1.21.11",
+	"credit": "Model generated using MrCrayfish's Model Creator (http://mrcrayfish.com/modelcreator/)",
+	"textures": {
+		"0": "trafficcontrol:block/black",
+		"1": "trafficcontrol:block/black_textured",
+		"2": "trafficcontrol:block/generic",
+		"particle": "trafficcontrol:block/generic"
+	},
+	"elements": [
+		{
+			"name": "Upper Bulb Upper Blinder",
+			"from": [
+				14.7,
+				4.199999999999999,
+				10
+			],
+			"to": [
+				15.2,
+				11.8,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						0.5
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Upper Bulb Left Blinder",
+			"from": [
+				11,
+				11.3,
+				10
+			],
+			"to": [
+				14.7,
+				11.8,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Upper Bulb Right Blinder",
+			"from": [
+				11,
+				4.199999999999999,
+				10
+			],
+			"to": [
+				14.7,
+				4.699999999999999,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						3.7
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						3.7
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						3.7
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						3.7
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Middle Bulb Upper Blinder",
+			"from": [
+				8.3,
+				4.199999999999999,
+				10
+			],
+			"to": [
+				8.8,
+				11.8,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						0.5
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Middle Bulb Left Blinder",
+			"from": [
+				4.3,
+				11.3,
+				10
+			],
+			"to": [
+				8.3,
+				11.8,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Middle Bulb Right Blinder",
+			"from": [
+				4.3,
+				4.199999999999999,
+				10
+			],
+			"to": [
+				8.3,
+				4.699999999999999,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Lower Bulb Upper Blinder",
+			"from": [
+				1.7,
+				4.199999999999999,
+				10
+			],
+			"to": [
+				2.2,
+				11.8,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						0.5
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						7.6,
+						0.5
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Lower Bulb Left Blinder",
+			"from": [
+				-2.3,
+				11.3,
+				10
+			],
+			"to": [
+				1.7,
+				11.8,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Lower Bulb Right Blinder",
+			"from": [
+				-2.3,
+				4.199999999999999,
+				10
+			],
+			"to": [
+				1.7,
+				4.699999999999999,
+				12
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						2
+					],
+					"texture": "#0"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						4
+					],
+					"texture": "#0"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						0.5,
+						4
+					],
+					"texture": "#0"
+				}
+			}
+		},
+		{
+			"name": "Backing Plate",
+			"from": [
+				-5,
+				3.3000000000000007,
+				9
+			],
+			"to": [
+				16.5,
+				12.8,
+				10
+			],
+			"rotation": {
+				"angle": 0,
+				"axis": "z",
+				"origin": [
+					8,
+					8,
+					8
+				]
+			},
+			"faces": {
+				"east": {
+					"uv": [
+						0,
+						0,
+						9.5,
+						1
+					],
+					"texture": "#1"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						1,
+						16
+					],
+					"texture": "#1"
+				},
+				"west": {
+					"uv": [
+						0,
+						0,
+						9.5,
+						1
+					],
+					"texture": "#1"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						1,
+						16
+					],
+					"texture": "#1"
+				},
+				"north": {
+					"uv": [
+						0,
+						0,
+						9.5,
+						16
+					],
+					"texture": "#1"
+				},
+				"south": {
+					"uv": [
+						0,
+						0,
+						9.5,
+						16
+					],
+					"texture": "#1"
+				}
+			}
+		},
+		{
+			"name": "Back Pole",
+			"from": [
+				7,
+				0,
+				7
+			],
+			"to": [
+				9,
+				16,
+				9
+			],
+			"faces": {
+				"north": {
+					"uv": [
+						0,
+						0,
+						2,
+						16
+					],
+					"texture": "#2"
+				},
+				"east": {
+					"uv": [
+						2,
+						0,
+						4,
+						16
+					],
+					"texture": "#2"
+				},
+				"south": {
+					"uv": [
+						4,
+						0,
+						6,
+						16
+					],
+					"texture": "#2"
+				},
+				"west": {
+					"uv": [
+						6,
+						0,
+						8,
+						16
+					],
+					"texture": "#2"
+				},
+				"up": {
+					"uv": [
+						0,
+						0,
+						2,
+						2
+					],
+					"texture": "#2"
+				},
+				"down": {
+					"uv": [
+						0,
+						0,
+						2,
+						2
+					],
+					"texture": "#2"
+				}
+			}
+		}
+	]
+}

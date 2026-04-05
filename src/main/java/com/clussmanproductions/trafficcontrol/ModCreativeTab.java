@@ -64,6 +64,16 @@ public class ModCreativeTab {
                         output.accept(ModItems.ORANGE_TL_FIVE_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_T_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_DH_FRAME.get());
+                        // Horizontal Traffic Light Frames
+                        output.accept(ModItems.BLACK_TL_TRIPLE_HORIZ_FRAME.get());
+                        output.accept(ModItems.BLACK_TL_QUAD_HORIZ_FRAME.get());
+                        output.accept(ModItems.BLACK_TL_FIVE_HORIZ_FRAME.get());
+                        output.accept(ModItems.YELLOW_TL_TRIPLE_HORIZ_FRAME.get());
+                        output.accept(ModItems.YELLOW_TL_QUAD_HORIZ_FRAME.get());
+                        output.accept(ModItems.YELLOW_TL_FIVE_HORIZ_FRAME.get());
+                        output.accept(ModItems.ORANGE_TL_TRIPLE_HORIZ_FRAME.get());
+                        output.accept(ModItems.ORANGE_TL_QUAD_HORIZ_FRAME.get());
+                        output.accept(ModItems.ORANGE_TL_FIVE_HORIZ_FRAME.get());
                         // Tools
                         output.accept(ModItems.SCREWDRIVER.get());
                         output.accept(ModItems.CROSSING_GATE_BASE.get());

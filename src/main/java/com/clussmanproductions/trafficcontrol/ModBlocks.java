@@ -129,6 +129,17 @@ public class ModBlocks {
     public static final DeferredBlock<Block> ORANGE_TL_T = BLOCKS.registerBlock("orange_traffic_light_6", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
     public static final DeferredBlock<Block> ORANGE_TL_DH = BLOCKS.registerBlock("orange_traffic_light_doghouse", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
 
+    // Horizontal traffic light variants
+    public static final DeferredBlock<Block> BLACK_TL_TRIPLE_HORIZ = BLOCKS.registerBlock("traffic_light_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> BLACK_TL_QUAD_HORIZ = BLOCKS.registerBlock("traffic_light_4_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> BLACK_TL_FIVE_HORIZ = BLOCKS.registerBlock("traffic_light_5_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> YELLOW_TL_TRIPLE_HORIZ = BLOCKS.registerBlock("yellow_traffic_light_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> YELLOW_TL_QUAD_HORIZ = BLOCKS.registerBlock("yellow_traffic_light_4_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> YELLOW_TL_FIVE_HORIZ = BLOCKS.registerBlock("yellow_traffic_light_5_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> ORANGE_TL_TRIPLE_HORIZ = BLOCKS.registerBlock("orange_traffic_light_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> ORANGE_TL_QUAD_HORIZ = BLOCKS.registerBlock("orange_traffic_light_4_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> ORANGE_TL_FIVE_HORIZ = BLOCKS.registerBlock("orange_traffic_light_5_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+
     private static final BlockBehaviour.Properties POLE_PROPS = BlockBehaviour.Properties.of()
             .strength(2f)
             .sound(SoundType.METAL)
