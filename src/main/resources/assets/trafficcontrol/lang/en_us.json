@@ -83,5 +83,8 @@
     "item.trafficcontrol.traffic_light_bulb_no_left_turn": "Traffic Light Bulb (No Left Turn)",
     "item.trafficcontrol.traffic_light_bulb_tunnelgreen": "Tunnel Bulb (Green)",
     "item.trafficcontrol.traffic_light_bulb_tunnelred": "Tunnel Bulb (Red)",
+    "item.trafficcontrol.screwdriver": "Screwdriver",
+    "trafficcontrol.tooltip.screwdriver": "Can be used to rotate Traffic Control blocks. Use while sneaking to rotate in the opposite direction.",
+    "trafficcontrol.tooltip.help": "Hold SHIFT for more info",
     "itemGroup.trafficcontrol": "Traffic Control"
 }

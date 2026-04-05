@@ -1,10 +1,10 @@
 {
 	"credit": "Made by RavenholmZombie using Blockbench",
 	"textures": {
-		"0": "trafficcontrol:blocks/screwdriver_top",
-		"1": "trafficcontrol:blocks/screwdriver_metal",
-		"2": "trafficcontrol:blocks/shunt",
-		"particle": "trafficcontrol:blocks/screwdriver_top"
+		"0": "trafficcontrol:block/screwdriver_top",
+		"1": "trafficcontrol:block/screwdriver_metal",
+		"2": "trafficcontrol:block/shunt",
+		"particle": "trafficcontrol:block/screwdriver_top"
 	},
 	"elements": [
 		{

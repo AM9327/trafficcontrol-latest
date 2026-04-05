@@ -14,4 +14,8 @@ public class RotatableBlockEntity extends BlockEntity {
     public RotatableBlockEntity(BlockPos pos, BlockState state) {
         super(ModBlockEntities.ROTATABLE.get(), pos, state);
     }
+
+    protected RotatableBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
+        super(type, pos, state);
+    }
 }

@@ -149,6 +149,11 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
     @Override
     protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos,
                                                 Player player, BlockHitResult hitResult) {
+        // Skip GUI when holding screwdriver (it rotates the block instead)
+        if (player.getMainHandItem().getItem() instanceof com.clussmanproductions.trafficcontrol.item.ItemScrewdriver
+                || player.getOffhandItem().getItem() instanceof com.clussmanproductions.trafficcontrol.item.ItemScrewdriver) {
+            return InteractionResult.PASS;
+        }
         if (level.isClientSide()) {
             BlockEntity be = level.getBlockEntity(pos);
             if (be instanceof SignBlockEntity signBE) {

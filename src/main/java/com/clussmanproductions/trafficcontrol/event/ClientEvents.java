@@ -17,6 +17,7 @@ public class ClientEvents {
     @SubscribeEvent
     public static void registerRenderers(EntityRenderersEvent.RegisterRenderers event) {
         event.registerBlockEntityRenderer(ModBlockEntities.ROTATABLE.get(), RotatableBlockEntityRenderer::new);
+        event.registerBlockEntityRenderer(ModBlockEntities.SIGN_ENTITY.get(), RotatableBlockEntityRenderer::new);
     }
 
     @SubscribeEvent

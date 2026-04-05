@@ -1,5 +1,6 @@
 package com.clussmanproductions.trafficcontrol;
 
+import com.clussmanproductions.trafficcontrol.item.ItemScrewdriver;
 import com.clussmanproductions.trafficcontrol.item.ItemTrafficLightFrame;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
@@ -147,4 +148,8 @@ public class ModItems {
     // Traffic Light Bulbs — tunnel
     public static final DeferredItem<Item> BULB_TUNNEL_GREEN = ITEMS.registerSimpleItem("traffic_light_bulb_tunnelgreen", new Item.Properties().stacksTo(16));
     public static final DeferredItem<Item> BULB_TUNNEL_RED = ITEMS.registerSimpleItem("traffic_light_bulb_tunnelred", new Item.Properties().stacksTo(16));
+
+    // Tools
+    public static final DeferredItem<Item> SCREWDRIVER = ITEMS.registerItem("screwdriver",
+            props -> new ItemScrewdriver(props.stacksTo(1).durability(128)));
 }

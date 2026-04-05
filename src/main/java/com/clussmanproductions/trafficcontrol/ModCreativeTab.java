@@ -64,6 +64,8 @@ public class ModCreativeTab {
                         output.accept(ModItems.ORANGE_TL_FIVE_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_T_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_DH_FRAME.get());
+                        // Tools
+                        output.accept(ModItems.SCREWDRIVER.get());
                         output.accept(ModItems.CROSSING_GATE_BASE.get());
                         output.accept(ModItems.STAND.get());
                         output.accept(ModItems.CROSSING_GATE_POLE.get());
