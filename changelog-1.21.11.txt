@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 (Beta) - Session Changelog (4/1/26) (12:00 AM)
+Traffic Control Mod 1.21.11-2.0.0 (Beta) - Session Changelog (4/5/26) (1:35 AM)
 ================================================================================
 
 ### Commits
@@ -104,10 +104,29 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta) - Session Changelog (4/1/26) (12:00 AM)
 - signFrontTexture and signBackTexture fields added to RotatableBlockEntityRenderState
 - Falls back to DEFAULT_BLANK_SIGN texture when no sign is selected on the block entity
 
-### Sign Pole Connections
+### Sign Pole Connections & Mounting
 - Signs render short arms (traffic_light_pole_arm model) toward adjacent CG poles, CG bases, and traffic lights
 - Signs do NOT render arms toward horizontal poles — the HP renders its own short arm toward the sign
 - HP renders short arm (traffic_light_pole_arm) toward adjacent signs to avoid double-arm overlap
+- Signs shift 9/16 toward CG pole/base when mounted (not toward HP — stays centered)
+- Sign face, back face, and arms all shift with body when mounted on CG pole
+- Sign-to-sign chaining: signs detect adjacent signs and render short arms (horizontal_bar_connect, 2px)
+- Chained signs detect CG pole 2 blocks away (through adjacent sign) and shift toward it
+- Back-to-back signs: adjacent signs facing opposite directions (rotation diff of 8) snap together
+  - Both shift 9/16 toward each other, no arms rendered between them
+  - Signal arm bar bridge rendered between the two poles
+- Rotation-aware hitbox: thin slab for cardinal rotations, full block for diagonal rotations
+- Hitbox shifts with body when mounted on CG pole/base or chained
+- No collision shape — players walk through signs
+
+### Traffic Light Back-to-Back
+- Adjacent traffic lights facing opposite directions (rotation diff of 8) now snap together
+- Both shift 9/16 toward each other with signal arm bar bridge between poles
+- Horizontal bar skipped between back-to-back TLs (bridge renders instead)
+
+### Bug Fixes
+- Fixed SIGN_REPO.init() never called — lazy initialization in renderer on first render
+- Fixed X11 auth error on runClient — xhost +local: in build.gradle doFirst block
 - Still needs improvements: text line rendering on sign face
 
 ### Crossing Gate Pole

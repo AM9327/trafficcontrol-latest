@@ -65,6 +65,33 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
                 break;
             }
         }
+        // Chained: adjacent sign with CG pole behind it
+        if (shiftDir == null) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                if (neighbor instanceof BlockSign) {
+                    Block beyond = level.getBlockState(pos.relative(dir, 2)).getBlock();
+                    if (beyond instanceof BlockCrossingGatePole) {
+                        shiftDir = dir;
+                        break;
+                    }
+                }
+            }
+        }
+        // Back-to-back: adjacent sign facing opposite direction
+        if (shiftDir == null) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockState neighborState = level.getBlockState(pos.relative(dir));
+                if (neighborState.getBlock() instanceof BlockSign
+                        && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                    int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
+                    if (Math.abs(neighborRot - rotation) == 8) {
+                        shiftDir = dir;
+                        break;
+                    }
+                }
+            }
+        }
 
         if (!isCardinal) {
             // Diagonal rotations: sign face spans beyond the block, use full block

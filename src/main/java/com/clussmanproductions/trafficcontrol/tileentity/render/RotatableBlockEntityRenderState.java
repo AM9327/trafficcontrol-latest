@@ -61,6 +61,15 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
     // Horizontal pole: directions toward adjacent signs (use short arm to avoid poking through)
     public List<Direction> signDirs = new ArrayList<>();
 
+    // Sign: directions toward adjacent signs (use short arm for sign-to-sign)
+    public List<Direction> signToSignDirs = new ArrayList<>();
+
+    // Sign: direction toward back-to-back paired sign (render bridge bar)
+    public @Nullable Direction backToBackSignDir = null;
+
+    // Traffic light: direction toward back-to-back paired TL (render bridge bar)
+    public @Nullable Direction backToBackTLDir = null;
+
     // Crossing gate pole: directions with connection arms
     public List<Direction> cgPoleArmDirs = new ArrayList<>();
 }
