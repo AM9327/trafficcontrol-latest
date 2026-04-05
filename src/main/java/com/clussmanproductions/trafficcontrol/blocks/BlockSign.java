@@ -32,6 +32,8 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
     private static final VoxelShape SHAPE_WEST  = Block.box(5, 0, 0, 11, 16, 16);
     private static final VoxelShape SHAPE_NORTH = Block.box(0, 0, 5, 16, 16, 11);
     private static final VoxelShape SHAPE_EAST  = Block.box(5, 0, 0, 11, 16, 16);
+    // Diagonal rotations: sign face spans the block diagonal, use full block
+    private static final VoxelShape SHAPE_DIAGONAL = Block.box(0, 0, 0, 16, 16, 16);
 
     public BlockSign(BlockBehaviour.Properties properties) {
         super(properties);
@@ -52,8 +54,7 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         int rotation = state.getValue(ROTATION);
-        int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
-        if (steps < 0) steps += 4;
+        boolean isCardinal = (rotation % 4) == 0; // 0, 4, 8, 12 are cardinal
 
         // Check for adjacent CG pole/base — sign shifts toward it (not toward HP)
         Direction shiftDir = null;
@@ -65,14 +66,24 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
             }
         }
 
+        if (!isCardinal) {
+            // Diagonal rotations: sign face spans beyond the block, use full block
+            if (shiftDir != null) {
+                double offsetX = shiftDir.getStepX() * 9.0;
+                double offsetZ = shiftDir.getStepZ() * 9.0;
+                return Block.box(offsetX, 0, offsetZ, 16 + offsetX, 16, 16 + offsetZ);
+            }
+            return SHAPE_DIAGONAL;
+        }
+
+        int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
+        if (steps < 0) steps += 4;
+
         if (shiftDir != null) {
-            // Base shape bounds based on facing
             double minX, minZ, maxX, maxZ;
             if (steps == 1 || steps == 3) {
-                // East/West facing: thin in X
                 minX = 5; minZ = 0; maxX = 11; maxZ = 16;
             } else {
-                // South/North facing: thin in Z
                 minX = 0; minZ = 5; maxX = 16; maxZ = 11;
             }
             double offsetX = shiftDir.getStepX() * 9.0;
