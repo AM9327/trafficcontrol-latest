@@ -30,3 +30,9 @@ CREDITS-fml.txt
 deps/
 trafficcontrol-0.4.1/
 trafficcontrol_old/
+.aider*
+CLAUDE.md
+AGENTS.md
+memory-bank/
+replay_pid*.log
+hs_err_*.log
