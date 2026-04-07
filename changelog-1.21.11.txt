@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/6/26) (11:19 PM)
+Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/7/26) (1:50 PM)
 ======================================================================================================
 
 ### Commits
@@ -104,7 +104,7 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - signFrontTexture and signBackTexture fields added to RotatableBlockEntityRenderState
 - Falls back to DEFAULT_BLANK_SIGN texture when no sign is selected on the block entity
 
-### Sign Pole Connections & Mounting
+### Sign Pole Connections & Mounting (WIP) (Beta 2)
 - Signs render short arms (traffic_light_pole_arm model) toward adjacent CG poles, CG bases, and traffic lights
 - Signs do NOT render arms toward horizontal poles — the HP renders its own short arm toward the sign
 - HP renders short arm (traffic_light_pole_arm) toward adjacent signs to avoid double-arm overlap
@@ -113,8 +113,8 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Sign-to-sign chaining: signs detect adjacent signs and render short arms (horizontal_bar_connect, 2px)
 - Chained signs detect CG pole 2 blocks away (through adjacent sign) and shift toward it
 - Back-to-back signs: adjacent signs facing opposite directions (rotation diff of 8) snap together
-  - Both shift 9/16 toward each other, no arms rendered between them
-  - Signal arm bar bridge rendered between the two poles
+- Both shift 9/16 toward each other, no arms rendered between them
+- Signal arm bar bridge rendered between the two poles
 - Rotation-aware hitbox: thin slab for cardinal rotations, full block for diagonal rotations
 - Hitbox shifts with body when mounted on CG pole/base or chained
 - No collision shape — players walk through signs
@@ -177,6 +177,29 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - CG pole arms extend toward adjacent street signs
 - Blank green texture (no text) for placed block, 2D sprite with text for inventory
 - Registered in ModBlockEntities ROTATABLE
+
+### Hanging Street Signs (4/7/26)
+- Both street sign and illuminated street sign support hanging placement
+- Place on bottom face of a block to hang (HANGING blockstate property)
+- Sign plate shifts up to Y 15-19, close to the block/pole above
+- Vanilla-style chain bracket renders above the sign (metal texture, ±45° crossed planes)
+- Chain bracket model (hanging_bracket.json) spans Y 19-24, rotates with sign body
+- Hanging hitbox extends above block boundary (Y 15-19) to match rendered position
+- Blockstate files updated to 32 variants (16 rotations × hanging true/false)
+- CG pole and HP connections skip hanging signs (no arms toward hanging signs)
+- Vertical back pole skipped for hanging signs (chains used instead)
+
+### Horizontal Pole Connection for Signs (4/7/26)
+- HP bar now extends through both BlockSign and BlockStreetSign blocks
+- HP renderer detects adjacent signs and renders horizontal_pole model at sign's block position
+- HP shouldConnect includes BlockStreetSign for blockstate arm connections
+- HP extractRenderState tracks streetSignDirs separately for bar extension rendering
+
+### Pole Rendering Fixes (4/7/26)
+- Signs no longer extend vertical back pole when mounted on horizontal pole
+- Signs only extend vertical pole toward CG poles/bases (not toward TLs or other signs)
+- Traffic lights no longer extend vertical pole toward signs (only toward CG poles and stacked TLs)
+- CG pole shouldConnect skips hanging street signs
 
 ### NeoForge Upgrade
 - Upgraded NeoForge from 21.11.38-beta to 21.11.42 stable

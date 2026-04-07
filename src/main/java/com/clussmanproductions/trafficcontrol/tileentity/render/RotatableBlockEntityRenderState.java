@@ -76,4 +76,10 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
 
     // Crossing gate pole: directions with connection arms
     public List<Direction> cgPoleArmDirs = new ArrayList<>();
+
+    // Street sign: hanging from block above
+    public boolean hanging = false;
+
+    // Horizontal pole: directions toward adjacent non-hanging street signs (extend bar into)
+    public List<Direction> streetSignDirs = new ArrayList<>();
 }

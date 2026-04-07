@@ -79,12 +79,15 @@ public class BlockCrossingGatePole extends Block implements EntityBlock {
     }
 
     private boolean shouldConnect(LevelReader level, BlockPos pos, Direction direction) {
-        Block neighbor = level.getBlockState(pos.relative(direction)).getBlock();
+        BlockState neighborState = level.getBlockState(pos.relative(direction));
+        Block neighbor = neighborState.getBlock();
+        if (neighbor instanceof BlockStreetSign) {
+            return !neighborState.getValue(BlockStreetSign.HANGING);
+        }
         return neighbor instanceof BlockHorizontalPole
                 || neighbor instanceof BlockTrafficLight
                 || neighbor instanceof BlockCrossingGatePole
-                || neighbor instanceof BlockSign
-                || neighbor instanceof BlockStreetSign;
+                || neighbor instanceof BlockSign;
     }
 
     @Override

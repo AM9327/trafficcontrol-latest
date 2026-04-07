@@ -88,7 +88,8 @@ public class BlockHorizontalPole extends Block implements EntityBlock, IHorizont
                 || neighbor instanceof BlockCrossingGatePole
                 || neighbor instanceof BlockCrossingGateBase
                 || neighbor instanceof BlockHorizontalPole
-                || neighbor instanceof BlockSign;
+                || neighbor instanceof BlockSign
+                || neighbor instanceof BlockStreetSign;
     }
 
     @Override

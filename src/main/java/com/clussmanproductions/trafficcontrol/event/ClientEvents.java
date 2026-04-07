@@ -76,5 +76,11 @@ public class ClientEvents {
                         Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "block/traffic_light_back_pole")
                 )
         );
+        event.register(
+                RotatableBlockEntityRenderer.HANGING_BRACKET_MODEL_KEY,
+                SimpleUnbakedStandaloneModel.blockStateModel(
+                        Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "block/hanging_bracket")
+                )
+        );
     }
 }

@@ -61,6 +61,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":traffic_light_paired");
     public static final StandaloneModelKey<BlockStateModel> TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY =
             new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":traffic_light_pole_arm");
+    public static final StandaloneModelKey<BlockStateModel> HANGING_BRACKET_MODEL_KEY =
+            new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":hanging_bracket");
 
     // PoseStack Y rotations for each cardinal direction
     private static final float[] DIR_ROTATIONS = new float[4];
@@ -120,6 +122,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.extendPoleUp = false;
         renderState.extendPoleDown = false;
         renderState.cgPoleArmDirs.clear();
+        renderState.streetSignDirs.clear();
+        renderState.hanging = false;
         renderState.signFrontTexture = null;
         renderState.signBackTexture = null;
 
@@ -205,16 +209,18 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Check for pole/TL/sign above and below — extend vertical pole to connect
-            Block blockAbove = level.getBlockState(pos.above()).getBlock();
-            Block blockBelow = level.getBlockState(pos.below()).getBlock();
-            if (blockAbove instanceof BlockCrossingGatePole || blockAbove instanceof BlockCrossingGateBase
-                    || blockAbove instanceof BlockTrafficLight || blockAbove instanceof BlockSign) {
-                renderState.extendPoleUp = true;
-            }
-            if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase
-                    || blockBelow instanceof BlockTrafficLight || blockBelow instanceof BlockSign) {
-                renderState.extendPoleDown = true;
+            // Check for CG pole/base above and below — extend vertical pole to connect
+            // Skip when mounted on horizontal pole to prevent pole sticking through HP
+            // Only extend toward CG poles/bases, not TLs or other signs
+            if (!renderState.mountedOnHorizontalPole) {
+                Block blockAbove = level.getBlockState(pos.above()).getBlock();
+                Block blockBelow = level.getBlockState(pos.below()).getBlock();
+                if (blockAbove instanceof BlockCrossingGatePole || blockAbove instanceof BlockCrossingGateBase) {
+                    renderState.extendPoleUp = true;
+                }
+                if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
+                    renderState.extendPoleDown = true;
+                }
             }
             // Collect connectable neighbors for arm rendering
             // Includes adjacent signs for sign-to-sign chaining on CG poles
@@ -241,16 +247,16 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // Street sign: show vertical pole when CG pole is below
+        // Street sign: hanging state and CG pole connection
         if (state.getBlock() instanceof BlockStreetSign) {
-            Block blockBelow = level.getBlockState(pos.below()).getBlock();
-            if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
-                renderState.extendPoleDown = true;
+            if (state.hasProperty(BlockStreetSign.HANGING)) {
+                renderState.hanging = state.getValue(BlockStreetSign.HANGING);
             }
-            // Also check 2 blocks down (CG pole with gap)
-            Block block2Below = level.getBlockState(pos.below(2)).getBlock();
-            if (blockBelow instanceof BlockCrossingGatePole && block2Below instanceof BlockCrossingGateBase) {
-                renderState.extendPoleDown = true;
+            if (!renderState.hanging) {
+                Block blockBelow = level.getBlockState(pos.below()).getBlock();
+                if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
+                    renderState.extendPoleDown = true;
+                }
             }
         }
 
@@ -288,7 +294,13 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     renderState.signalArmTrafficLightDirs.add(dir);
                     if (neighbor instanceof BlockSign) {
                         renderState.signDirs.add(dir);
+                        renderState.streetSignDirs.add(dir);
                     }
+                } else if (neighbor instanceof BlockStreetSign
+                        && (!neighborState.hasProperty(BlockStreetSign.HANGING)
+                            || !neighborState.getValue(BlockStreetSign.HANGING))) {
+                    renderState.signalArmTrafficLightDirs.add(dir);
+                    renderState.streetSignDirs.add(dir);
                 }
             }
             // Second pass: add TLs, but skip back-to-back pairs (opposite dirs, rotation diff of 8)
@@ -413,15 +425,15 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
             }
 
-            // 4. Check for pole/TL/sign above and below — extend vertical pole to connect
+            // 4. Check for CG pole/base and stacked TLs above/below — extend vertical pole
             Block tlBlockAbove = level.getBlockState(pos.above()).getBlock();
             Block tlBlockBelow = level.getBlockState(pos.below()).getBlock();
             if (tlBlockAbove instanceof BlockCrossingGatePole || tlBlockAbove instanceof BlockCrossingGateBase
-                    || tlBlockAbove instanceof BlockTrafficLight || tlBlockAbove instanceof BlockSign) {
+                    || tlBlockAbove instanceof BlockTrafficLight) {
                 renderState.extendPoleUp = true;
             }
             if (tlBlockBelow instanceof BlockCrossingGatePole || tlBlockBelow instanceof BlockCrossingGateBase
-                    || tlBlockBelow instanceof BlockTrafficLight || tlBlockBelow instanceof BlockSign) {
+                    || tlBlockBelow instanceof BlockTrafficLight) {
                 renderState.extendPoleDown = true;
             }
         }
@@ -481,8 +493,14 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         float poleShiftAmount = 9.0f / 16.0f; // 9 pixels toward pole
 
         // --- Render body (rotated) ---
+        boolean isHangingStreetSign = state.getBlock() instanceof BlockStreetSign && renderState.hanging;
         {
             poseStack.pushPose();
+
+            // Hanging street sign: shift body UP so sign sits at Y 15-19
+            if (isHangingStreetSign) {
+                poseStack.translate(0, 9.0f / 16.0f, 0);
+            }
 
             // World-space shift toward pole (applied after rotation in transform order)
             if (shiftToPole) {
@@ -502,6 +520,24 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             );
 
             poseStack.popPose();
+        }
+
+        // --- Hanging bracket (chain) for street signs ---
+        if (isHangingStreetSign) {
+            ModelManager modelManager = Minecraft.getInstance().getModelManager();
+            BlockStateModel bracketModel = modelManager.getStandaloneModel(HANGING_BRACKET_MODEL_KEY);
+            if (bracketModel != null) {
+                poseStack.pushPose();
+                poseStack.translate(0.5f, 0.0f, 0.5f);
+                poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+                poseStack.translate(-0.5f, 0.0f, -0.5f);
+                nodeCollector.submitBlockModel(
+                        poseStack, renderType, bracketModel,
+                        1.0f, 1.0f, 1.0f,
+                        renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+                );
+                poseStack.popPose();
+            }
         }
 
         // --- Bridge: render connect model at the pole block position to fill the gap ---
@@ -524,7 +560,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         // --- Vertical pole extension for TLs/signs above/below CG poles ---
-        if ((isTrafficLight || isSign) && (renderState.extendPoleUp || renderState.extendPoleDown)) {
+        if ((isTrafficLight || isSign) && !isHangingStreetSign && (renderState.extendPoleUp || renderState.extendPoleDown)) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             BlockStateModel poleModel = modelManager.getStandaloneModel(BACK_POLE_MODEL_KEY);
             if (poleModel != null) {
@@ -732,6 +768,27 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                     nodeCollector.submitBlockModel(
                             poseStack, renderType, poleModel,
+                            1.0f, 1.0f, 1.0f,
+                            renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+                    );
+                    poseStack.popPose();
+                }
+            }
+        }
+
+        // HP: extend bar into adjacent street sign blocks only
+        if (state.getBlock() instanceof BlockHorizontalPole && !renderState.streetSignDirs.isEmpty()) {
+            ModelManager mm = Minecraft.getInstance().getModelManager();
+            BlockStateModel hpModel = mm.getStandaloneModel(HORIZONTAL_POLE_MODEL_KEY);
+            if (hpModel != null) {
+                for (Direction dir : renderState.streetSignDirs) {
+                    poseStack.pushPose();
+                    poseStack.translate(dir.getStepX(), 0, dir.getStepZ());
+                    poseStack.translate(0.5f, 0.0f, 0.5f);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+                    poseStack.translate(-0.5f, 0.0f, -0.5f);
+                    nodeCollector.submitBlockModel(
+                            poseStack, renderType, hpModel,
                             1.0f, 1.0f, 1.0f,
                             renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
                     );

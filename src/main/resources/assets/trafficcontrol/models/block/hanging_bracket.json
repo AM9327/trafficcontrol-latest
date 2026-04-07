@@ -1,0 +1,51 @@
+{
+    "textures": {
+        "0": "trafficcontrol:block/generic"
+    },
+    "elements": [
+        {
+            "name": "Chain Left A",
+            "from": [3, 19, 8],
+            "to": [5, 24, 8],
+            "rotation": {"angle": 45, "axis": "y", "origin": [4, 21.5, 8]},
+            "shade": false,
+            "faces": {
+                "north": {"uv": [0, 0, 2, 5], "texture": "#0"},
+                "south": {"uv": [0, 0, 2, 5], "texture": "#0"}
+            }
+        },
+        {
+            "name": "Chain Left B",
+            "from": [4, 19, 7],
+            "to": [4, 24, 9],
+            "rotation": {"angle": 45, "axis": "y", "origin": [4, 21.5, 8]},
+            "shade": false,
+            "faces": {
+                "west": {"uv": [2, 0, 4, 5], "texture": "#0"},
+                "east": {"uv": [2, 0, 4, 5], "texture": "#0"}
+            }
+        },
+        {
+            "name": "Chain Right A",
+            "from": [11, 19, 8],
+            "to": [13, 24, 8],
+            "rotation": {"angle": 45, "axis": "y", "origin": [12, 21.5, 8]},
+            "shade": false,
+            "faces": {
+                "north": {"uv": [0, 0, 2, 5], "texture": "#0"},
+                "south": {"uv": [0, 0, 2, 5], "texture": "#0"}
+            }
+        },
+        {
+            "name": "Chain Right B",
+            "from": [12, 19, 7],
+            "to": [12, 24, 9],
+            "rotation": {"angle": 45, "axis": "y", "origin": [12, 21.5, 8]},
+            "shade": false,
+            "faces": {
+                "west": {"uv": [2, 0, 4, 5], "texture": "#0"},
+                "east": {"uv": [2, 0, 4, 5], "texture": "#0"}
+            }
+        }
+    ]
+}
