@@ -1,6 +1,6 @@
 {
     "model": {
         "type": "minecraft:model",
-        "model": "trafficcontrol:block/traffic_light_horizontal"
+        "model": "trafficcontrol:item/orange_traffic_light_horizontal_frame"
     }
 }

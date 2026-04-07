@@ -1,6 +1,110 @@
 {
-	"parent": "item/generated",
+	"format_version": "1.21.11",
+	"credit": "Made with Blockbench",
 	"textures": {
-		"layer0": "trafficcontrol:item/traffic_light_1_frame"
+		"0": "trafficcontrol:block/black",
+		"1": "trafficcontrol:block/black_textured",
+		"2": "trafficcontrol:block/generic",
+		"3": "trafficcontrol:block/gray",
+		"particle": "trafficcontrol:block/generic"
+	},
+	"elements": [
+		{
+			"name": "Middle Bulb",
+			"from": [4.7, 6.3, 9.925],
+			"to": [11.3, 11.3, 10.025],
+			"rotation": {"angle": 0, "axis": "z", "origin": [8, 7, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 5.6, 5.5], "texture": "#3"},
+				"east": {"uv": [0, 0, 0.1, 5.5], "texture": "#3"},
+				"south": {"uv": [0, 0, 5.6, 5.5], "texture": "#3"},
+				"west": {"uv": [0, 0, 0.1, 5.5], "texture": "#3"},
+				"up": {"uv": [0, 0, 5.6, 0.1], "texture": "#3"},
+				"down": {"uv": [0, 0, 5.6, 0.1], "texture": "#3"}
+			}
+		},
+		{
+			"name": "Middle Bulb Upper Blinder",
+			"from": [4.2, 11.3, 10],
+			"to": [11.8, 11.8, 12],
+			"rotation": {"angle": 0, "axis": "z", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 7.6, 0.5], "texture": "#0"},
+				"east": {"uv": [0, 0, 2, 0.5], "texture": "#0"},
+				"south": {"uv": [0, 0, 7.6, 0.5], "texture": "#0"},
+				"west": {"uv": [0, 0, 2, 0.5], "texture": "#0"},
+				"up": {"uv": [0, 0, 7.6, 2], "texture": "#0"},
+				"down": {"uv": [0, 0, 7.6, 2], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Middle Bulb Left Blinder",
+			"from": [4.2, 6.3, 10],
+			"to": [4.7, 11.3, 12],
+			"rotation": {"angle": 0, "axis": "z", "origin": [8, 7, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 0.5, 4], "texture": "#0"},
+				"east": {"uv": [0, 0, 2, 4], "texture": "#0"},
+				"south": {"uv": [0, 0, 0.5, 4], "texture": "#0"},
+				"west": {"uv": [0, 0, 2, 4], "texture": "#0"},
+				"up": {"uv": [0, 0, 0.5, 2], "texture": "#0"},
+				"down": {"uv": [0, 0, 0.5, 2], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Middle Bulb Right Blinder",
+			"from": [11.3, 6.3, 10],
+			"to": [11.8, 11.3, 12],
+			"rotation": {"angle": 0, "axis": "z", "origin": [8, 7, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 0.5, 4], "texture": "#0"},
+				"east": {"uv": [0, 0, 2, 4], "texture": "#0"},
+				"south": {"uv": [0, 0, 0.5, 4], "texture": "#0"},
+				"west": {"uv": [0, 0, 2, 4], "texture": "#0"},
+				"up": {"uv": [0, 0, 0.5, 2], "texture": "#0"},
+				"down": {"uv": [0, 0, 0.5, 2], "texture": "#0"}
+			}
+		},
+		{
+			"name": "Backing Plate",
+			"from": [3.2, 3, 9],
+			"to": [12.7, 13.5, 10],
+			"rotation": {"angle": 0, "axis": "z", "origin": [8, 8, 8]},
+			"faces": {
+				"north": {"uv": [0, 0, 9.5, 16], "texture": "#1"},
+				"east": {"uv": [0, 0, 1, 16], "texture": "#1"},
+				"south": {"uv": [0, 0, 9.5, 16], "texture": "#1"},
+				"west": {"uv": [0, 0, 1, 16], "texture": "#1"},
+				"up": {"uv": [0, 0, 9.5, 1], "texture": "#1"},
+				"down": {"uv": [0, 0, 9.5, 1], "texture": "#1"}
+			}
+		}
+	],
+	"display": {
+		"thirdperson_righthand": {
+			"rotation": [75, 45, 0],
+			"translation": [0, 2.5, 0],
+			"scale": [0.375, 0.375, 0.375]
+		},
+		"firstperson_righthand": {
+			"rotation": [0, 45, 0],
+			"scale": [0.4, 0.4, 0.4]
+		},
+		"firstperson_lefthand": {
+			"rotation": [0, -135, 0],
+			"scale": [0.4, 0.4, 0.4]
+		},
+		"ground": {
+			"translation": [0, 3, 0],
+			"scale": [0.25, 0.25, 0.25]
+		},
+		"gui": {
+			"rotation": [30, 45, 0],
+			"translation": [0, 0, 0],
+			"scale": [0.625, 0.625, 0.625]
+		},
+		"fixed": {
+			"scale": [0.5, 0.5, 0.5]
+		}
 	}
 }

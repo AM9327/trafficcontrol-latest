@@ -6,6 +6,7 @@ import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGatePole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSignalArm;
+import com.clussmanproductions.trafficcontrol.blocks.BlockStreetSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLight;
 import com.clussmanproductions.trafficcontrol.signs.Sign;
 import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
@@ -204,13 +205,15 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Check for CG pole/base above and below — extend vertical pole to connect
+            // Check for pole/TL/sign above and below — extend vertical pole to connect
             Block blockAbove = level.getBlockState(pos.above()).getBlock();
             Block blockBelow = level.getBlockState(pos.below()).getBlock();
-            if (blockAbove instanceof BlockCrossingGatePole || blockAbove instanceof BlockCrossingGateBase) {
+            if (blockAbove instanceof BlockCrossingGatePole || blockAbove instanceof BlockCrossingGateBase
+                    || blockAbove instanceof BlockTrafficLight || blockAbove instanceof BlockSign) {
                 renderState.extendPoleUp = true;
             }
-            if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
+            if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase
+                    || blockBelow instanceof BlockTrafficLight || blockBelow instanceof BlockSign) {
                 renderState.extendPoleDown = true;
             }
             // Collect connectable neighbors for arm rendering
@@ -235,6 +238,19 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             // Add arm toward mounting HP only (not all adjacent HPs)
             if (renderState.mountedOnHorizontalPole && renderState.horizontalBarDirection != null) {
                 renderState.signalArmTrafficLightDirs.add(renderState.horizontalBarDirection);
+            }
+        }
+
+        // Street sign: show vertical pole when CG pole is below
+        if (state.getBlock() instanceof BlockStreetSign) {
+            Block blockBelow = level.getBlockState(pos.below()).getBlock();
+            if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
+                renderState.extendPoleDown = true;
+            }
+            // Also check 2 blocks down (CG pole with gap)
+            Block block2Below = level.getBlockState(pos.below(2)).getBlock();
+            if (blockBelow instanceof BlockCrossingGatePole && block2Below instanceof BlockCrossingGateBase) {
+                renderState.extendPoleDown = true;
             }
         }
 
@@ -397,13 +413,15 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
             }
 
-            // 4. Check for CG pole/base above and below — extend vertical pole to connect
-            Block blockAbove = level.getBlockState(pos.above()).getBlock();
-            Block blockBelow = level.getBlockState(pos.below()).getBlock();
-            if (blockAbove instanceof BlockCrossingGatePole || blockAbove instanceof BlockCrossingGateBase) {
+            // 4. Check for pole/TL/sign above and below — extend vertical pole to connect
+            Block tlBlockAbove = level.getBlockState(pos.above()).getBlock();
+            Block tlBlockBelow = level.getBlockState(pos.below()).getBlock();
+            if (tlBlockAbove instanceof BlockCrossingGatePole || tlBlockAbove instanceof BlockCrossingGateBase
+                    || tlBlockAbove instanceof BlockTrafficLight || tlBlockAbove instanceof BlockSign) {
                 renderState.extendPoleUp = true;
             }
-            if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
+            if (tlBlockBelow instanceof BlockCrossingGatePole || tlBlockBelow instanceof BlockCrossingGateBase
+                    || tlBlockBelow instanceof BlockTrafficLight || tlBlockBelow instanceof BlockSign) {
                 renderState.extendPoleDown = true;
             }
         }
@@ -429,7 +447,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
     ) {
         BlockState state = renderState.blockState;
         BlockStateModel baseModel = this.blockRenderer.getBlockModel(state);
-        boolean isSign = state.getBlock() instanceof BlockSign;
+        boolean isSign = state.getBlock() instanceof BlockSign || state.getBlock() instanceof BlockStreetSign;
         RenderType renderType = isSign
                 ? RenderTypes.entityCutout(TextureAtlas.LOCATION_BLOCKS)
                 : RenderTypes.entitySolidZOffsetForward(TextureAtlas.LOCATION_BLOCKS);
@@ -510,8 +528,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             BlockStateModel poleModel = modelManager.getStandaloneModel(BACK_POLE_MODEL_KEY);
             if (poleModel != null) {
-                // Render full-height pole at the TL's own position to fill gaps from short model pole
                 poseStack.pushPose();
+                if (state.getBlock() instanceof BlockStreetSign) {
+                    // Street sign: scale pole to only cover Y 0 to 6 (below the sign plate)
+                    poseStack.scale(1.0f, 6.0f / 16.0f, 1.0f);
+                }
                 nodeCollector.submitBlockModel(
                         poseStack, renderType, poleModel,
                         1.0f, 1.0f, 1.0f,
@@ -744,7 +765,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
 
         // --- Sign face rendering: draw sign texture as a quad ---
         // Always render for sign blocks (use blank sign texture if none selected)
-        if (isSign) {
+        // Street signs use their own block model texture, not the sign face system
+        if (isSign && !(state.getBlock() instanceof BlockStreetSign)) {
             Identifier frontTex = renderState.signFrontTexture;
             Identifier backTex = renderState.signBackTexture;
 

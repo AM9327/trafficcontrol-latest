@@ -1,0 +1,16 @@
+{
+    "variants": {
+        "horizontal_bar=false,paired=false": {
+            "model": "trafficcontrol:block/orange_traffic_light_2_horizontal"
+        },
+        "horizontal_bar=true,paired=false": {
+            "model": "trafficcontrol:block/orange_traffic_light_2_horizontal"
+        },
+        "horizontal_bar=false,paired=true": {
+            "model": "trafficcontrol:block/orange_traffic_light_2_horizontal"
+        },
+        "horizontal_bar=true,paired=true": {
+            "model": "trafficcontrol:block/orange_traffic_light_2_horizontal"
+        }
+    }
+}

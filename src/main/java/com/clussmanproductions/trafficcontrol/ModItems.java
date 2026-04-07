@@ -104,6 +104,12 @@ public class ModItems {
             p -> new ItemTrafficLightFrame(ModBlocks.ORANGE_TL_QUAD_HORIZ.get(), p.stacksTo(1)));
     public static final DeferredItem<BlockItem> ORANGE_TL_FIVE_HORIZ_FRAME = ITEMS.registerItem("orange_traffic_light_5_horizontal_frame",
             p -> new ItemTrafficLightFrame(ModBlocks.ORANGE_TL_FIVE_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> BLACK_TL_DOUBLE_HORIZ_FRAME = ITEMS.registerItem("traffic_light_2_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.BLACK_TL_DOUBLE_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> YELLOW_TL_DOUBLE_HORIZ_FRAME = ITEMS.registerItem("yellow_traffic_light_2_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.YELLOW_TL_DOUBLE_HORIZ.get(), p.stacksTo(1)));
+    public static final DeferredItem<BlockItem> ORANGE_TL_DOUBLE_HORIZ_FRAME = ITEMS.registerItem("orange_traffic_light_2_horizontal_frame",
+            p -> new ItemTrafficLightFrame(ModBlocks.ORANGE_TL_DOUBLE_HORIZ.get(), p.stacksTo(1)));
 
     public static final DeferredItem<BlockItem> CROSSING_GATE_BASE = ITEMS.registerSimpleBlockItem("crossing_gate_base", ModBlocks.CROSSING_GATE_BASE);
     public static final DeferredItem<BlockItem> STAND = ITEMS.registerSimpleBlockItem("stand", ModBlocks.STAND);

@@ -83,7 +83,8 @@ public class BlockCrossingGatePole extends Block implements EntityBlock {
         return neighbor instanceof BlockHorizontalPole
                 || neighbor instanceof BlockTrafficLight
                 || neighbor instanceof BlockCrossingGatePole
-                || neighbor instanceof BlockSign;
+                || neighbor instanceof BlockSign
+                || neighbor instanceof BlockStreetSign;
     }
 
     @Override

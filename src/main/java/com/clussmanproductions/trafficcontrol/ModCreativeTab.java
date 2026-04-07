@@ -43,34 +43,39 @@ public class ModCreativeTab {
                         output.accept(ModItems.CONCRETE_BARRIER_GREEN.get());
                         output.accept(ModItems.CONCRETE_BARRIER_RED.get());
                         output.accept(ModItems.CONCRETE_BARRIER_BLACK.get());
-                        output.accept(ModItems.BLACK_TL_TRIPLE_FRAME.get());
+                        // Black Traffic Light Frames (vertical + horizontal)
                         output.accept(ModItems.BLACK_TL_SINGLE_FRAME.get());
                         output.accept(ModItems.BLACK_TL_DOUBLE_FRAME.get());
+                        output.accept(ModItems.BLACK_TL_TRIPLE_FRAME.get());
                         output.accept(ModItems.BLACK_TL_QUAD_FRAME.get());
                         output.accept(ModItems.BLACK_TL_FIVE_FRAME.get());
                         output.accept(ModItems.BLACK_TL_T_FRAME.get());
                         output.accept(ModItems.BLACK_TL_DH_FRAME.get());
-                        output.accept(ModItems.YELLOW_TL_TRIPLE_FRAME.get());
+                        output.accept(ModItems.BLACK_TL_DOUBLE_HORIZ_FRAME.get());
+                        output.accept(ModItems.BLACK_TL_TRIPLE_HORIZ_FRAME.get());
+                        output.accept(ModItems.BLACK_TL_QUAD_HORIZ_FRAME.get());
+                        output.accept(ModItems.BLACK_TL_FIVE_HORIZ_FRAME.get());
+                        // Yellow Traffic Light Frames (vertical + horizontal)
                         output.accept(ModItems.YELLOW_TL_SINGLE_FRAME.get());
                         output.accept(ModItems.YELLOW_TL_DOUBLE_FRAME.get());
+                        output.accept(ModItems.YELLOW_TL_TRIPLE_FRAME.get());
                         output.accept(ModItems.YELLOW_TL_QUAD_FRAME.get());
                         output.accept(ModItems.YELLOW_TL_FIVE_FRAME.get());
                         output.accept(ModItems.YELLOW_TL_T_FRAME.get());
                         output.accept(ModItems.YELLOW_TL_DH_FRAME.get());
-                        output.accept(ModItems.ORANGE_TL_TRIPLE_FRAME.get());
+                        output.accept(ModItems.YELLOW_TL_DOUBLE_HORIZ_FRAME.get());
+                        output.accept(ModItems.YELLOW_TL_TRIPLE_HORIZ_FRAME.get());
+                        output.accept(ModItems.YELLOW_TL_QUAD_HORIZ_FRAME.get());
+                        output.accept(ModItems.YELLOW_TL_FIVE_HORIZ_FRAME.get());
+                        // Orange Traffic Light Frames (vertical + horizontal)
                         output.accept(ModItems.ORANGE_TL_SINGLE_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_DOUBLE_FRAME.get());
+                        output.accept(ModItems.ORANGE_TL_TRIPLE_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_QUAD_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_FIVE_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_T_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_DH_FRAME.get());
-                        // Horizontal Traffic Light Frames
-                        output.accept(ModItems.BLACK_TL_TRIPLE_HORIZ_FRAME.get());
-                        output.accept(ModItems.BLACK_TL_QUAD_HORIZ_FRAME.get());
-                        output.accept(ModItems.BLACK_TL_FIVE_HORIZ_FRAME.get());
-                        output.accept(ModItems.YELLOW_TL_TRIPLE_HORIZ_FRAME.get());
-                        output.accept(ModItems.YELLOW_TL_QUAD_HORIZ_FRAME.get());
-                        output.accept(ModItems.YELLOW_TL_FIVE_HORIZ_FRAME.get());
+                        output.accept(ModItems.ORANGE_TL_DOUBLE_HORIZ_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_TRIPLE_HORIZ_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_QUAD_HORIZ_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_FIVE_HORIZ_FRAME.get());

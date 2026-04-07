@@ -10,6 +10,7 @@ import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSignalArm;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLight;
+import com.clussmanproductions.trafficcontrol.blocks.BlockStreetSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficRail;
 import com.clussmanproductions.trafficcontrol.blocks.BlockType3Barrier;
 
@@ -139,6 +140,9 @@ public class ModBlocks {
     public static final DeferredBlock<Block> ORANGE_TL_TRIPLE_HORIZ = BLOCKS.registerBlock("orange_traffic_light_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
     public static final DeferredBlock<Block> ORANGE_TL_QUAD_HORIZ = BLOCKS.registerBlock("orange_traffic_light_4_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
     public static final DeferredBlock<Block> ORANGE_TL_FIVE_HORIZ = BLOCKS.registerBlock("orange_traffic_light_5_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> BLACK_TL_DOUBLE_HORIZ = BLOCKS.registerBlock("traffic_light_2_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> YELLOW_TL_DOUBLE_HORIZ = BLOCKS.registerBlock("yellow_traffic_light_2_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
+    public static final DeferredBlock<Block> ORANGE_TL_DOUBLE_HORIZ = BLOCKS.registerBlock("orange_traffic_light_2_horizontal", BlockTrafficLight::new, TRAFFIC_LIGHT_PROPS);
 
     private static final BlockBehaviour.Properties POLE_PROPS = BlockBehaviour.Properties.of()
             .strength(2f)
@@ -174,7 +178,8 @@ public class ModBlocks {
     public static final DeferredBlock<Block> WCH_MECHANICAL_BELL = BLOCKS.registerBlock("wch_mechanical_bell", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> WCH_BELL = BLOCKS.registerBlock("wch_bell", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> VERTICAL_WIG_WAG = BLOCKS.registerBlock("vertical_wig_wag", Block::new, PLACEHOLDER_PROPS);
-    public static final DeferredBlock<Block> STREET_SIGN = BLOCKS.registerBlock("street_sign", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> STREET_SIGN = BLOCKS.registerBlock("street_sign", BlockStreetSign::new,
+            BlockBehaviour.Properties.of().strength(2.0f).noOcclusion().lightLevel(state -> 15));
     public static final DeferredBlock<Block> TRAFFIC_SENSOR_LEFT = BLOCKS.registerBlock("traffic_sensor_left", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> TRAFFIC_SENSOR_RIGHT = BLOCKS.registerBlock("traffic_sensor_right", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> TRAFFIC_SENSOR_STRAIGHT = BLOCKS.registerBlock("traffic_sensor_straight", Block::new, PLACEHOLDER_PROPS);

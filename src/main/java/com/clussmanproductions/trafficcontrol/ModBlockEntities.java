@@ -72,11 +72,15 @@ public class ModBlockEntities {
                             ModBlocks.ORANGE_TL_TRIPLE_HORIZ.get(),
                             ModBlocks.ORANGE_TL_QUAD_HORIZ.get(),
                             ModBlocks.ORANGE_TL_FIVE_HORIZ.get(),
+                            ModBlocks.BLACK_TL_DOUBLE_HORIZ.get(),
+                            ModBlocks.YELLOW_TL_DOUBLE_HORIZ.get(),
+                            ModBlocks.ORANGE_TL_DOUBLE_HORIZ.get(),
                             ModBlocks.CROSSING_GATE_BASE.get(),
                             ModBlocks.STAND.get(),
                             ModBlocks.HORIZONTAL_POLE.get(),
                             ModBlocks.SIGNAL_ARM.get(),
-                            ModBlocks.CROSSING_GATE_POLE.get()
+                            ModBlocks.CROSSING_GATE_POLE.get(),
+                            ModBlocks.STREET_SIGN.get()
                     ));
 
     // Dedicated block entity for signs — stores sign selection and text

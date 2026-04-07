@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/5/26) (12:25 PM)
+Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/6/26) (11:19 PM)
 ======================================================================================================
 
 ### Commits
@@ -140,6 +140,43 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Models rotated 90° around Z axis from vertical versions with vertical back pole
 - Registered as BlockTrafficLight with same placement behavior as vertical frames
 - Added to creative tab after orange doghouse frame
+
+### 3D Inventory Icons (4/6/26)
+- Upgraded all 21 vertical traffic light frame inventory icons from 2D sprites to 3D models
+  - Item models are copies of block models with Back Pole removed
+  - Per-size GUI display scaling: 1-bulb: 0.625, 2-bulb: 0.7, 3-bulb: 0.625, 4-bulb: 0.55, 5-bulb: 0.475, T-frame: 0.5, doghouse: 0.5
+  - Horizontal frames have separate scale/translation values for proper centering
+  - Old 2D PNG sprite textures kept in textures/item/ as fallback
+- Traffic light bulb icons slightly angled (rotation [5, -10, 0]) for 3D look while keeping arrows readable
+
+### Gray Bulb Background Texture (4/6/26)
+- Added gray.png texture for bulb recesses in all traffic light models (block and item)
+- Integrated as texture #3 in all TL block models
+- Bulb elements use #3 on south face (visible) and #2 on other faces for block models
+- Item models use #3 on all faces to prevent bleed-through at inventory angles
+
+### Back Pole and Back Pole Arm (4/5/26)
+- Added missing Back Pole and Back Pole Arm to all horizontal TL models
+- Shortened Back Pole (Y 3-12) with horizontal cross piece
+- Matches the 3-bulb horizontal model structure
+
+### 2-Bulb Horizontal Variants (4/5/26)
+- Added 2-bulb horizontal traffic light frame variants (black, yellow, orange)
+- Block models, item models, blockstates, and item definitions
+
+### Creative Tab Reorganization (4/6/26)
+- Reordered creative tab by color: all black (vertical + horizontal), all yellow, all orange
+- Within each color: single, double, triple, quad, five, T, doghouse, then horizontal variants
+
+### Street Sign Block Rework (4/6/26)
+- New BlockStreetSign class with ROTATION_16 for 16-direction rotation
+- Places facing player direction, rotatable with screwdriver
+- Rotation-aware hitbox (NS/EW/diagonal), no collision (walk through)
+- Emits light level 15 (fullbright, shade:false on model)
+- Renders vertical pole connection when CG pole is below (scaled to sign plate height)
+- CG pole arms extend toward adjacent street signs
+- Blank green texture (no text) for placed block, 2D sprite with text for inventory
+- Registered in ModBlockEntities ROTATABLE
 
 ### NeoForge Upgrade
 - Upgraded NeoForge from 21.11.38-beta to 21.11.42 stable

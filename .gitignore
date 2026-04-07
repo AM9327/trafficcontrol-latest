@@ -36,3 +36,4 @@ AGENTS.md
 memory-bank/
 replay_pid*.log
 hs_err_*.log
+src/main/resources/assets/trafficcontrol/blockbench/
