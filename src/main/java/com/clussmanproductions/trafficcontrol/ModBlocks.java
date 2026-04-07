@@ -179,6 +179,8 @@ public class ModBlocks {
     public static final DeferredBlock<Block> WCH_BELL = BLOCKS.registerBlock("wch_bell", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> VERTICAL_WIG_WAG = BLOCKS.registerBlock("vertical_wig_wag", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> STREET_SIGN = BLOCKS.registerBlock("street_sign", BlockStreetSign::new,
+            BlockBehaviour.Properties.of().strength(2.0f).noOcclusion());
+    public static final DeferredBlock<Block> ILLUMINATED_STREET_SIGN = BLOCKS.registerBlock("illuminated_street_sign", BlockStreetSign::new,
             BlockBehaviour.Properties.of().strength(2.0f).noOcclusion().lightLevel(state -> 15));
     public static final DeferredBlock<Block> TRAFFIC_SENSOR_LEFT = BLOCKS.registerBlock("traffic_sensor_left", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> TRAFFIC_SENSOR_RIGHT = BLOCKS.registerBlock("traffic_sensor_right", Block::new, PLACEHOLDER_PROPS);

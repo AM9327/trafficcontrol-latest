@@ -80,7 +80,8 @@ public class ModBlockEntities {
                             ModBlocks.HORIZONTAL_POLE.get(),
                             ModBlocks.SIGNAL_ARM.get(),
                             ModBlocks.CROSSING_GATE_POLE.get(),
-                            ModBlocks.STREET_SIGN.get()
+                            ModBlocks.STREET_SIGN.get(),
+                            ModBlocks.ILLUMINATED_STREET_SIGN.get()
                     ));
 
     // Dedicated block entity for signs — stores sign selection and text

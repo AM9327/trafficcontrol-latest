@@ -86,6 +86,7 @@
     "block.trafficcontrol.wch_bell": "WCH Electronic Bell",
     "block.trafficcontrol.vertical_wig_wag": "Upper Quadrant Wig Wag",
     "block.trafficcontrol.street_sign": "Street Sign",
+    "block.trafficcontrol.illuminated_street_sign": "Street Sign (Illuminated)",
     "block.trafficcontrol.traffic_sensor_left": "Traffic Sensor (Left)",
     "block.trafficcontrol.traffic_sensor_right": "Traffic Sensor (Right)",
     "block.trafficcontrol.traffic_sensor_straight": "Traffic Sensor (Straight)",

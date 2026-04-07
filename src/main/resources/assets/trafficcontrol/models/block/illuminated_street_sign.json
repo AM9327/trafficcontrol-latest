@@ -8,6 +8,7 @@
 	"elements": [
 		{
 			"name": "Sign Plate",
+			"shade": false,
 			"from": [0, 6, 7],
 			"to": [16, 10, 9],
 			"faces": {

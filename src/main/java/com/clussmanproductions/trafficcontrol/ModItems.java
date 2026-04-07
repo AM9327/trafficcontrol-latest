@@ -137,6 +137,7 @@ public class ModItems {
     public static final DeferredItem<BlockItem> WCH_BELL = ITEMS.registerSimpleBlockItem("wch_bell", ModBlocks.WCH_BELL);
     public static final DeferredItem<BlockItem> VERTICAL_WIG_WAG = ITEMS.registerSimpleBlockItem("vertical_wig_wag", ModBlocks.VERTICAL_WIG_WAG);
     public static final DeferredItem<BlockItem> STREET_SIGN = ITEMS.registerSimpleBlockItem("street_sign", ModBlocks.STREET_SIGN);
+    public static final DeferredItem<BlockItem> ILLUMINATED_STREET_SIGN = ITEMS.registerSimpleBlockItem("illuminated_street_sign", ModBlocks.ILLUMINATED_STREET_SIGN);
 
     // Traffic sensors
     public static final DeferredItem<BlockItem> TRAFFIC_SENSOR_LEFT = ITEMS.registerSimpleBlockItem("traffic_sensor_left", ModBlocks.TRAFFIC_SENSOR_LEFT);

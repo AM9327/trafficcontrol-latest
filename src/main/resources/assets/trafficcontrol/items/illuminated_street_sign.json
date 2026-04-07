@@ -1,0 +1,6 @@
+{
+    "model": {
+        "type": "minecraft:model",
+        "model": "trafficcontrol:item/illuminated_street_sign"
+    }
+}

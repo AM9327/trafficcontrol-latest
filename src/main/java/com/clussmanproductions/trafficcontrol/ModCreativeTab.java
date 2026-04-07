@@ -121,6 +121,7 @@ public class ModCreativeTab {
                         output.accept(ModItems.BULB_TUNNEL_RED.get());
                         // Street sign after bulbs
                         output.accept(ModItems.STREET_SIGN.get());
+                        output.accept(ModItems.ILLUMINATED_STREET_SIGN.get());
                         // Traffic sensors after street sign
                         output.accept(ModItems.TRAFFIC_SENSOR_LEFT.get());
                         output.accept(ModItems.TRAFFIC_SENSOR_STRAIGHT.get());
