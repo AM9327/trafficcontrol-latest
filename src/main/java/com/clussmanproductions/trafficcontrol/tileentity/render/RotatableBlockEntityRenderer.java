@@ -209,19 +209,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Check for CG pole/base above and below — extend vertical pole to connect
-            // Skip when mounted on horizontal pole to prevent pole sticking through HP
-            // Only extend toward CG poles/bases, not TLs or other signs
-            if (!renderState.mountedOnHorizontalPole) {
-                Block blockAbove = level.getBlockState(pos.above()).getBlock();
-                Block blockBelow = level.getBlockState(pos.below()).getBlock();
-                if (blockAbove instanceof BlockCrossingGatePole || blockAbove instanceof BlockCrossingGateBase) {
-                    renderState.extendPoleUp = true;
-                }
-                if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
-                    renderState.extendPoleDown = true;
-                }
-            }
+            // Regular signs (BlockSign) do NOT extend a center pole — they mount
+            // on CG poles to the side, which render their own pole visuals.
             // Collect connectable neighbors for arm rendering
             // Includes adjacent signs for sign-to-sign chaining on CG poles
             // Skip back-to-back signs (rotation diff of 8) — no arm needed
@@ -392,7 +381,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
                 if (neighbor instanceof BlockCrossingGatePole
                         || neighbor instanceof BlockCrossingGateBase
-                        || neighbor instanceof BlockSign) {
+                        || neighbor instanceof BlockSign
+                        || neighbor instanceof BlockStreetSign) {
                     renderState.onCrossingGateBase = true;
                     // Render horizontal bar toward crossing gate pole/sign to bridge the gap
                     if (!dir.equals(poleDir)) {
@@ -425,15 +415,17 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
             }
 
-            // 4. Check for CG pole/base and stacked TLs above/below — extend vertical pole
+            // 4. Check for pole/TL/sign above and below — extend vertical pole
             Block tlBlockAbove = level.getBlockState(pos.above()).getBlock();
             Block tlBlockBelow = level.getBlockState(pos.below()).getBlock();
             if (tlBlockAbove instanceof BlockCrossingGatePole || tlBlockAbove instanceof BlockCrossingGateBase
-                    || tlBlockAbove instanceof BlockTrafficLight) {
+                    || tlBlockAbove instanceof BlockTrafficLight || tlBlockAbove instanceof BlockSign
+                    || tlBlockAbove instanceof BlockStreetSign) {
                 renderState.extendPoleUp = true;
             }
             if (tlBlockBelow instanceof BlockCrossingGatePole || tlBlockBelow instanceof BlockCrossingGateBase
-                    || tlBlockBelow instanceof BlockTrafficLight) {
+                    || tlBlockBelow instanceof BlockTrafficLight || tlBlockBelow instanceof BlockSign
+                    || tlBlockBelow instanceof BlockStreetSign) {
                 renderState.extendPoleDown = true;
             }
         }
@@ -493,8 +485,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         float poleShiftAmount = 9.0f / 16.0f; // 9 pixels toward pole
 
         // --- Render body (rotated) ---
+        // Skip body model for regular signs (BlockSign) when mounted on a pole —
+        // the model only contains a center pole element; the sign face renders as a quad separately
         boolean isHangingStreetSign = state.getBlock() instanceof BlockStreetSign && renderState.hanging;
-        {
+        boolean skipBodyModel = state.getBlock() instanceof BlockSign && shiftToPole;
+        if (!skipBodyModel) {
             poseStack.pushPose();
 
             // Hanging street sign: shift body UP so sign sits at Y 15-19
@@ -560,7 +555,13 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         // --- Vertical pole extension for TLs/signs above/below CG poles ---
-        if ((isTrafficLight || isSign) && !isHangingStreetSign && (renderState.extendPoleUp || renderState.extendPoleDown)) {
+        // When shifted to a side pole, only render if bridging blocks both above AND below;
+        // otherwise the center pole appears offset from the body with nothing to connect to
+        boolean shouldRenderPole = (renderState.extendPoleUp || renderState.extendPoleDown);
+        if (shiftToPole && isTrafficLight) {
+            shouldRenderPole = renderState.extendPoleUp && renderState.extendPoleDown;
+        }
+        if ((isTrafficLight || isSign) && !isHangingStreetSign && shouldRenderPole) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             BlockStateModel poleModel = modelManager.getStandaloneModel(BACK_POLE_MODEL_KEY);
             if (poleModel != null) {

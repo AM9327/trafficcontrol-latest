@@ -196,9 +196,16 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - HP extractRenderState tracks streetSignDirs separately for bar extension rendering
 
 ### Pole Rendering Fixes (4/7/26)
-- Signs no longer extend vertical back pole when mounted on horizontal pole
-- Signs only extend vertical pole toward CG poles/bases (not toward TLs or other signs)
-- Traffic lights no longer extend vertical pole toward signs (only toward CG poles and stacked TLs)
+- Regular signs (BlockSign) no longer render the built-in center pole when mounted on a CG pole
+  - The sign.json model only contains a pole element; the sign face renders as a separate quad
+  - When shifted to a side pole, the body model is skipped to hide the misaligned center pole
+  - Standalone signs (not on a pole) still render the built-in pole
+- Regular signs do NOT extend center pole up/down — they mount on CG poles to the side
+- Traffic lights extend vertical pole toward signs/street signs above and below
+  - When shifted to a side pole, the back pole only renders if bridging blocks both above AND below
+  - Prevents offset pole stub when TL has a sign on only one side
+- BlockTrafficLight.updateHorizontalBar() now recognizes BlockStreetSign as a connectable neighbor
+- TL renderer recognizes BlockStreetSign for horizontal bar rendering toward adjacent signs
 - CG pole shouldConnect skips hanging street signs
 
 ### NeoForge Upgrade
