@@ -1,6 +1,7 @@
 package com.clussmanproductions.trafficcontrol;
 
 import com.clussmanproductions.trafficcontrol.network.PacketUpdateSign;
+import com.clussmanproductions.trafficcontrol.network.PacketUpdateStreetSign;
 import com.clussmanproductions.trafficcontrol.signs.SignRepository;
 import org.slf4j.Logger;
 import com.mojang.logging.LogUtils;
@@ -37,6 +38,11 @@ public class ModTrafficControl {
                 PacketUpdateSign.TYPE,
                 PacketUpdateSign.STREAM_CODEC,
                 PacketUpdateSign::handle
+        );
+        registrar.playToServer(
+                PacketUpdateStreetSign.TYPE,
+                PacketUpdateStreetSign.STREAM_CODEC,
+                PacketUpdateStreetSign::handle
         );
     }
 }

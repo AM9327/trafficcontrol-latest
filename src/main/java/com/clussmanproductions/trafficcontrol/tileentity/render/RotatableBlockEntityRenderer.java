@@ -11,10 +11,15 @@ import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLight;
 import com.clussmanproductions.trafficcontrol.signs.Sign;
 import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
 import com.clussmanproductions.trafficcontrol.tileentity.SignBlockEntity;
+import com.clussmanproductions.trafficcontrol.tileentity.StreetSignBlockEntity;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.mojang.math.Axis;
+import net.minecraft.client.gui.Font;
+import net.minecraft.network.chat.Style;
+import net.minecraft.util.FormattedCharSequence;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.SubmitNodeCollector;
 import net.minecraft.client.renderer.block.BlockRenderDispatcher;
 import net.minecraft.client.renderer.block.model.BlockStateModel;
@@ -124,6 +129,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.cgPoleArmDirs.clear();
         renderState.streetSignDirs.clear();
         renderState.hanging = false;
+        renderState.streetSignText1 = "";
+        renderState.streetSignText2 = "";
+        renderState.streetSignTextColor = 0xFFFFFFFF;
+        renderState.streetSignFillColor = 0xFF006400;
+        renderState.streetSignGlowing = false;
         renderState.signFrontTexture = null;
         renderState.signBackTexture = null;
 
@@ -153,8 +163,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         int rotation = state.hasProperty(BlockStateProperties.ROTATION_16)
                 ? state.getValue(BlockStateProperties.ROTATION_16) : 0;
 
-        // Sign: detect mounting pole and find adjacent connectable blocks
-        if (state.getBlock() instanceof BlockSign) {
+        // Sign / Street sign: detect mounting pole and find adjacent connectable blocks
+        // Both BlockSign and non-hanging BlockStreetSign share the same pole mounting logic.
+        boolean isSignLike = state.getBlock() instanceof BlockSign
+                || (state.getBlock() instanceof BlockStreetSign
+                    && (!state.hasProperty(BlockStreetSign.HANGING) || !state.getValue(BlockStreetSign.HANGING)));
+        if (isSignLike) {
             // First pass: prefer horizontal pole for mounting
             for (Direction dir : Direction.Plane.HORIZONTAL) {
                 Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
@@ -177,11 +191,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Chained mount: adjacent sign with CG pole behind it
+            // Chained mount: adjacent sign-like block with CG pole behind it
             if (!renderState.mountedOnPole) {
                 for (Direction dir : Direction.Plane.HORIZONTAL) {
                     Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
-                    if (neighbor instanceof BlockSign) {
+                    if (neighbor instanceof BlockSign || neighbor instanceof BlockStreetSign) {
                         Block beyond = level.getBlockState(pos.relative(dir, 2)).getBlock();
                         if (beyond instanceof BlockCrossingGatePole) {
                             renderState.mountedOnPole = true;
@@ -192,11 +206,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Back-to-back: adjacent sign facing opposite direction (rotation diff of 8)
+            // Back-to-back: adjacent sign-like block facing opposite direction (rotation diff of 8)
             if (!renderState.mountedOnPole && state.hasProperty(BlockStateProperties.ROTATION_16)) {
                 for (Direction dir : Direction.Plane.HORIZONTAL) {
                     BlockState neighborState = level.getBlockState(pos.relative(dir));
-                    if (neighborState.getBlock() instanceof BlockSign
+                    if ((neighborState.getBlock() instanceof BlockSign || neighborState.getBlock() instanceof BlockStreetSign)
                             && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
                         int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
                         if (Math.abs(neighborRot - rotation) == 8) {
@@ -209,8 +223,6 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Regular signs (BlockSign) do NOT extend a center pole — they mount
-            // on CG poles to the side, which render their own pole visuals.
             // Collect connectable neighbors for arm rendering
             // Includes adjacent signs for sign-to-sign chaining on CG poles
             // Skip back-to-back signs (rotation diff of 8) — no arm needed
@@ -220,7 +232,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         || neighbor instanceof BlockCrossingGateBase
                         || neighbor instanceof BlockTrafficLight) {
                     renderState.signalArmTrafficLightDirs.add(dir);
-                } else if (neighbor instanceof BlockSign) {
+                } else if (neighbor instanceof BlockSign || neighbor instanceof BlockStreetSign) {
                     BlockState neighborState = level.getBlockState(pos.relative(dir));
                     boolean isBackToBack = neighborState.hasProperty(BlockStateProperties.ROTATION_16)
                             && Math.abs(neighborState.getValue(BlockStateProperties.ROTATION_16) - rotation) == 8;
@@ -230,13 +242,15 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Add arm toward mounting HP only (not all adjacent HPs)
-            if (renderState.mountedOnHorizontalPole && renderState.horizontalBarDirection != null) {
+            // Add arm toward mounting HP only (not all adjacent HPs).
+            // Street signs shift toward the HP so they don't need their own arm — the HP handles it.
+            if (renderState.mountedOnHorizontalPole && renderState.horizontalBarDirection != null
+                    && !(state.getBlock() instanceof BlockStreetSign)) {
                 renderState.signalArmTrafficLightDirs.add(renderState.horizontalBarDirection);
             }
         }
 
-        // Street sign: hanging state and CG pole connection
+        // Street sign: hanging state, CG pole below, and text/color data
         if (state.getBlock() instanceof BlockStreetSign) {
             if (state.hasProperty(BlockStreetSign.HANGING)) {
                 renderState.hanging = state.getValue(BlockStreetSign.HANGING);
@@ -246,6 +260,18 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 if (blockBelow instanceof BlockCrossingGatePole || blockBelow instanceof BlockCrossingGateBase) {
                     renderState.extendPoleDown = true;
                 }
+            }
+            if (blockEntity instanceof StreetSignBlockEntity streetSignBE) {
+                renderState.streetSignText1 = streetSignBE.getText1();
+                renderState.streetSignText2 = streetSignBE.getText2();
+                renderState.streetSignTextColor = streetSignBE.getTextColor() | 0xFF000000;
+                renderState.streetSignGlowing = streetSignBE.hasGlowingText();
+                renderState.streetSignFillColor = switch (streetSignBE.getColorIndex()) {
+                    case 1 -> 0xFFCC0000; // Red
+                    case 2 -> 0xFF0000CC; // Blue
+                    case 3 -> 0xFFCCCC00; // Yellow
+                    default -> 0xFF006400; // Green
+                };
             }
         }
 
@@ -288,8 +314,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 } else if (neighbor instanceof BlockStreetSign
                         && (!neighborState.hasProperty(BlockStreetSign.HANGING)
                             || !neighborState.getValue(BlockStreetSign.HANGING))) {
-                    renderState.signalArmTrafficLightDirs.add(dir);
-                    renderState.streetSignDirs.add(dir);
+                    // No arm — the arm model is full-block height and pokes through
+                    // the 4px-tall street sign plate. They sit adjacent without a connector.
                 }
             }
             // Second pass: add TLs, but skip back-to-back pairs (opposite dirs, rotation diff of 8)
@@ -381,8 +407,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
                 if (neighbor instanceof BlockCrossingGatePole
                         || neighbor instanceof BlockCrossingGateBase
-                        || neighbor instanceof BlockSign
-                        || neighbor instanceof BlockStreetSign) {
+                        || neighbor instanceof BlockSign) {
                     renderState.onCrossingGateBase = true;
                     // Render horizontal bar toward crossing gate pole/sign to bridge the gap
                     if (!dir.equals(poleDir)) {
@@ -419,13 +444,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             Block tlBlockAbove = level.getBlockState(pos.above()).getBlock();
             Block tlBlockBelow = level.getBlockState(pos.below()).getBlock();
             if (tlBlockAbove instanceof BlockCrossingGatePole || tlBlockAbove instanceof BlockCrossingGateBase
-                    || tlBlockAbove instanceof BlockTrafficLight || tlBlockAbove instanceof BlockSign
-                    || tlBlockAbove instanceof BlockStreetSign) {
+                    || tlBlockAbove instanceof BlockTrafficLight || tlBlockAbove instanceof BlockSign) {
                 renderState.extendPoleUp = true;
             }
             if (tlBlockBelow instanceof BlockCrossingGatePole || tlBlockBelow instanceof BlockCrossingGateBase
-                    || tlBlockBelow instanceof BlockTrafficLight || tlBlockBelow instanceof BlockSign
-                    || tlBlockBelow instanceof BlockStreetSign) {
+                    || tlBlockBelow instanceof BlockTrafficLight || tlBlockBelow instanceof BlockSign) {
                 renderState.extendPoleDown = true;
             }
         }
@@ -471,23 +494,30 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
 
+        boolean isStreetSign = state.getBlock() instanceof BlockStreetSign;
+        boolean isHangingStreetSign = isStreetSign && renderState.hanging;
+
         // --- Pole-mounted shift ---
         // Shift toward pole only when there's no adjacent traffic light (side-by-side row)
         // and no other pole connections (e.g. CG pole on the opposite side).
         // When TLs are adjacent or between two poles, keep centered.
+        // Street signs always shift when mounted (both HP and CG pole).
+        // Regular signs only shift on CG pole (HP provides flush mount).
         boolean shiftToPole = (isTrafficLight && renderState.mountedOnPole
                 && renderState.horizontalBarDirection != null
                 && (!renderState.hasAdjacentTrafficLight || renderState.backToBackTLDir != null)
-                && renderState.horizontalPoleDirs.isEmpty())
-                || (isSign && renderState.mountedOnPole
+                && (renderState.horizontalPoleDirs.isEmpty() || renderState.backToBackTLDir != null))
+                || (state.getBlock() instanceof BlockSign && renderState.mountedOnPole
+                && !renderState.mountedOnHorizontalPole
+                && renderState.horizontalBarDirection != null)
+                || (isStreetSign && !isHangingStreetSign && renderState.mountedOnPole
                 && !renderState.mountedOnHorizontalPole
                 && renderState.horizontalBarDirection != null);
-        float poleShiftAmount = 9.0f / 16.0f; // 9 pixels toward pole
+        float poleShiftAmount = 9.0f / 16.0f;
 
         // --- Render body (rotated) ---
         // Skip body model for regular signs (BlockSign) when mounted on a pole —
         // the model only contains a center pole element; the sign face renders as a quad separately
-        boolean isHangingStreetSign = state.getBlock() instanceof BlockStreetSign && renderState.hanging;
         boolean skipBodyModel = state.getBlock() instanceof BlockSign && shiftToPole;
         if (!skipBodyModel) {
             poseStack.pushPose();
@@ -508,11 +538,56 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
             poseStack.translate(-0.5f, 0.0f, -0.5f);
 
+
             nodeCollector.submitBlockModel(
                     poseStack, renderType, bodyModel,
                     1.0f, 1.0f, 1.0f,
                     renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
             );
+
+            poseStack.popPose();
+        }
+
+        // --- Street sign: colored fill quads behind block model ---
+        // Block model uses street_sign.png (transparent fill, white border).
+        // entityCutout discards transparent pixels, showing colored fill quads behind.
+        if (isStreetSign) {
+            Identifier whiteTex = Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "textures/block/street_sign_white.png");
+            ensureTextureLoaded(whiteTex);
+
+            int fillColor = renderState.streetSignFillColor;
+            int fr = (fillColor >> 16) & 0xFF;
+            int fg = (fillColor >> 8) & 0xFF;
+            int fb = fillColor & 0xFF;
+            int light = renderState.lightCoords;
+            int overlay = OverlayTexture.NO_OVERLAY;
+
+            // Sign plate: model faces at z=7/16 (north) and z=9/16 (south).
+            // Fill quads sit slightly behind each face to avoid z-fighting with the border.
+            float x1 = 0, x2 = 1;
+            float y1 = 6f / 16f, y2 = 10f / 16f;
+            float zNorth = 7f / 16f + 0.002f;
+            float zSouth = 9f / 16f - 0.002f;
+
+            poseStack.pushPose();
+            if (isHangingStreetSign) poseStack.translate(0, 9.0f / 16.0f, 0);
+            if (shiftToPole) {
+                Direction poleDir = renderState.horizontalBarDirection;
+                poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0, poleDir.getStepZ() * poleShiftAmount);
+            }
+            poseStack.translate(0.5f, 0.0f, 0.5f);
+            poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+            poseStack.translate(-0.5f, 0.0f, -0.5f);
+
+            // flipWinding=false for south (+Z), flipWinding=true for north (-Z)
+            RenderType fillRt = RenderTypes.entitySolid(whiteTex);
+            nodeCollector.submitCustomGeometry(poseStack, fillRt, (pose, consumer) -> {
+                Matrix4f m = pose.pose();
+                Vector3f nS = pose.transformNormal(0, 0, 1, new Vector3f());
+                addQuad(consumer, m, nS, x1, y1, x2, y2, zSouth, false, fr, fg, fb, 255, overlay, light);
+                Vector3f nN = pose.transformNormal(0, 0, -1, new Vector3f());
+                addQuad(consumer, m, nN, x1, y1, x2, y2, zNorth, true, fr, fg, fb, 255, overlay, light);
+            });
 
             poseStack.popPose();
         }
@@ -561,6 +636,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         if (shiftToPole && isTrafficLight) {
             shouldRenderPole = renderState.extendPoleUp && renderState.extendPoleDown;
         }
+        // Street signs never render the center back pole — they mount on external poles
+        if (isStreetSign) shouldRenderPole = false;
         if ((isTrafficLight || isSign) && !isHangingStreetSign && shouldRenderPole) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             BlockStateModel poleModel = modelManager.getStandaloneModel(BACK_POLE_MODEL_KEY);
@@ -726,7 +803,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         // Signal arm / horizontal pole / sign: render ext arm toward each adjacent block
-        if ((state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole || state.getBlock() instanceof BlockSign)
+        if ((state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole
+                || state.getBlock() instanceof BlockSign || (state.getBlock() instanceof BlockStreetSign && !renderState.hanging))
                 && !renderState.signalArmTrafficLightDirs.isEmpty()) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             boolean isHorizPole = state.getBlock() instanceof BlockHorizontalPole;
@@ -740,7 +818,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 } else if (isHorizPole && renderState.signDirs.contains(dir)) {
                     modelKey = TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY;
                 } else {
-                    boolean isSignBlock = state.getBlock() instanceof BlockSign;
+                    boolean isSignBlock = state.getBlock() instanceof BlockSign || state.getBlock() instanceof BlockStreetSign;
                     if (isSignBlock) {
                         // Short arm for sign-to-sign, full arm for sign-to-pole
                         modelKey = renderState.signToSignDirs.contains(dir)
@@ -908,6 +986,131 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
+        // --- Street sign text rendering (2 lines, both faces) ---
+        // --- Street sign text rendering (2 lines, both faces) ---
+        // Real street signs are retroreflective — always render text at fullbright.
+        // Text must fit within the sign plate: 14/16 usable width, ~3/16 usable height (inside border).
+        boolean hasText = state.getBlock() instanceof BlockStreetSign
+                && (!renderState.streetSignText1.isEmpty() || !renderState.streetSignText2.isEmpty());
+        if (hasText) {
+            Font font = Minecraft.getInstance().font;
+            FormattedCharSequence line1 = FormattedCharSequence.forward(renderState.streetSignText1, Style.EMPTY);
+            FormattedCharSequence line2 = FormattedCharSequence.forward(renderState.streetSignText2, Style.EMPTY);
+            boolean hasLine1 = !renderState.streetSignText1.isEmpty();
+            boolean hasLine2 = !renderState.streetSignText2.isEmpty();
+            int lineCount = (hasLine1 ? 1 : 0) + (hasLine2 ? 1 : 0);
+
+            // Sign plate: [0,6,7] to [16,10,9] = 4px tall, 16px wide
+            // Usable area inside border: ~14px wide (0.875 blocks), ~3px tall (0.1875 blocks)
+            float maxUsableWidth = 0.875f;   // 14/16 blocks
+            float maxUsableHeight = 0.1875f; // 3/16 blocks (inside the border)
+            int lineHeight = font.lineHeight; // 9px
+
+            int w1 = hasLine1 ? font.width(line1) : 0;
+            int w2 = hasLine2 ? font.width(line2) : 0;
+            int maxTextWidth = Math.max(w1, w2);
+
+            // Start with base scale, then clamp to fit both width and height
+            float textScale = 1.0f / 64.0f;
+            float totalTextPixelHeight = lineCount * lineHeight;
+
+            // Clamp scale so text width fits
+            if (maxTextWidth * textScale > maxUsableWidth) {
+                textScale = maxUsableWidth / maxTextWidth;
+            }
+            // Clamp scale so text height fits (critical for 2 lines)
+            if (totalTextPixelHeight * textScale > maxUsableHeight) {
+                textScale = maxUsableHeight / totalTextPixelHeight;
+            }
+
+            float finalScale = textScale;
+            float totalTextHeight = totalTextPixelHeight;
+
+            for (int face = 0; face < 2; face++) {
+                poseStack.pushPose();
+
+                if (isHangingStreetSign) {
+                    poseStack.translate(0, 9.0f / 16.0f, 0);
+                }
+                if (shiftToPole) {
+                    Direction poleDir = renderState.horizontalBarDirection;
+                    poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
+                            poleDir.getStepZ() * poleShiftAmount);
+                }
+
+                poseStack.translate(0.5f, 0.5f, 0.5f);
+                poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+
+                if (face == 1) {
+                    poseStack.mulPose(Axis.YP.rotationDegrees(180));
+                }
+
+                poseStack.translate(0, 0, 1.5f / 16.0f);
+                poseStack.scale(finalScale, -finalScale, finalScale);
+
+                // Street signs are retroreflective — always fullbright text
+                int textLight = 0xF000F0;
+
+                // Render each line, centered vertically within the plate
+                float yStart = -totalTextHeight / 2.0f;
+                int lineIndex = 0;
+                if (hasLine1) {
+                    nodeCollector.submitText(poseStack,
+                            -w1 / 2.0f, yStart + lineIndex * lineHeight,
+                            line1, false, Font.DisplayMode.POLYGON_OFFSET,
+                            textLight, renderState.streetSignTextColor, 0, 0);
+                    lineIndex++;
+                }
+                if (hasLine2) {
+                    nodeCollector.submitText(poseStack,
+                            -w2 / 2.0f, yStart + lineIndex * lineHeight,
+                            line2, false, Font.DisplayMode.POLYGON_OFFSET,
+                            textLight, renderState.streetSignTextColor, 0, 0);
+                }
+
+                poseStack.popPose();
+            }
+        }
+
+    }
+
+    private static void addBorderQuad(
+            VertexConsumer consumer, Matrix4f m, Vector3f n,
+            float x1, float y1, float x2, float y2, float z,
+            int r, int g, int b, int a, int overlay, int light, boolean flipWinding
+    ) {
+        if (flipWinding) {
+            // North face winding (CCW from -Z side)
+            consumer.addVertex(m, x2, y2, z).setColor(r, g, b, a).setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x2, y1, z).setColor(r, g, b, a).setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x1, y1, z).setColor(r, g, b, a).setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x1, y2, z).setColor(r, g, b, a).setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+        } else {
+            // South face winding (CCW from +Z side)
+            consumer.addVertex(m, x1, y2, z).setColor(r, g, b, a).setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x1, y1, z).setColor(r, g, b, a).setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x2, y1, z).setColor(r, g, b, a).setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x2, y2, z).setColor(r, g, b, a).setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+        }
+    }
+
+    // Renders a face quad at a fixed Z. flipWinding=false for south (+Z), true for north (-Z).
+    private static void addQuad(
+            VertexConsumer consumer, Matrix4f m, Vector3f n,
+            float x1, float y1, float x2, float y2, float z, boolean flipWinding,
+            int r, int g, int b, int a, int overlay, int light
+    ) {
+        if (flipWinding) {
+            consumer.addVertex(m, x2, y2, z).setColor(r, g, b, a).setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x2, y1, z).setColor(r, g, b, a).setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x1, y1, z).setColor(r, g, b, a).setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x1, y2, z).setColor(r, g, b, a).setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+        } else {
+            consumer.addVertex(m, x1, y2, z).setColor(r, g, b, a).setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x1, y1, z).setColor(r, g, b, a).setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x2, y1, z).setColor(r, g, b, a).setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+            consumer.addVertex(m, x2, y2, z).setColor(r, g, b, a).setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(n.x, n.y, n.z);
+        }
     }
 
     private static void ensureTextureLoaded(Identifier location) {

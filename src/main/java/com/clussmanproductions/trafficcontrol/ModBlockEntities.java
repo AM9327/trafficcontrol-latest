@@ -2,6 +2,7 @@ package com.clussmanproductions.trafficcontrol;
 
 import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
 import com.clussmanproductions.trafficcontrol.tileentity.SignBlockEntity;
+import com.clussmanproductions.trafficcontrol.tileentity.StreetSignBlockEntity;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.neoforged.neoforge.registries.DeferredHolder;
@@ -79,9 +80,7 @@ public class ModBlockEntities {
                             ModBlocks.STAND.get(),
                             ModBlocks.HORIZONTAL_POLE.get(),
                             ModBlocks.SIGNAL_ARM.get(),
-                            ModBlocks.CROSSING_GATE_POLE.get(),
-                            ModBlocks.STREET_SIGN.get(),
-                            ModBlocks.ILLUMINATED_STREET_SIGN.get()
+                            ModBlocks.CROSSING_GATE_POLE.get()
                     ));
 
     // Dedicated block entity for signs — stores sign selection and text
@@ -90,5 +89,14 @@ public class ModBlockEntities {
                     () -> new BlockEntityType<>(
                             SignBlockEntity::new,
                             ModBlocks.SIGN.get()
+                    ));
+
+    // Dedicated block entity for street signs — stores text and color
+    public static final DeferredHolder<BlockEntityType<?>, BlockEntityType<StreetSignBlockEntity>> STREET_SIGN_ENTITY =
+            BLOCK_ENTITIES.register("street_sign",
+                    () -> new BlockEntityType<>(
+                            StreetSignBlockEntity::new,
+                            ModBlocks.STREET_SIGN.get(),
+                            ModBlocks.ILLUMINATED_STREET_SIGN.get()
                     ));
 }

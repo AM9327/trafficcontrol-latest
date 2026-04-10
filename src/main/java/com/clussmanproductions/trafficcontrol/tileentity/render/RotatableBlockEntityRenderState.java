@@ -82,4 +82,11 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
 
     // Horizontal pole: directions toward adjacent non-hanging street signs (extend bar into)
     public List<Direction> streetSignDirs = new ArrayList<>();
+
+    // Street sign: text (2 lines), text color, plate fill color, and glow
+    public String streetSignText1 = "";
+    public String streetSignText2 = "";
+    public int streetSignTextColor = 0xFFFFFFFF;
+    public int streetSignFillColor = 0xFF006400; // ARGB, default dark green
+    public boolean streetSignGlowing = false;
 }

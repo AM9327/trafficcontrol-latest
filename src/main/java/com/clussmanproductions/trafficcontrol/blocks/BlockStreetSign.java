@@ -1,10 +1,19 @@
 package com.clussmanproductions.trafficcontrol.blocks;
 
-import com.clussmanproductions.trafficcontrol.tileentity.RotatableBlockEntity;
+import com.clussmanproductions.trafficcontrol.gui.StreetSignGui;
+import com.clussmanproductions.trafficcontrol.item.ItemScrewdriver;
+import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
+import com.clussmanproductions.trafficcontrol.tileentity.StreetSignBlockEntity;
+import net.minecraft.client.Minecraft;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.RenderShape;
@@ -16,12 +25,13 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
 import net.minecraft.world.level.block.state.properties.IntegerProperty;
 import net.minecraft.world.level.block.state.properties.RotationSegment;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jspecify.annotations.Nullable;
 
-public class BlockStreetSign extends Block implements EntityBlock {
+public class BlockStreetSign extends Block implements IHorizontalPoleConnectable, EntityBlock {
 
     public static final IntegerProperty ROTATION = BlockStateProperties.ROTATION_16;
     public static final BooleanProperty HANGING = BlockStateProperties.HANGING;
@@ -33,7 +43,7 @@ public class BlockStreetSign extends Block implements EntityBlock {
 
     // Hanging sign: Y 15-19 (shifted up by 9)
     private static final VoxelShape HANGING_SHAPE_NS = Block.box(0, 15, 5, 16, 19, 11);
-    private static final VoxelShape HANGING_SHAPE_EW = Block.box(5, 15, 0, 11, 19, 16);
+    private static final VoxelShape HANGING_SHAPE_EW = Block.box(5, 15, 0, 11, 15, 16);
     private static final VoxelShape HANGING_SHAPE_DIAGONAL = Block.box(0, 15, 0, 16, 19, 16);
 
     public BlockStreetSign(BlockBehaviour.Properties properties) {
@@ -57,21 +67,117 @@ public class BlockStreetSign extends Block implements EntityBlock {
     }
 
     @Override
+    public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
+        super.setPlacedBy(level, pos, state, placer, stack);
+        if (level.isClientSide()) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof StreetSignBlockEntity streetSignBE) {
+                Minecraft.getInstance().setScreen(new StreetSignGui(streetSignBE));
+            }
+        }
+    }
+
+    @Override
+    public boolean canConnectHorizontalPole(BlockState state, Direction fromDirection) {
+        // Don't connect horizontal pole to hanging signs
+        return !state.getValue(HANGING);
+    }
+
+    /** Check if a neighbor is a sign-type block (BlockSign or BlockStreetSign, non-hanging). */
+    private static boolean isSignLike(BlockGetter level, BlockPos pos) {
+        BlockState state = level.getBlockState(pos);
+        Block block = state.getBlock();
+        if (block instanceof BlockSign) return true;
+        if (block instanceof BlockStreetSign) {
+            return !state.hasProperty(HANGING) || !state.getValue(HANGING);
+        }
+        return false;
+    }
+
+    @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         boolean hanging = state.getValue(HANGING);
         int rotation = state.getValue(ROTATION);
         boolean isCardinal = (rotation % 4) == 0;
 
+        // Hanging signs don't shift toward poles
+        if (hanging) {
+            if (!isCardinal) return HANGING_SHAPE_DIAGONAL;
+            int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
+            if (steps < 0) steps += 4;
+            return (steps == 1 || steps == 3) ? HANGING_SHAPE_EW : HANGING_SHAPE_NS;
+        }
+
+        // Check for adjacent CG pole/base — sign shifts toward it
+        Direction shiftDir = null;
+        double shiftPixels = 9.0;
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+            if (neighbor instanceof BlockCrossingGatePole || neighbor instanceof BlockCrossingGateBase) {
+                shiftDir = dir;
+                break;
+            }
+        }
+        // Chained: adjacent sign-like block with CG pole behind it
+        if (shiftDir == null) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                if (isSignLike(level, pos.relative(dir))) {
+                    Block beyond = level.getBlockState(pos.relative(dir, 2)).getBlock();
+                    if (beyond instanceof BlockCrossingGatePole) {
+                        shiftDir = dir;
+                        break;
+                    }
+                }
+            }
+        }
+        // Back-to-back: adjacent sign-like block facing opposite direction
+        if (shiftDir == null) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockState neighborState = level.getBlockState(pos.relative(dir));
+                if ((neighborState.getBlock() instanceof BlockSign || neighborState.getBlock() instanceof BlockStreetSign)
+                        && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                    int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
+                    if (Math.abs(neighborRot - rotation) == 8) {
+                        shiftDir = dir;
+                        break;
+                    }
+                }
+            }
+        }
+
+        // Y bounds for street sign plate
+        double yMin = 6, yMax = 10;
+
+        if (!isCardinal) {
+            if (shiftDir != null) {
+                double offsetX = shiftDir.getStepX() * shiftPixels;
+                double offsetZ = shiftDir.getStepZ() * shiftPixels;
+                return Block.box(offsetX, yMin, offsetZ, 16 + offsetX, yMax, 16 + offsetZ);
+            }
+            return SHAPE_DIAGONAL;
+        }
+
         int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
         if (steps < 0) steps += 4;
 
-        if (hanging) {
-            if (!isCardinal) return HANGING_SHAPE_DIAGONAL;
-            return (steps == 1 || steps == 3) ? HANGING_SHAPE_EW : HANGING_SHAPE_NS;
-        } else {
-            if (!isCardinal) return SHAPE_DIAGONAL;
-            return (steps == 1 || steps == 3) ? SHAPE_EW : SHAPE_NS;
+        if (shiftDir != null) {
+            double minX, minZ, maxX, maxZ;
+            if (steps == 1 || steps == 3) {
+                minX = 5; minZ = 0; maxX = 11; maxZ = 16;
+            } else {
+                minX = 0; minZ = 5; maxX = 16; maxZ = 11;
+            }
+            double offsetX = shiftDir.getStepX() * shiftPixels;
+            double offsetZ = shiftDir.getStepZ() * shiftPixels;
+            return Block.box(minX + offsetX, yMin, minZ + offsetZ, maxX + offsetX, yMax, maxZ + offsetZ);
         }
+
+        return switch (steps) {
+            case 1 -> SHAPE_EW;
+            case 2 -> SHAPE_NS;
+            case 3 -> SHAPE_EW;
+            default -> SHAPE_NS;
+        };
     }
 
     @Override
@@ -86,6 +192,90 @@ public class BlockStreetSign extends Block implements EntityBlock {
 
     @Override
     public @Nullable BlockEntity newBlockEntity(BlockPos pos, BlockState state) {
-        return new RotatableBlockEntity(pos, state);
+        return new StreetSignBlockEntity(pos, state);
+    }
+
+    @Override
+    protected void onPlace(BlockState state, Level level, BlockPos pos, BlockState oldState, boolean movedByPiston) {
+        super.onPlace(state, level, pos, oldState, movedByPiston);
+        if (!level.isClientSide()) {
+            notifyNeighborBlockEntities(level, pos);
+        }
+    }
+
+    private void notifyNeighborBlockEntities(Level level, BlockPos pos) {
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            BlockPos neighborPos = pos.relative(dir);
+            BlockEntity be = level.getBlockEntity(neighborPos);
+            if (be != null) {
+                BlockState neighborState = level.getBlockState(neighborPos);
+                level.sendBlockUpdated(neighborPos, neighborState, neighborState, 3);
+            }
+        }
+    }
+
+    @Override
+    protected InteractionResult useItemOn(
+            net.minecraft.world.item.ItemStack stack, BlockState state, Level level, BlockPos pos,
+            Player player, net.minecraft.world.InteractionHand hand, BlockHitResult hitResult) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (!(be instanceof StreetSignBlockEntity streetSignBE)) {
+            return InteractionResult.PASS;
+        }
+
+        // Dye interaction: change text color
+        if (stack.getItem() instanceof net.minecraft.world.item.DyeItem dyeItem) {
+            if (!level.isClientSide()) {
+                streetSignBE.setTextColor(dyeItem.getDyeColor().getTextColor());
+                streetSignBE.syncToClient();
+                level.playSound(null, pos, net.minecraft.sounds.SoundEvents.DYE_USE,
+                        net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+                stack.consume(1, player);
+            }
+            return InteractionResult.SUCCESS;
+        }
+
+        // Glow ink sac: make text glow
+        if (stack.is(net.minecraft.world.item.Items.GLOW_INK_SAC)) {
+            if (!level.isClientSide() && !streetSignBE.hasGlowingText()) {
+                streetSignBE.setGlowingText(true);
+                streetSignBE.syncToClient();
+                level.playSound(null, pos, net.minecraft.sounds.SoundEvents.GLOW_INK_SAC_USE,
+                        net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+                stack.consume(1, player);
+            }
+            return InteractionResult.SUCCESS;
+        }
+
+        // Ink sac: remove glow
+        if (stack.is(net.minecraft.world.item.Items.INK_SAC)) {
+            if (!level.isClientSide() && streetSignBE.hasGlowingText()) {
+                streetSignBE.setGlowingText(false);
+                streetSignBE.syncToClient();
+                level.playSound(null, pos, net.minecraft.sounds.SoundEvents.INK_SAC_USE,
+                        net.minecraft.sounds.SoundSource.BLOCKS, 1.0F, 1.0F);
+                stack.consume(1, player);
+            }
+            return InteractionResult.SUCCESS;
+        }
+
+        return InteractionResult.TRY_WITH_EMPTY_HAND;
+    }
+
+    @Override
+    protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player player, BlockHitResult hitResult) {
+        // Screwdriver bypasses GUI — let screwdriver rotation handle it
+        if (player.getMainHandItem().getItem() instanceof ItemScrewdriver
+                || player.getOffhandItem().getItem() instanceof ItemScrewdriver) {
+            return InteractionResult.PASS;
+        }
+
+        if (level.isClientSide()) {
+            BlockEntity be = level.getBlockEntity(pos);
+            if (be instanceof StreetSignBlockEntity streetSignBE) {
+                Minecraft.getInstance().setScreen(new StreetSignGui(streetSignBE));
+            }
+        }
+        return InteractionResult.SUCCESS;
     }
 }
