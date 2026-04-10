@@ -226,19 +226,25 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             // Collect connectable neighbors for arm rendering
             // Includes adjacent signs for sign-to-sign chaining on CG poles
             // Skip back-to-back signs (rotation diff of 8) — no arm needed
-            for (Direction dir : Direction.Plane.HORIZONTAL) {
-                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
-                if (neighbor instanceof BlockCrossingGatePole
-                        || neighbor instanceof BlockCrossingGateBase
-                        || neighbor instanceof BlockTrafficLight) {
-                    renderState.signalArmTrafficLightDirs.add(dir);
-                } else if (neighbor instanceof BlockSign || neighbor instanceof BlockStreetSign) {
-                    BlockState neighborState = level.getBlockState(pos.relative(dir));
-                    boolean isBackToBack = neighborState.hasProperty(BlockStateProperties.ROTATION_16)
-                            && Math.abs(neighborState.getValue(BlockStateProperties.ROTATION_16) - rotation) == 8;
-                    if (!isBackToBack) {
+            // Street signs don't render arms toward poles/TLs — they shift toward the pole instead
+            // Street signs never render arms — all arm models are full-block height
+            // and poke through the 4px-tall plate. They shift toward poles instead.
+            boolean isCurrentStreetSign = state.getBlock() instanceof BlockStreetSign;
+            if (!isCurrentStreetSign) {
+                for (Direction dir : Direction.Plane.HORIZONTAL) {
+                    Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                    if (neighbor instanceof BlockCrossingGatePole
+                            || neighbor instanceof BlockCrossingGateBase
+                            || neighbor instanceof BlockTrafficLight) {
                         renderState.signalArmTrafficLightDirs.add(dir);
-                        renderState.signToSignDirs.add(dir);
+                    } else if (neighbor instanceof BlockSign || neighbor instanceof BlockStreetSign) {
+                        BlockState neighborState = level.getBlockState(pos.relative(dir));
+                        boolean isBackToBack = neighborState.hasProperty(BlockStateProperties.ROTATION_16)
+                                && Math.abs(neighborState.getValue(BlockStateProperties.ROTATION_16) - rotation) == 8;
+                        if (!isBackToBack) {
+                            renderState.signalArmTrafficLightDirs.add(dir);
+                            renderState.signToSignDirs.add(dir);
+                        }
                     }
                 }
             }
@@ -276,11 +282,20 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         // Crossing gate pole: read connection state for arm rendering
+        // Skip arms toward street signs — the arm model is full-block height and pokes through the 4px plate
         if (state.getBlock() instanceof BlockCrossingGatePole) {
-            if (state.getValue(BlockCrossingGatePole.NORTH)) renderState.cgPoleArmDirs.add(Direction.NORTH);
-            if (state.getValue(BlockCrossingGatePole.SOUTH)) renderState.cgPoleArmDirs.add(Direction.SOUTH);
-            if (state.getValue(BlockCrossingGatePole.EAST)) renderState.cgPoleArmDirs.add(Direction.EAST);
-            if (state.getValue(BlockCrossingGatePole.WEST)) renderState.cgPoleArmDirs.add(Direction.WEST);
+            Direction[] dirs = {Direction.NORTH, Direction.SOUTH, Direction.EAST, Direction.WEST};
+            net.minecraft.world.level.block.state.properties.BooleanProperty[] props = {
+                    BlockCrossingGatePole.NORTH, BlockCrossingGatePole.SOUTH,
+                    BlockCrossingGatePole.EAST, BlockCrossingGatePole.WEST};
+            for (int i = 0; i < 4; i++) {
+                if (state.getValue(props[i])) {
+                    Block neighbor = level.getBlockState(pos.relative(dirs[i])).getBlock();
+                    if (!(neighbor instanceof BlockStreetSign)) {
+                        renderState.cgPoleArmDirs.add(dirs[i]);
+                    }
+                }
+            }
         }
 
         // Signal arm: find adjacent traffic lights to render bars toward
@@ -515,7 +530,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 || (isStreetSign && !isHangingStreetSign && renderState.mountedOnPole
                 && !renderState.mountedOnHorizontalPole
                 && renderState.horizontalBarDirection != null);
-        float poleShiftAmount = 9.0f / 16.0f;
+        // Street signs use a smaller shift (7/16) so the plate edge stops at the
+        // CG pole column face (at 7/16 into the pole block) instead of overlapping it.
+        float poleShiftAmount = isStreetSign ? 7.0f / 16.0f : 9.0f / 16.0f;
 
         // --- Render body (rotated) ---
         // Skip body model for regular signs (BlockSign) when mounted on a pole —

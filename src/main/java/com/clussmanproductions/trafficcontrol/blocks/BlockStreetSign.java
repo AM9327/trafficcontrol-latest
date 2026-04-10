@@ -110,7 +110,7 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
 
         // Check for adjacent CG pole/base — sign shifts toward it
         Direction shiftDir = null;
-        double shiftPixels = 9.0;
+        double shiftPixels = 7.0; // stops at CG pole column face (7/16 into pole block)
         for (Direction dir : Direction.Plane.HORIZONTAL) {
             Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
             if (neighbor instanceof BlockCrossingGatePole || neighbor instanceof BlockCrossingGateBase) {
