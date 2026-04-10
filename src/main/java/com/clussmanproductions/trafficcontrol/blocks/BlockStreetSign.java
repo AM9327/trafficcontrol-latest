@@ -71,9 +71,13 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
         super.setPlacedBy(level, pos, state, placer, stack);
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof StreetSignBlockEntity streetSignBE) {
-            // Add the first sign plate on placement
+            // Add the first sign plate on placement with correct rotation
             if (streetSignBE.getSignCount() == 0) {
-                streetSignBE.addSign(0); // default green
+                int idx = streetSignBE.addSign(0); // default green
+                if (idx >= 0) {
+                    int rot = state.getValue(ROTATION);
+                    streetSignBE.setRotation(idx, rot);
+                }
             }
             if (level.isClientSide()) {
                 Minecraft.getInstance().setScreen(new StreetSignGui(streetSignBE));
@@ -104,12 +108,21 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
         int rotation = state.getValue(ROTATION);
         boolean isCardinal = (rotation % 4) == 0;
 
-        // Hanging signs don't shift toward poles
+        // Hanging signs: plates at Y 0 + 9px offset = Y 9 to 9+plateCount*4
         if (hanging) {
-            if (!isCardinal) return HANGING_SHAPE_DIAGONAL;
+            int hPlateCount = 1;
+            BlockEntity hbe = level.getBlockEntity(pos);
+            if (hbe instanceof StreetSignBlockEntity ssbe) {
+                hPlateCount = Math.max(1, ssbe.getSignCount());
+            }
+            double hYMin = 9;
+            double hYMax = 9 + hPlateCount * 4.0;
+            if (!isCardinal) return Block.box(0, hYMin, 0, 16, hYMax, 16);
             int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
             if (steps < 0) steps += 4;
-            return (steps == 1 || steps == 3) ? HANGING_SHAPE_EW : HANGING_SHAPE_NS;
+            return (steps == 1 || steps == 3)
+                    ? Block.box(5, hYMin, 0, 11, hYMax, 16)
+                    : Block.box(0, hYMin, 5, 16, hYMax, 11);
         }
 
         // Check for adjacent CG pole/base — sign shifts toward it
@@ -237,7 +250,10 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
                 && !player.isSecondaryUseActive()) {
             if (streetSignBE.getSignCount() < StreetSignBlockEntity.MAX_SIGNS) {
                 if (!level.isClientSide()) {
-                    streetSignBE.addSign(0); // default green
+                    int newIdx = streetSignBE.addSign(0);
+                    if (newIdx >= 0) {
+                        streetSignBE.setRotation(newIdx, state.getValue(ROTATION));
+                    }
                     streetSignBE.syncToClient();
                     if (!player.getAbilities().instabuild) {
                         stack.shrink(1);

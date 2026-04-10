@@ -636,8 +636,10 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 // All faces in one call — front, back, and 3D edges
                 final float fy1 = plateY1, fy2 = plateY2;
                 final float uv1 = v1, uv2 = v2;
-                // Edge UV: sample white border from top of row 0 (u 0.125-0.875, v 0-0.0625)
-                final float eu0 = 0.125f, eu1 = 0.875f, ev0 = 0.0f, ev1 = 0.0625f;
+                // Edge UVs: each edge samples its own border strip from the plate's row
+                final float rowV = row * 0.25f;         // row start in V
+                final float pxU = 1f / 16f;             // 1 pixel in U
+                final float pxV = 1f / 16f;             // 1 pixel in V
                 RenderType signRt = RenderTypes.entitySolid(signTex);
                 nodeCollector.submitCustomGeometry(poseStack, signRt, (pose, consumer) -> {
                     Matrix4f m = pose.pose();
@@ -661,46 +663,48 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                             .setUv(1, uv2).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
                     consumer.addVertex(m, x1, fy2, zNorth).setColor(255, 255, 255, 255)
                             .setUv(1, uv1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                    // All edges solid white — sample from center of top border (pure white pixel)
+                    float wu = 0.5f, wv = rowV + 0.03f; // center of white border area
                     // Top edge
                     Vector3f nUp = pose.transformNormal(0, 1, 0, new Vector3f());
                     consumer.addVertex(m, x1, fy2, zNorth).setColor(255, 255, 255, 255)
-                            .setUv(eu0, ev0).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
                     consumer.addVertex(m, x1, fy2, zSouth).setColor(255, 255, 255, 255)
-                            .setUv(eu0, ev1).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
                     consumer.addVertex(m, x2, fy2, zSouth).setColor(255, 255, 255, 255)
-                            .setUv(eu1, ev1).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
                     consumer.addVertex(m, x2, fy2, zNorth).setColor(255, 255, 255, 255)
-                            .setUv(eu1, ev0).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
                     // Bottom edge
                     Vector3f nDown = pose.transformNormal(0, -1, 0, new Vector3f());
                     consumer.addVertex(m, x1, fy1, zSouth).setColor(255, 255, 255, 255)
-                            .setUv(eu0, ev0).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
                     consumer.addVertex(m, x1, fy1, zNorth).setColor(255, 255, 255, 255)
-                            .setUv(eu0, ev1).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
                     consumer.addVertex(m, x2, fy1, zNorth).setColor(255, 255, 255, 255)
-                            .setUv(eu1, ev1).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
                     consumer.addVertex(m, x2, fy1, zSouth).setColor(255, 255, 255, 255)
-                            .setUv(eu1, ev0).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
-                    // Left edge (facing -X, CCW from -X view)
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
+                    // Left edge
                     Vector3f nW = pose.transformNormal(-1, 0, 0, new Vector3f());
                     consumer.addVertex(m, x1, fy2, zNorth).setColor(255, 255, 255, 255)
-                            .setUv(eu0, ev0).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
                     consumer.addVertex(m, x1, fy1, zNorth).setColor(255, 255, 255, 255)
-                            .setUv(eu0, ev1).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
                     consumer.addVertex(m, x1, fy1, zSouth).setColor(255, 255, 255, 255)
-                            .setUv(eu1, ev1).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
                     consumer.addVertex(m, x1, fy2, zSouth).setColor(255, 255, 255, 255)
-                            .setUv(eu1, ev0).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
-                    // Right edge (facing +X, CCW from +X view)
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
+                    // Right edge
                     Vector3f nE = pose.transformNormal(1, 0, 0, new Vector3f());
                     consumer.addVertex(m, x2, fy2, zSouth).setColor(255, 255, 255, 255)
-                            .setUv(eu0, ev0).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
                     consumer.addVertex(m, x2, fy1, zSouth).setColor(255, 255, 255, 255)
-                            .setUv(eu0, ev1).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
                     consumer.addVertex(m, x2, fy1, zNorth).setColor(255, 255, 255, 255)
-                            .setUv(eu1, ev1).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
                     consumer.addVertex(m, x2, fy2, zNorth).setColor(255, 255, 255, 255)
-                            .setUv(eu1, ev0).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                            .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
                 });
 
                 // 4. Text rendering (2 lines, both faces)
