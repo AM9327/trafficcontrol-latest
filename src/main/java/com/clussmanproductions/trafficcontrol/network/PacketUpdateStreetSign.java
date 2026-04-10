@@ -12,11 +12,13 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.network.handling.IPayloadContext;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public record PacketUpdateStreetSign(
         BlockPos pos,
-        String text1,
-        String text2,
-        int colorIndex,
+        List<String> texts,
+        List<Integer> colorIndices,
         int textColor
 ) implements CustomPacketPayload {
 
@@ -25,9 +27,8 @@ public record PacketUpdateStreetSign(
 
     public static final StreamCodec<ByteBuf, PacketUpdateStreetSign> STREAM_CODEC = StreamCodec.composite(
             BlockPos.STREAM_CODEC, PacketUpdateStreetSign::pos,
-            ByteBufCodecs.STRING_UTF8, PacketUpdateStreetSign::text1,
-            ByteBufCodecs.STRING_UTF8, PacketUpdateStreetSign::text2,
-            ByteBufCodecs.INT, PacketUpdateStreetSign::colorIndex,
+            ByteBufCodecs.STRING_UTF8.apply(ByteBufCodecs.list()), PacketUpdateStreetSign::texts,
+            ByteBufCodecs.INT.apply(ByteBufCodecs.list()), PacketUpdateStreetSign::colorIndices,
             ByteBufCodecs.INT, PacketUpdateStreetSign::textColor,
             PacketUpdateStreetSign::new
     );
@@ -42,9 +43,19 @@ public record PacketUpdateStreetSign(
             if (context.player() instanceof ServerPlayer serverPlayer) {
                 BlockEntity be = serverPlayer.level().getBlockEntity(packet.pos());
                 if (be instanceof StreetSignBlockEntity streetSignBE) {
-                    streetSignBE.setText1(packet.text1());
-                    streetSignBE.setText2(packet.text2());
-                    streetSignBE.setColorIndex(packet.colorIndex());
+                    // Update all sign entries
+                    int count = Math.min(packet.texts().size(), StreetSignBlockEntity.MAX_SIGNS);
+                    // Reset and rebuild
+                    for (int i = 0; i < count; i++) {
+                        if (i >= streetSignBE.getSignCount()) {
+                            int colorIdx = i < packet.colorIndices().size() ? packet.colorIndices().get(i) : 0;
+                            streetSignBE.addSign(colorIdx);
+                        }
+                        streetSignBE.setText(i, packet.texts().get(i));
+                        if (i < packet.colorIndices().size()) {
+                            streetSignBE.setColorIndex(i, packet.colorIndices().get(i));
+                        }
+                    }
                     streetSignBE.setTextColor(packet.textColor());
                     streetSignBE.syncToClient();
                 }

@@ -129,10 +129,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.cgPoleArmDirs.clear();
         renderState.streetSignDirs.clear();
         renderState.hanging = false;
-        renderState.streetSignText1 = "";
-        renderState.streetSignText2 = "";
+        renderState.streetSignCount = 0;
+        for (int i = 0; i < 4; i++) {
+            renderState.streetSignTexts[i] = "";
+            renderState.streetSignFillColors[i] = 0xFF006400;
+        }
         renderState.streetSignTextColor = 0xFFFFFFFF;
-        renderState.streetSignFillColor = 0xFF006400;
         renderState.streetSignGlowing = false;
         renderState.signFrontTexture = null;
         renderState.signBackTexture = null;
@@ -268,16 +270,18 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
             }
             if (blockEntity instanceof StreetSignBlockEntity streetSignBE) {
-                renderState.streetSignText1 = streetSignBE.getText1();
-                renderState.streetSignText2 = streetSignBE.getText2();
+                renderState.streetSignCount = streetSignBE.getSignCount();
+                for (int i = 0; i < renderState.streetSignCount; i++) {
+                    renderState.streetSignTexts[i] = streetSignBE.getText(i);
+                    renderState.streetSignFillColors[i] = switch (streetSignBE.getColorIndex(i)) {
+                        case 1 -> 0xFFCC0000; // Red
+                        case 2 -> 0xFF0000CC; // Blue
+                        case 3 -> 0xFFCCCC00; // Yellow
+                        default -> 0xFF006400; // Green
+                    };
+                }
                 renderState.streetSignTextColor = streetSignBE.getTextColor() | 0xFF000000;
                 renderState.streetSignGlowing = streetSignBE.hasGlowingText();
-                renderState.streetSignFillColor = switch (streetSignBE.getColorIndex()) {
-                    case 1 -> 0xFFCC0000; // Red
-                    case 2 -> 0xFF0000CC; // Blue
-                    case 3 -> 0xFFCCCC00; // Yellow
-                    default -> 0xFF006400; // Green
-                };
             }
         }
 
@@ -537,7 +541,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         // --- Render body (rotated) ---
         // Skip body model for regular signs (BlockSign) when mounted on a pole —
         // the model only contains a center pole element; the sign face renders as a quad separately
-        boolean skipBodyModel = state.getBlock() instanceof BlockSign && shiftToPole;
+        boolean skipBodyModel = (state.getBlock() instanceof BlockSign && shiftToPole)
+                || isStreetSign; // street sign plates are rendered dynamically
         if (!skipBodyModel) {
             poseStack.pushPose();
 
@@ -567,48 +572,173 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             poseStack.popPose();
         }
 
-        // --- Street sign: colored fill quads behind block model ---
-        // Block model uses street_sign.png (transparent fill, white border).
-        // entityCutout discards transparent pixels, showing colored fill quads behind.
-        if (isStreetSign) {
+        // --- Street sign: render stacked plates (fill + border + text per plate) ---
+        // Each plate is 4px tall, stacking from bottom (index 0) to top.
+        // Block model is skipped; plates are rendered entirely as custom geometry.
+        if (isStreetSign && renderState.streetSignCount > 0) {
             Identifier whiteTex = Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "textures/block/street_sign_white.png");
+            Identifier borderTex = Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "textures/block/street_sign.png");
             ensureTextureLoaded(whiteTex);
+            ensureTextureLoaded(borderTex);
 
-            int fillColor = renderState.streetSignFillColor;
-            int fr = (fillColor >> 16) & 0xFF;
-            int fg = (fillColor >> 8) & 0xFF;
-            int fb = fillColor & 0xFF;
             int light = renderState.lightCoords;
             int overlay = OverlayTexture.NO_OVERLAY;
+            Font font = Minecraft.getInstance().font;
+            float maxUsableWidth = 0.875f; // 14/16 blocks
 
-            // Sign plate: model faces at z=7/16 (north) and z=9/16 (south).
-            // Fill quads sit slightly behind each face to avoid z-fighting with the border.
-            float x1 = 0, x2 = 1;
-            float y1 = 6f / 16f, y2 = 10f / 16f;
-            float zNorth = 7f / 16f + 0.002f;
-            float zSouth = 9f / 16f - 0.002f;
+            for (int plateIdx = 0; plateIdx < renderState.streetSignCount; plateIdx++) {
+                // Y position: stack from bottom up, centered in the block
+                // 1 plate: Y 6-10 (centered). 2: Y 4-12. 3: Y 2-14. 4: Y 0-16.
+                int totalHeight = renderState.streetSignCount * 4; // total px
+                float startY = (16f - totalHeight) / 2f / 16f;    // center vertically
+                float plateY1 = startY + (plateIdx * 4f / 16f);
+                float plateY2 = plateY1 + 4f / 16f;
+                float plateCenterY = (plateY1 + plateY2) / 2f;
 
-            poseStack.pushPose();
-            if (isHangingStreetSign) poseStack.translate(0, 9.0f / 16.0f, 0);
-            if (shiftToPole) {
-                Direction poleDir = renderState.horizontalBarDirection;
-                poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0, poleDir.getStepZ() * poleShiftAmount);
+                int fillColor = renderState.streetSignFillColors[plateIdx];
+                int fr = (fillColor >> 16) & 0xFF;
+                int fg = (fillColor >> 8) & 0xFF;
+                int fb = fillColor & 0xFF;
+
+                float x1 = 0, x2 = 1;
+                float zNorth = 7f / 16f + 0.002f;
+                float zSouth = 9f / 16f - 0.002f;
+                float zBorderNorth = 7f / 16f;
+                float zBorderSouth = 9f / 16f;
+
+                // Common transform for this plate
+                poseStack.pushPose();
+                if (isHangingStreetSign) poseStack.translate(0, 9.0f / 16.0f, 0);
+                if (shiftToPole) {
+                    Direction poleDir = renderState.horizontalBarDirection;
+                    poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
+                            poleDir.getStepZ() * poleShiftAmount);
+                }
+                poseStack.translate(0.5f, 0.0f, 0.5f);
+                poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+                poseStack.translate(-0.5f, 0.0f, -0.5f);
+
+                // 1. Colored fill (entitySolid, behind border)
+                final float fy1 = plateY1, fy2 = plateY2;
+                RenderType fillRt = RenderTypes.entitySolid(whiteTex);
+                nodeCollector.submitCustomGeometry(poseStack, fillRt, (pose, consumer) -> {
+                    Matrix4f m = pose.pose();
+                    Vector3f nS = pose.transformNormal(0, 0, 1, new Vector3f());
+                    addQuad(consumer, m, nS, x1, fy1, x2, fy2, zSouth, false, fr, fg, fb, 255, overlay, light);
+                    Vector3f nN = pose.transformNormal(0, 0, -1, new Vector3f());
+                    addQuad(consumer, m, nN, x1, fy1, x2, fy2, zNorth, true, fr, fg, fb, 255, overlay, light);
+                });
+
+                // 2. Border texture (entityCutout, transparent center shows fill)
+                RenderType borderRt = RenderTypes.entityCutout(borderTex);
+                nodeCollector.submitCustomGeometry(poseStack, borderRt, (pose, consumer) -> {
+                    Matrix4f m = pose.pose();
+                    // South face
+                    Vector3f nS = pose.transformNormal(0, 0, 1, new Vector3f());
+                    consumer.addVertex(m, x1, fy2, zBorderSouth).setColor(255, 255, 255, 255)
+                            .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
+                    consumer.addVertex(m, x1, fy1, zBorderSouth).setColor(255, 255, 255, 255)
+                            .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
+                    consumer.addVertex(m, x2, fy1, zBorderSouth).setColor(255, 255, 255, 255)
+                            .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
+                    consumer.addVertex(m, x2, fy2, zBorderSouth).setColor(255, 255, 255, 255)
+                            .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
+                    // North face
+                    Vector3f nN = pose.transformNormal(0, 0, -1, new Vector3f());
+                    consumer.addVertex(m, x2, fy2, zBorderNorth).setColor(255, 255, 255, 255)
+                            .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                    consumer.addVertex(m, x2, fy1, zBorderNorth).setColor(255, 255, 255, 255)
+                            .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                    consumer.addVertex(m, x1, fy1, zBorderNorth).setColor(255, 255, 255, 255)
+                            .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                    consumer.addVertex(m, x1, fy2, zBorderNorth).setColor(255, 255, 255, 255)
+                            .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                });
+
+                // 3. Edge faces for 3D depth (white, using whiteTex)
+                RenderType edgeRt = RenderTypes.entitySolid(whiteTex);
+                nodeCollector.submitCustomGeometry(poseStack, edgeRt, (pose, consumer) -> {
+                    Matrix4f m = pose.pose();
+                    float zN = zBorderNorth, zS = zBorderSouth;
+                    int er = 220, eg = 220, eb = 220; // slightly gray for depth
+                    // Top face (facing up)
+                    Vector3f nUp = pose.transformNormal(0, 1, 0, new Vector3f());
+                    consumer.addVertex(m, x1, fy2, zN).setColor(er, eg, eb, 255)
+                            .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
+                    consumer.addVertex(m, x1, fy2, zS).setColor(er, eg, eb, 255)
+                            .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
+                    consumer.addVertex(m, x2, fy2, zS).setColor(er, eg, eb, 255)
+                            .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
+                    consumer.addVertex(m, x2, fy2, zN).setColor(er, eg, eb, 255)
+                            .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nUp.x, nUp.y, nUp.z);
+                    // Bottom face (facing down)
+                    Vector3f nDown = pose.transformNormal(0, -1, 0, new Vector3f());
+                    consumer.addVertex(m, x1, fy1, zS).setColor(er, eg, eb, 255)
+                            .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
+                    consumer.addVertex(m, x1, fy1, zN).setColor(er, eg, eb, 255)
+                            .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
+                    consumer.addVertex(m, x2, fy1, zN).setColor(er, eg, eb, 255)
+                            .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
+                    consumer.addVertex(m, x2, fy1, zS).setColor(er, eg, eb, 255)
+                            .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nDown.x, nDown.y, nDown.z);
+                    // Left face (facing west, -X)
+                    Vector3f nW = pose.transformNormal(-1, 0, 0, new Vector3f());
+                    consumer.addVertex(m, x1, fy2, zS).setColor(er, eg, eb, 255)
+                            .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
+                    consumer.addVertex(m, x1, fy1, zS).setColor(er, eg, eb, 255)
+                            .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
+                    consumer.addVertex(m, x1, fy1, zN).setColor(er, eg, eb, 255)
+                            .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
+                    consumer.addVertex(m, x1, fy2, zN).setColor(er, eg, eb, 255)
+                            .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nW.x, nW.y, nW.z);
+                    // Right face (facing east, +X)
+                    Vector3f nE = pose.transformNormal(1, 0, 0, new Vector3f());
+                    consumer.addVertex(m, x2, fy2, zN).setColor(er, eg, eb, 255)
+                            .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                    consumer.addVertex(m, x2, fy1, zN).setColor(er, eg, eb, 255)
+                            .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                    consumer.addVertex(m, x2, fy1, zS).setColor(er, eg, eb, 255)
+                            .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                    consumer.addVertex(m, x2, fy2, zS).setColor(er, eg, eb, 255)
+                            .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                });
+
+                // 3. Text rendering (both faces)
+                String plateText = renderState.streetSignTexts[plateIdx];
+                if (plateText != null && !plateText.isEmpty()) {
+                    FormattedCharSequence text = FormattedCharSequence.forward(plateText, Style.EMPTY);
+                    int textWidth = font.width(text);
+
+                    float textScale = 1.0f / 64.0f;
+                    float maxUsableHeight = 0.1875f; // 3/16 blocks
+                    if (textWidth * textScale > maxUsableWidth) {
+                        textScale = maxUsableWidth / textWidth;
+                    }
+                    if (font.lineHeight * textScale > maxUsableHeight) {
+                        textScale = maxUsableHeight / font.lineHeight;
+                    }
+                    float finalScale = textScale;
+
+                    for (int face = 0; face < 2; face++) {
+                        poseStack.pushPose();
+                        poseStack.translate(0.5f, plateCenterY, 0.5f);
+                        if (face == 1) {
+                            poseStack.mulPose(Axis.YP.rotationDegrees(180));
+                        }
+                        poseStack.translate(0, 0, 1.5f / 16.0f);
+                        poseStack.scale(finalScale, -finalScale, finalScale);
+
+                        int textLight = 0xF000F0; // retroreflective
+                        nodeCollector.submitText(poseStack,
+                                -textWidth / 2.0f, -font.lineHeight / 2.0f,
+                                text, false, Font.DisplayMode.POLYGON_OFFSET,
+                                textLight, renderState.streetSignTextColor, 0, 0);
+                        poseStack.popPose();
+                    }
+                }
+
+                poseStack.popPose(); // end plate transform
             }
-            poseStack.translate(0.5f, 0.0f, 0.5f);
-            poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
-            poseStack.translate(-0.5f, 0.0f, -0.5f);
-
-            // flipWinding=false for south (+Z), flipWinding=true for north (-Z)
-            RenderType fillRt = RenderTypes.entitySolid(whiteTex);
-            nodeCollector.submitCustomGeometry(poseStack, fillRt, (pose, consumer) -> {
-                Matrix4f m = pose.pose();
-                Vector3f nS = pose.transformNormal(0, 0, 1, new Vector3f());
-                addQuad(consumer, m, nS, x1, y1, x2, y2, zSouth, false, fr, fg, fb, 255, overlay, light);
-                Vector3f nN = pose.transformNormal(0, 0, -1, new Vector3f());
-                addQuad(consumer, m, nN, x1, y1, x2, y2, zNorth, true, fr, fg, fb, 255, overlay, light);
-            });
-
-            poseStack.popPose();
         }
 
         // --- Hanging bracket (chain) for street signs ---
@@ -655,17 +785,19 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         if (shiftToPole && isTrafficLight) {
             shouldRenderPole = renderState.extendPoleUp && renderState.extendPoleDown;
         }
-        // Street signs never render the center back pole — they mount on external poles
-        if (isStreetSign) shouldRenderPole = false;
+        // Street signs: render pole only when standalone (not mounted on any pole)
+        if (isStreetSign) {
+            if (renderState.mountedOnPole) {
+                shouldRenderPole = false;
+            } else {
+                shouldRenderPole = true; // standalone needs a support pole
+            }
+        }
         if ((isTrafficLight || isSign) && !isHangingStreetSign && shouldRenderPole) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             BlockStateModel poleModel = modelManager.getStandaloneModel(BACK_POLE_MODEL_KEY);
             if (poleModel != null) {
                 poseStack.pushPose();
-                if (state.getBlock() instanceof BlockStreetSign) {
-                    // Street sign: scale pole to only cover Y 0 to 6 (below the sign plate)
-                    poseStack.scale(1.0f, 6.0f / 16.0f, 1.0f);
-                }
                 nodeCollector.submitBlockModel(
                         poseStack, renderType, poleModel,
                         1.0f, 1.0f, 1.0f,
@@ -1005,91 +1137,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // --- Street sign text rendering (2 lines, both faces) ---
-        // --- Street sign text rendering (2 lines, both faces) ---
-        // Real street signs are retroreflective — always render text at fullbright.
-        // Text must fit within the sign plate: 14/16 usable width, ~3/16 usable height (inside border).
-        boolean hasText = state.getBlock() instanceof BlockStreetSign
-                && (!renderState.streetSignText1.isEmpty() || !renderState.streetSignText2.isEmpty());
-        if (hasText) {
-            Font font = Minecraft.getInstance().font;
-            FormattedCharSequence line1 = FormattedCharSequence.forward(renderState.streetSignText1, Style.EMPTY);
-            FormattedCharSequence line2 = FormattedCharSequence.forward(renderState.streetSignText2, Style.EMPTY);
-            boolean hasLine1 = !renderState.streetSignText1.isEmpty();
-            boolean hasLine2 = !renderState.streetSignText2.isEmpty();
-            int lineCount = (hasLine1 ? 1 : 0) + (hasLine2 ? 1 : 0);
-
-            // Sign plate: [0,6,7] to [16,10,9] = 4px tall, 16px wide
-            // Usable area inside border: ~14px wide (0.875 blocks), ~3px tall (0.1875 blocks)
-            float maxUsableWidth = 0.875f;   // 14/16 blocks
-            float maxUsableHeight = 0.1875f; // 3/16 blocks (inside the border)
-            int lineHeight = font.lineHeight; // 9px
-
-            int w1 = hasLine1 ? font.width(line1) : 0;
-            int w2 = hasLine2 ? font.width(line2) : 0;
-            int maxTextWidth = Math.max(w1, w2);
-
-            // Start with base scale, then clamp to fit both width and height
-            float textScale = 1.0f / 64.0f;
-            float totalTextPixelHeight = lineCount * lineHeight;
-
-            // Clamp scale so text width fits
-            if (maxTextWidth * textScale > maxUsableWidth) {
-                textScale = maxUsableWidth / maxTextWidth;
-            }
-            // Clamp scale so text height fits (critical for 2 lines)
-            if (totalTextPixelHeight * textScale > maxUsableHeight) {
-                textScale = maxUsableHeight / totalTextPixelHeight;
-            }
-
-            float finalScale = textScale;
-            float totalTextHeight = totalTextPixelHeight;
-
-            for (int face = 0; face < 2; face++) {
-                poseStack.pushPose();
-
-                if (isHangingStreetSign) {
-                    poseStack.translate(0, 9.0f / 16.0f, 0);
-                }
-                if (shiftToPole) {
-                    Direction poleDir = renderState.horizontalBarDirection;
-                    poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
-                            poleDir.getStepZ() * poleShiftAmount);
-                }
-
-                poseStack.translate(0.5f, 0.5f, 0.5f);
-                poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
-
-                if (face == 1) {
-                    poseStack.mulPose(Axis.YP.rotationDegrees(180));
-                }
-
-                poseStack.translate(0, 0, 1.5f / 16.0f);
-                poseStack.scale(finalScale, -finalScale, finalScale);
-
-                // Street signs are retroreflective — always fullbright text
-                int textLight = 0xF000F0;
-
-                // Render each line, centered vertically within the plate
-                float yStart = -totalTextHeight / 2.0f;
-                int lineIndex = 0;
-                if (hasLine1) {
-                    nodeCollector.submitText(poseStack,
-                            -w1 / 2.0f, yStart + lineIndex * lineHeight,
-                            line1, false, Font.DisplayMode.POLYGON_OFFSET,
-                            textLight, renderState.streetSignTextColor, 0, 0);
-                    lineIndex++;
-                }
-                if (hasLine2) {
-                    nodeCollector.submitText(poseStack,
-                            -w2 / 2.0f, yStart + lineIndex * lineHeight,
-                            line2, false, Font.DisplayMode.POLYGON_OFFSET,
-                            textLight, renderState.streetSignTextColor, 0, 0);
-                }
-
-                poseStack.popPose();
-            }
-        }
+        // (Street sign text is now rendered inline with each plate above)
 
     }
 

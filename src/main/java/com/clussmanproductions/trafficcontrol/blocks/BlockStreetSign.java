@@ -69,9 +69,13 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
     @Override
     public void setPlacedBy(Level level, BlockPos pos, BlockState state, @Nullable LivingEntity placer, ItemStack stack) {
         super.setPlacedBy(level, pos, state, placer, stack);
-        if (level.isClientSide()) {
-            BlockEntity be = level.getBlockEntity(pos);
-            if (be instanceof StreetSignBlockEntity streetSignBE) {
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof StreetSignBlockEntity streetSignBE) {
+            // Add the first sign plate on placement
+            if (streetSignBE.getSignCount() == 0) {
+                streetSignBE.addSign(0); // default green
+            }
+            if (level.isClientSide()) {
                 Minecraft.getInstance().setScreen(new StreetSignGui(streetSignBE));
             }
         }
@@ -145,8 +149,16 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
             }
         }
 
-        // Y bounds for street sign plate
-        double yMin = 6, yMax = 10;
+        // Y bounds: plates centered vertically (4px each)
+        // 1 plate: Y 6-10. 2: Y 4-12. 3: Y 2-14. 4: Y 0-16.
+        int plateCount = 1;
+        BlockEntity be = level.getBlockEntity(pos);
+        if (be instanceof StreetSignBlockEntity ssbe) {
+            plateCount = Math.max(1, ssbe.getSignCount());
+        }
+        double totalHeight = plateCount * 4.0;
+        double yMin = (16.0 - totalHeight) / 2.0;
+        double yMax = yMin + totalHeight;
 
         if (!isCardinal) {
             if (shiftDir != null) {
@@ -154,7 +166,7 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
                 double offsetZ = shiftDir.getStepZ() * shiftPixels;
                 return Block.box(offsetX, yMin, offsetZ, 16 + offsetX, yMax, 16 + offsetZ);
             }
-            return SHAPE_DIAGONAL;
+            return Block.box(0, yMin, 0, 16, yMax, 16);
         }
 
         int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
@@ -173,10 +185,8 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
         }
 
         return switch (steps) {
-            case 1 -> SHAPE_EW;
-            case 2 -> SHAPE_NS;
-            case 3 -> SHAPE_EW;
-            default -> SHAPE_NS;
+            case 1, 3 -> Block.box(5, yMin, 0, 11, yMax, 16);
+            default -> Block.box(0, yMin, 5, 16, yMax, 11);
         };
     }
 
@@ -221,6 +231,26 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
         BlockEntity be = level.getBlockEntity(pos);
         if (!(be instanceof StreetSignBlockEntity streetSignBE)) {
             return InteractionResult.PASS;
+        }
+
+        // Stack another sign plate — only when NOT sneaking (sneak to place adjacent)
+        if (stack.getItem() instanceof net.minecraft.world.item.BlockItem blockItem
+                && blockItem.getBlock() instanceof BlockStreetSign
+                && !player.isSecondaryUseActive()) {
+            if (streetSignBE.getSignCount() < StreetSignBlockEntity.MAX_SIGNS) {
+                if (!level.isClientSide()) {
+                    streetSignBE.addSign(0); // default green
+                    streetSignBE.syncToClient();
+                    if (!player.getAbilities().instabuild) {
+                        stack.shrink(1);
+                    }
+                }
+                if (level.isClientSide()) {
+                    Minecraft.getInstance().setScreen(new StreetSignGui(streetSignBE));
+                }
+                return InteractionResult.SUCCESS;
+            }
+            return InteractionResult.CONSUME; // full, don't place new block
         }
 
         // Dye interaction: change text color
