@@ -115,8 +115,8 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
             if (hbe instanceof StreetSignBlockEntity ssbe) {
                 hPlateCount = Math.max(1, ssbe.getSignCount());
             }
-            double hYMin = 9;
-            double hYMax = 9 + hPlateCount * 4.0;
+            double hYMin = 15;
+            double hYMax = 15 + hPlateCount * 4.0;
             if (!isCardinal) return Block.box(0, hYMin, 0, 16, hYMax, 16);
             int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
             if (steps < 0) steps += 4;

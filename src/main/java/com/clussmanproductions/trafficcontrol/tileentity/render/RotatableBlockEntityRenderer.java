@@ -623,7 +623,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
 
                 // Common transform for this plate
                 poseStack.pushPose();
-                if (isHangingStreetSign) poseStack.translate(0, 9.0f / 16.0f, 0);
+                // Hanging signs: offset plates to Y 15+ so bracket chains connect at Y 19
+                if (isHangingStreetSign) poseStack.translate(0, 15.0f / 16.0f, 0);
                 if (shiftToPole) {
                     Direction poleDir = renderState.horizontalBarDirection;
                     poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
