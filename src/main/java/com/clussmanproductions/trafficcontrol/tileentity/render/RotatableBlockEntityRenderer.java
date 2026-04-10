@@ -409,8 +409,10 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         || neighbor instanceof BlockCrossingGateBase
                         || neighbor instanceof BlockSign) {
                     renderState.onCrossingGateBase = true;
-                    // Render horizontal bar toward crossing gate pole/sign to bridge the gap
-                    if (!dir.equals(poleDir)) {
+                    // Render horizontal bar toward crossing gate pole/sign to bridge the gap.
+                    // Skip when back-to-back — the bridge bar handles the connection,
+                    // and adding to horizontalPoleDirs would block shiftToPole.
+                    if (!dir.equals(poleDir) && renderState.backToBackTLDir == null) {
                         renderState.horizontalPoleDirs.add(dir);
                     }
                 }
@@ -506,7 +508,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         boolean shiftToPole = (isTrafficLight && renderState.mountedOnPole
                 && renderState.horizontalBarDirection != null
                 && (!renderState.hasAdjacentTrafficLight || renderState.backToBackTLDir != null)
-                && (renderState.horizontalPoleDirs.isEmpty() || renderState.backToBackTLDir != null))
+                && renderState.horizontalPoleDirs.isEmpty())
                 || (state.getBlock() instanceof BlockSign && renderState.mountedOnPole
                 && !renderState.mountedOnHorizontalPole
                 && renderState.horizontalBarDirection != null)
