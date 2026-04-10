@@ -337,8 +337,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 } else if (neighbor instanceof BlockStreetSign
                         && (!neighborState.hasProperty(BlockStreetSign.HANGING)
                             || !neighborState.getValue(BlockStreetSign.HANGING))) {
-                    // No arm — the arm model is full-block height and pokes through
-                    // the 4px-tall street sign plate. They sit adjacent without a connector.
+                    renderState.signalArmTrafficLightDirs.add(dir);
+                    renderState.streetSignDirs.add(dir);
                 }
             }
             // Second pass: add TLs, but skip back-to-back pairs (opposite dirs, rotation diff of 8)
@@ -430,12 +430,13 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
                 if (neighbor instanceof BlockCrossingGatePole
                         || neighbor instanceof BlockCrossingGateBase
-                        || neighbor instanceof BlockSign) {
+                        || neighbor instanceof BlockSign
+                        || neighbor instanceof BlockStreetSign) {
                     renderState.onCrossingGateBase = true;
                     // Render horizontal bar toward crossing gate pole/sign to bridge the gap.
-                    // Skip when back-to-back — the bridge bar handles the connection,
-                    // and adding to horizontalPoleDirs would block shiftToPole.
-                    if (!dir.equals(poleDir) && renderState.backToBackTLDir == null) {
+                    // Skip for street signs (bar pokes through 4px plate).
+                    boolean isStreetSignNeighbor = neighbor instanceof BlockStreetSign;
+                    if (!dir.equals(poleDir) && !isStreetSignNeighbor) {
                         renderState.horizontalPoleDirs.add(dir);
                     }
                 }
