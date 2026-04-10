@@ -11,6 +11,8 @@ import net.minecraft.client.input.CharacterEvent;
 import net.minecraft.client.input.KeyEvent;
 import net.minecraft.client.multiplayer.ClientPacketListener;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.Identifier;
+import net.minecraft.world.level.block.state.BlockState;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -19,28 +21,47 @@ import java.util.List;
 public class StreetSignGui extends Screen {
 
     private final StreetSignBlockEntity streetSignBE;
-    private final String[] messages;
+    private final int signCount;
+
+    // Per-plate data (cached locally for editing)
+    private final String[] line1s;
+    private final String[] line2s;
     private final int[] colors;
-    private int signCount;
-    private int activeSign = -1; // index of the sign being edited (-1 = none, newest is active)
-    private @Nullable TextFieldHelper activeField;
+
+    private int editIndex;      // which plate is active
+    private int activeLine = 0; // 0 = line1, 1 = line2
+    private final int[] rotations; // per-plate rotation (0-15)
+    private @Nullable TextFieldHelper field1;
+    private @Nullable TextFieldHelper field2;
     private int frame;
 
     private static final int[] SIGN_COLORS = {0xFF006400, 0xFFCC0000, 0xFF0000CC, 0xFFCCCC00};
     private static final String[] SIGN_COLOR_NAMES = {"Green", "Red", "Blue", "Yellow"};
+    private static final Identifier SIGN_TEXTURE = Identifier.fromNamespaceAndPath("trafficcontrol", "textures/block/street_sign.png");
+    private static final String[] DIRECTION_LABELS = {
+            "N/S", "NNE/SSW", "NE/SW", "ENE/WSW",
+            "E/W", "ESE/WNW", "SE/NW", "SSE/NNW",
+            "N/S", "NNE/SSW", "NE/SW", "ENE/WSW",
+            "E/W", "ESE/WNW", "SE/NW", "SSE/NNW"
+    };
 
     public StreetSignGui(StreetSignBlockEntity streetSignBE) {
         super(Component.literal("Edit Street Sign"));
         this.streetSignBE = streetSignBE;
-        this.signCount = streetSignBE.getSignCount();
-        this.messages = new String[StreetSignBlockEntity.MAX_SIGNS];
-        this.colors = new int[StreetSignBlockEntity.MAX_SIGNS];
+        this.signCount = Math.max(1, streetSignBE.getSignCount());
+        this.editIndex = signCount - 1; // start editing newest plate
+
+        // Cache all plate data
+        this.line1s = new String[signCount];
+        this.line2s = new String[signCount];
+        this.colors = new int[signCount];
+        this.rotations = new int[signCount];
         for (int i = 0; i < signCount; i++) {
-            messages[i] = streetSignBE.getText(i);
+            line1s[i] = streetSignBE.getText(i);
+            line2s[i] = streetSignBE.getText2(i);
             colors[i] = streetSignBE.getColorIndex(i);
+            rotations[i] = streetSignBE.getRotation(i);
         }
-        // The newest sign is the active one for editing
-        activeSign = signCount - 1;
     }
 
     @Override
@@ -48,39 +69,64 @@ public class StreetSignGui extends Screen {
         int cx = this.width / 2;
         int cy = this.height / 2;
 
-        // Text field for active sign
-        if (activeSign >= 0) {
-            this.activeField = new TextFieldHelper(
-                    () -> this.messages[activeSign],
-                    text -> {
-                        this.messages[activeSign] = text;
-                        this.streetSignBE.setText(activeSign, text);
-                    },
-                    TextFieldHelper.createClipboardGetter(this.minecraft),
-                    TextFieldHelper.createClipboardSetter(this.minecraft),
-                    text -> text.length() <= 50
-            );
-        }
+        rebuildFields();
 
-        // Color buttons for active sign
+        // Position buttons below all stacked plates
+        int platePH = 40;
+        int previewBaseY = cy - 70;
+        int bottomOfPlates = previewBaseY + signCount * (platePH + 10);
+
         int btnW = 50, gap = 2;
         int rowW = 4 * btnW + 3 * gap;
         int startX = cx - rowW / 2;
-        int btnY = cy + 40;
+        int btnY = bottomOfPlates + 6;
 
+        // Button text colors matching sign colors (brighter for readability)
+        int[] btnTextColors = {0x00AA00, 0xFF5555, 0x5555FF, 0xFFFF55};
         for (int i = 0; i < 4; i++) {
             final int idx = i;
-            this.addRenderableWidget(Button.builder(Component.literal(SIGN_COLOR_NAMES[i]), b -> {
-                if (activeSign >= 0) {
-                    this.colors[activeSign] = idx;
-                }
+            Component label = Component.literal(SIGN_COLOR_NAMES[i])
+                    .withStyle(style -> style.withColor(net.minecraft.network.chat.TextColor.fromRgb(btnTextColors[idx])));
+            this.addRenderableWidget(Button.builder(label, b -> {
+                this.colors[editIndex] = idx;
             }).bounds(startX + i * (btnW + gap), btnY, btnW, 20).build());
         }
+
+        // Direction button (rotates the active plate only)
+        this.addRenderableWidget(Button.builder(
+                Component.literal(DIRECTION_LABELS[rotations[editIndex] % 16]), b -> {
+            rotations[editIndex] = (rotations[editIndex] + 1) % 16;
+            b.setMessage(Component.literal(DIRECTION_LABELS[rotations[editIndex] % 16]));
+            // Update block entity for immediate visual feedback
+            streetSignBE.setRotation(editIndex, rotations[editIndex]);
+            streetSignBE.syncToClient();
+        }).bounds(cx - 50, btnY + 26, 100, 20).build());
 
         // Done button
         this.addRenderableWidget(Button.builder(Component.literal("Done"), b -> {
             this.minecraft.setScreen(null);
-        }).bounds(cx - 50, btnY + 28, 100, 20).build());
+        }).bounds(cx - 50, btnY + 52, 100, 20).build());
+    }
+
+    private void rebuildFields() {
+        this.field1 = new TextFieldHelper(
+                () -> this.line1s[editIndex],
+                text -> this.line1s[editIndex] = text,
+                TextFieldHelper.createClipboardGetter(this.minecraft),
+                TextFieldHelper.createClipboardSetter(this.minecraft),
+                text -> text.length() <= 50
+        );
+        this.field2 = new TextFieldHelper(
+                () -> this.line2s[editIndex],
+                text -> this.line2s[editIndex] = text,
+                TextFieldHelper.createClipboardGetter(this.minecraft),
+                TextFieldHelper.createClipboardSetter(this.minecraft),
+                text -> text.length() <= 50
+        );
+    }
+
+    private TextFieldHelper activeField() {
+        return activeLine == 0 ? field1 : field2;
     }
 
     @Override
@@ -95,62 +141,96 @@ public class StreetSignGui extends Screen {
         int cx = this.width / 2;
         int cy = this.height / 2;
 
-        // Title
-        graphics.drawCenteredString(this.font, this.title, cx, cy - 80, 0xFFFFFF);
+        // --- All plates stacked ---
+        int platePW = 200, platePH = 40;
+        int previewBaseY = cy - 70;
 
-        // --- Sign preview: render all plates stacked ---
-        int pw = 200, ph = 20; // per plate
-        int px = cx - pw / 2;
-        int totalH = signCount * ph;
-        int baseY = cy - 60;
+        for (int i = signCount - 1; i >= 0; i--) {
+            int py = previewBaseY + (signCount - 1 - i) * (platePH + 10);
+            int px = cx - platePW / 2;
 
-        for (int i = signCount - 1; i >= 0; i--) { // render top-to-bottom
-            int py = baseY + (signCount - 1 - i) * ph;
+            // Active plate highlight border
+            if (i == editIndex) {
+                graphics.fill(px - 3, py - 3, px + platePW + 3, py + platePH + 3, 0xFFFFFF00);
+            }
+            // Sign plate texture (16x16 texture, 4 rows of 4px each)
+            int texV = colors[i] * 4;
+            graphics.blit(net.minecraft.client.renderer.RenderPipelines.GUI_TEXTURED,
+                    SIGN_TEXTURE, px, py, 0, texV, platePW, platePH, 16, 4, 16, 16);
 
-            // White border (2px)
-            graphics.fill(px - 2, py - 2, px + pw + 2, py + ph + 2, 0xFFFFFFFF);
-            // Fill with sign color
-            graphics.fill(px, py, px + pw, py + ph, SIGN_COLORS[this.colors[i]]);
+            int textColor = colors[i] == 3 ? 0xFF000000 : 0xFFFFFFFF;
+            int lineH = this.font.lineHeight;
+            int textBaseY = py + (platePH - 2 * lineH) / 2;
 
-            // Text
-            int textColor = this.colors[i] == 3 ? 0xFF000000 : 0xFFFFFFFF;
-            int textCenterY = py + (ph - this.font.lineHeight) / 2;
+            // Line 1
+            if (!line1s[i].isEmpty()) {
+                int tw = this.font.width(line1s[i]);
+                graphics.drawString(this.font, line1s[i], cx - tw / 2, textBaseY, textColor, false);
+            }
+            // Line 2
+            if (!line2s[i].isEmpty()) {
+                int tw = this.font.width(line2s[i]);
+                graphics.drawString(this.font, line2s[i], cx - tw / 2, textBaseY + lineH, textColor, false);
+            }
 
-            if (!this.messages[i].isEmpty()) {
-                int textWidth = this.font.width(this.messages[i]);
-                int textX = cx - textWidth / 2;
-                graphics.drawString(this.font, this.messages[i], textX, textCenterY, textColor, false);
+            // Cursor for active plate
+            if (i == editIndex) {
 
-                // Cursor for active sign
-                if (i == activeSign && this.frame / 6 % 2 == 0 && this.activeField != null) {
-                    int cursorPos = this.activeField.getCursorPos();
-                    String before = this.messages[i].substring(0, Math.min(cursorPos, this.messages[i].length()));
-                    int cursorX = textX + this.font.width(before);
-                    if (cursorPos >= this.messages[i].length()) {
-                        graphics.drawString(this.font, "_", cursorX, textCenterY, textColor, false);
-                    } else {
-                        graphics.fill(cursorX, textCenterY - 1, cursorX + 1, textCenterY + this.font.lineHeight, textColor);
+                // Cursor
+                boolean showCursor = this.frame / 6 % 2 == 0;
+                if (showCursor) {
+                    String activeText = activeLine == 0 ? line1s[i] : line2s[i];
+                    TextFieldHelper field = activeField();
+                    int cursorLineY = textBaseY + activeLine * lineH;
+                    if (field != null) {
+                        int tw = this.font.width(activeText);
+                        int textX = activeText.isEmpty() ? cx : cx - tw / 2;
+                        int cursorPos = field.getCursorPos();
+                        String before = activeText.substring(0, Math.min(cursorPos, activeText.length()));
+                        int cursorX = activeText.isEmpty() ? cx : textX + this.font.width(before);
+                        if (cursorPos >= activeText.length()) {
+                            graphics.drawString(this.font, "_", cursorX, cursorLineY, textColor, false);
+                        } else {
+                            graphics.fill(cursorX, cursorLineY - 1, cursorX + 1, cursorLineY + lineH, textColor);
+                        }
                     }
                 }
-            } else if (i == activeSign && this.frame / 6 % 2 == 0) {
-                graphics.drawString(this.font, "_", cx, textCenterY, textColor, false);
-            }
-
-            // Active sign indicator
-            if (i == activeSign) {
-                graphics.fill(px - 4, py, px - 2, py + ph, 0xFFFFFF00);
             }
         }
 
-        // Selected color indicator
-        if (activeSign >= 0) {
-            int btnW = 50, gap = 2;
-            int rowW = 4 * btnW + 3 * gap;
-            int startX = cx - rowW / 2;
-            int btnY = cy + 40;
-            int selX = startX + this.colors[activeSign] * (btnW + gap);
-            graphics.fill(selX, btnY + 21, selX + btnW, btnY + 23, 0xFFFFFFFF);
+        // Color button highlight — colored border around selected button
+        int cbtnW = 50, cbtnGap = 2;
+        int cbtnRowW = 4 * cbtnW + 3 * cbtnGap;
+        int cbtnStartX = cx - cbtnRowW / 2;
+        int bottomOfPlates2 = previewBaseY + signCount * (platePH + 10);
+        int cbtnY = bottomOfPlates2 + 6;
+        int sel = colors[editIndex];
+        int bx = cbtnStartX + sel * (cbtnW + cbtnGap);
+        graphics.fill(bx, cbtnY + 21, bx + cbtnW, cbtnY + 24, SIGN_COLORS[sel]);
+    }
+
+    @Override
+    public boolean mouseClicked(net.minecraft.client.input.MouseButtonEvent event, boolean p) {
+        double mouseX = event.x();
+        double mouseY = event.y();
+        int cx = this.width / 2;
+        int cy = this.height / 2;
+        int platePW = 200, platePH = 40;
+        int previewBaseY = cy - 70;
+
+        for (int i = signCount - 1; i >= 0; i--) {
+            int py = previewBaseY + (signCount - 1 - i) * (platePH + 10);
+            int px = cx - platePW / 2;
+            if (mouseX >= px - 2 && mouseX <= px + platePW + 2 && mouseY >= py - 2 && mouseY <= py + platePH + 2) {
+                if (i != editIndex) {
+                    editIndex = i;
+                    activeLine = 0;
+                    rebuildFields();
+                    return true;
+                }
+            }
         }
+        return super.mouseClicked(event, p);
     }
 
     @Override
@@ -159,46 +239,41 @@ public class StreetSignGui extends Screen {
             this.minecraft.setScreen(null);
             return true;
         }
+        // Enter moves to line 2
         if (event.isConfirmation()) {
-            this.minecraft.setScreen(null);
+            if (activeLine < 1) {
+                activeLine = 1;
+            }
             return true;
         }
-        // Up/Down switches active sign
-        if (event.isUp() && activeSign < signCount - 1) {
-            activeSign++;
-            rebuildField();
+        // Tab cycles between plates
+        if (event.isCycleFocus()) {
+            editIndex = (editIndex + 1) % signCount;
+            activeLine = 0;
+            rebuildFields();
             return true;
         }
-        if (event.isDown() && activeSign > 0) {
-            activeSign--;
-            rebuildField();
+        // Up/Down switches lines within the active plate
+        if (event.isUp() && activeLine > 0) {
+            activeLine = 0;
+            return true;
+        }
+        if (event.isDown() && activeLine < 1) {
+            activeLine = 1;
             return true;
         }
 
-        return this.activeField != null && this.activeField.keyPressed(event) || super.keyPressed(event);
+        TextFieldHelper field = activeField();
+        return field != null && field.keyPressed(event) || super.keyPressed(event);
     }
 
     @Override
     public boolean charTyped(CharacterEvent event) {
-        if (this.activeField != null) {
-            this.activeField.charTyped(event);
+        TextFieldHelper field = activeField();
+        if (field != null) {
+            field.charTyped(event);
         }
         return true;
-    }
-
-    private void rebuildField() {
-        if (activeSign >= 0 && activeSign < signCount) {
-            this.activeField = new TextFieldHelper(
-                    () -> this.messages[activeSign],
-                    text -> {
-                        this.messages[activeSign] = text;
-                        this.streetSignBE.setText(activeSign, text);
-                    },
-                    TextFieldHelper.createClipboardGetter(this.minecraft),
-                    TextFieldHelper.createClipboardSetter(this.minecraft),
-                    text -> text.length() <= 50
-            );
-        }
     }
 
     @Override
@@ -206,15 +281,18 @@ public class StreetSignGui extends Screen {
         ClientPacketListener connection = Minecraft.getInstance().getConnection();
         if (connection != null) {
             List<String> texts = new ArrayList<>();
+            List<String> texts2 = new ArrayList<>();
             List<Integer> colorIndices = new ArrayList<>();
+            List<Integer> rots = new ArrayList<>();
             for (int i = 0; i < signCount; i++) {
-                texts.add(this.messages[i].trim());
-                colorIndices.add(this.colors[i]);
+                texts.add(line1s[i].trim());
+                texts2.add(line2s[i].trim());
+                colorIndices.add(colors[i]);
+                rots.add(rotations[i]);
             }
             connection.send(new PacketUpdateStreetSign(
                     this.streetSignBE.getBlockPos(),
-                    texts,
-                    colorIndices,
+                    texts, texts2, colorIndices, rots,
                     this.streetSignBE.getTextColor()));
         }
     }

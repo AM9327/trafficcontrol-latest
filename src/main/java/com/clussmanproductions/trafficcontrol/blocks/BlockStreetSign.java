@@ -149,16 +149,14 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
             }
         }
 
-        // Y bounds: plates centered vertically (4px each)
-        // 1 plate: Y 6-10. 2: Y 4-12. 3: Y 2-14. 4: Y 0-16.
+        // Y bounds: plates stacked from bottom (4px each)
         int plateCount = 1;
         BlockEntity be = level.getBlockEntity(pos);
         if (be instanceof StreetSignBlockEntity ssbe) {
             plateCount = Math.max(1, ssbe.getSignCount());
         }
-        double totalHeight = plateCount * 4.0;
-        double yMin = (16.0 - totalHeight) / 2.0;
-        double yMax = yMin + totalHeight;
+        double yMin = 0;
+        double yMax = plateCount * 4.0;
 
         if (!isCardinal) {
             if (shiftDir != null) {

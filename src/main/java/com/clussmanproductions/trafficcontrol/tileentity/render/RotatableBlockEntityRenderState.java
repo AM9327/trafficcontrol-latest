@@ -86,7 +86,9 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
     // Street sign: up to 4 stacked plates, each with text and fill color
     public int streetSignCount = 0;
     public String[] streetSignTexts = new String[4];
-    public int[] streetSignFillColors = new int[4]; // ARGB per plate
+    public String[] streetSignTexts2 = new String[4];
+    public int[] streetSignFillColors = new int[4];
+    public float[] streetSignRotations = new float[4]; // degrees per plate
     public int streetSignTextColor = 0xFFFFFFFF;
     public boolean streetSignGlowing = false;
 }

@@ -132,7 +132,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.streetSignCount = 0;
         for (int i = 0; i < 4; i++) {
             renderState.streetSignTexts[i] = "";
+            renderState.streetSignTexts2[i] = "";
             renderState.streetSignFillColors[i] = 0xFF006400;
+            renderState.streetSignRotations[i] = 0;
         }
         renderState.streetSignTextColor = 0xFFFFFFFF;
         renderState.streetSignGlowing = false;
@@ -273,6 +275,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 renderState.streetSignCount = streetSignBE.getSignCount();
                 for (int i = 0; i < renderState.streetSignCount; i++) {
                     renderState.streetSignTexts[i] = streetSignBE.getText(i);
+                    renderState.streetSignTexts2[i] = streetSignBE.getText2(i);
+                    renderState.streetSignRotations[i] = net.minecraft.world.level.block.state.properties.RotationSegment.convertToDegrees(streetSignBE.getRotation(i));
                     renderState.streetSignFillColors[i] = switch (streetSignBE.getColorIndex(i)) {
                         case 1 -> 0xFFCC0000; // Red
                         case 2 -> 0xFF0000CC; // Blue
@@ -575,36 +579,49 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         // --- Street sign: render stacked plates (fill + border + text per plate) ---
         // Each plate is 4px tall, stacking from bottom (index 0) to top.
         // Block model is skipped; plates are rendered entirely as custom geometry.
-        if (isStreetSign && renderState.streetSignCount > 0) {
+        // Always render at least 1 plate (avoids invisible block when signCount=0)
+        if (isStreetSign) {
+            int plateCount = Math.max(1, renderState.streetSignCount);
+            Identifier signTex = Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "textures/block/street_sign.png");
             Identifier whiteTex = Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "textures/block/street_sign_white.png");
-            Identifier borderTex = Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "textures/block/street_sign.png");
+            ensureTextureLoaded(signTex);
             ensureTextureLoaded(whiteTex);
-            ensureTextureLoaded(borderTex);
 
             int light = renderState.lightCoords;
             int overlay = OverlayTexture.NO_OVERLAY;
             Font font = Minecraft.getInstance().font;
             float maxUsableWidth = 0.875f; // 14/16 blocks
 
-            for (int plateIdx = 0; plateIdx < renderState.streetSignCount; plateIdx++) {
-                // Y position: stack from bottom up, centered in the block
-                // 1 plate: Y 6-10 (centered). 2: Y 4-12. 3: Y 2-14. 4: Y 0-16.
-                int totalHeight = renderState.streetSignCount * 4; // total px
-                float startY = (16f - totalHeight) / 2f / 16f;    // center vertically
-                float plateY1 = startY + (plateIdx * 4f / 16f);
+            for (int plateIdx = 0; plateIdx < plateCount; plateIdx++) {
+                // Y position: stack from bottom up, sitting on whatever is below
+                float plateY1 = plateIdx * 4f / 16f;
                 float plateY2 = plateY1 + 4f / 16f;
                 float plateCenterY = (plateY1 + plateY2) / 2f;
 
-                int fillColor = renderState.streetSignFillColors[plateIdx];
-                int fr = (fillColor >> 16) & 0xFF;
-                int fg = (fillColor >> 8) & 0xFF;
-                int fb = fillColor & 0xFF;
+                // Color index → UV row in street_sign.png (4 rows: green, red, blue, yellow)
+                int colorIdx = plateIdx < renderState.streetSignCount
+                        ? ((renderState.streetSignFillColors[plateIdx] >> 8) & 0xFF) == 0xCC ? 1  // red
+                        : (renderState.streetSignFillColors[plateIdx] & 0xFF) == 0xCC ? 2         // blue
+                        : ((renderState.streetSignFillColors[plateIdx] >> 8) & 0xFF) == 0xCC00 ? 3 // yellow (won't match)
+                        : 0 : 0; // green default
+                // Simpler: map from ARGB fill color to row index
+                int fc = plateIdx < renderState.streetSignCount ? renderState.streetSignFillColors[plateIdx] : 0xFF006400;
+                int row = switch (fc) {
+                    case 0xFFCC0000 -> 1; // Red
+                    case 0xFF0000CC -> 2; // Blue
+                    case 0xFFCCCC00 -> 3; // Yellow
+                    default -> 0;         // Green
+                };
+                float v1 = row * 0.25f;
+                float v2 = v1 + 0.25f;
 
                 float x1 = 0, x2 = 1;
-                float zNorth = 7f / 16f + 0.002f;
-                float zSouth = 9f / 16f - 0.002f;
-                float zBorderNorth = 7f / 16f;
-                float zBorderSouth = 9f / 16f;
+                float zSouth = 9f / 16f;
+                float zNorth = 7f / 16f;
+
+                // Per-plate rotation
+                float plateRotation = plateIdx < renderState.streetSignCount
+                        ? renderState.streetSignRotations[plateIdx] : renderState.rotationDegrees;
 
                 // Common transform for this plate
                 poseStack.pushPose();
@@ -615,51 +632,42 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                             poleDir.getStepZ() * poleShiftAmount);
                 }
                 poseStack.translate(0.5f, 0.0f, 0.5f);
-                poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+                poseStack.mulPose(Axis.YP.rotationDegrees(-plateRotation));
                 poseStack.translate(-0.5f, 0.0f, -0.5f);
 
-                // 1. Colored fill (entitySolid, behind border)
+                // Single textured quad per face — texture has border + fill + corners
                 final float fy1 = plateY1, fy2 = plateY2;
-                RenderType fillRt = RenderTypes.entitySolid(whiteTex);
-                nodeCollector.submitCustomGeometry(poseStack, fillRt, (pose, consumer) -> {
-                    Matrix4f m = pose.pose();
-                    Vector3f nS = pose.transformNormal(0, 0, 1, new Vector3f());
-                    addQuad(consumer, m, nS, x1, fy1, x2, fy2, zSouth, false, fr, fg, fb, 255, overlay, light);
-                    Vector3f nN = pose.transformNormal(0, 0, -1, new Vector3f());
-                    addQuad(consumer, m, nN, x1, fy1, x2, fy2, zNorth, true, fr, fg, fb, 255, overlay, light);
-                });
-
-                // 2. Border texture (entityCutout, transparent center shows fill)
-                RenderType borderRt = RenderTypes.entityCutout(borderTex);
-                nodeCollector.submitCustomGeometry(poseStack, borderRt, (pose, consumer) -> {
+                final float uv1 = v1, uv2 = v2;
+                RenderType signRt = RenderTypes.entitySolid(signTex);
+                nodeCollector.submitCustomGeometry(poseStack, signRt, (pose, consumer) -> {
                     Matrix4f m = pose.pose();
                     // South face
                     Vector3f nS = pose.transformNormal(0, 0, 1, new Vector3f());
-                    consumer.addVertex(m, x1, fy2, zBorderSouth).setColor(255, 255, 255, 255)
-                            .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
-                    consumer.addVertex(m, x1, fy1, zBorderSouth).setColor(255, 255, 255, 255)
-                            .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
-                    consumer.addVertex(m, x2, fy1, zBorderSouth).setColor(255, 255, 255, 255)
-                            .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
-                    consumer.addVertex(m, x2, fy2, zBorderSouth).setColor(255, 255, 255, 255)
-                            .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
+                    consumer.addVertex(m, x1, fy2, zSouth).setColor(255, 255, 255, 255)
+                            .setUv(0, uv1).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
+                    consumer.addVertex(m, x1, fy1, zSouth).setColor(255, 255, 255, 255)
+                            .setUv(0, uv2).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
+                    consumer.addVertex(m, x2, fy1, zSouth).setColor(255, 255, 255, 255)
+                            .setUv(1, uv2).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
+                    consumer.addVertex(m, x2, fy2, zSouth).setColor(255, 255, 255, 255)
+                            .setUv(1, uv1).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
                     // North face
                     Vector3f nN = pose.transformNormal(0, 0, -1, new Vector3f());
-                    consumer.addVertex(m, x2, fy2, zBorderNorth).setColor(255, 255, 255, 255)
-                            .setUv(0, 0).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
-                    consumer.addVertex(m, x2, fy1, zBorderNorth).setColor(255, 255, 255, 255)
-                            .setUv(0, 1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
-                    consumer.addVertex(m, x1, fy1, zBorderNorth).setColor(255, 255, 255, 255)
-                            .setUv(1, 1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
-                    consumer.addVertex(m, x1, fy2, zBorderNorth).setColor(255, 255, 255, 255)
-                            .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                    consumer.addVertex(m, x2, fy2, zNorth).setColor(255, 255, 255, 255)
+                            .setUv(0, uv1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                    consumer.addVertex(m, x2, fy1, zNorth).setColor(255, 255, 255, 255)
+                            .setUv(0, uv2).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                    consumer.addVertex(m, x1, fy1, zNorth).setColor(255, 255, 255, 255)
+                            .setUv(1, uv2).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
+                    consumer.addVertex(m, x1, fy2, zNorth).setColor(255, 255, 255, 255)
+                            .setUv(1, uv1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
                 });
 
                 // 3. Edge faces for 3D depth (white, using whiteTex)
                 RenderType edgeRt = RenderTypes.entitySolid(whiteTex);
                 nodeCollector.submitCustomGeometry(poseStack, edgeRt, (pose, consumer) -> {
                     Matrix4f m = pose.pose();
-                    float zN = zBorderNorth, zS = zBorderSouth;
+                    float zN = zNorth, zS = zSouth;
                     int er = 220, eg = 220, eb = 220; // slightly gray for depth
                     // Top face (facing up)
                     Vector3f nUp = pose.transformNormal(0, 1, 0, new Vector3f());
@@ -703,21 +711,29 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                             .setUv(1, 0).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
                 });
 
-                // 3. Text rendering (both faces)
-                String plateText = renderState.streetSignTexts[plateIdx];
-                if (plateText != null && !plateText.isEmpty()) {
-                    FormattedCharSequence text = FormattedCharSequence.forward(plateText, Style.EMPTY);
-                    int textWidth = font.width(text);
+                // 4. Text rendering (2 lines, both faces)
+                String plateText1 = plateIdx < renderState.streetSignCount ? renderState.streetSignTexts[plateIdx] : "";
+                String plateText2 = plateIdx < renderState.streetSignCount ? renderState.streetSignTexts2[plateIdx] : "";
+                boolean hasL1 = plateText1 != null && !plateText1.isEmpty();
+                boolean hasL2 = plateText2 != null && !plateText2.isEmpty();
+                if (hasL1 || hasL2) {
+                    FormattedCharSequence line1 = hasL1 ? FormattedCharSequence.forward(plateText1, Style.EMPTY) : null;
+                    FormattedCharSequence line2 = hasL2 ? FormattedCharSequence.forward(plateText2, Style.EMPTY) : null;
+                    int w1 = hasL1 ? font.width(line1) : 0;
+                    int w2 = hasL2 ? font.width(line2) : 0;
+                    int lineCount = (hasL1 ? 1 : 0) + (hasL2 ? 1 : 0);
+                    int maxW = Math.max(w1, w2);
 
                     float textScale = 1.0f / 64.0f;
                     float maxUsableHeight = 0.1875f; // 3/16 blocks
-                    if (textWidth * textScale > maxUsableWidth) {
-                        textScale = maxUsableWidth / textWidth;
+                    if (maxW * textScale > maxUsableWidth) {
+                        textScale = maxUsableWidth / maxW;
                     }
-                    if (font.lineHeight * textScale > maxUsableHeight) {
-                        textScale = maxUsableHeight / font.lineHeight;
+                    if (lineCount * font.lineHeight * textScale > maxUsableHeight) {
+                        textScale = maxUsableHeight / (lineCount * font.lineHeight);
                     }
                     float finalScale = textScale;
+                    float totalH = lineCount * font.lineHeight;
 
                     for (int face = 0; face < 2; face++) {
                         poseStack.pushPose();
@@ -728,11 +744,22 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         poseStack.translate(0, 0, 1.5f / 16.0f);
                         poseStack.scale(finalScale, -finalScale, finalScale);
 
-                        int textLight = 0xF000F0; // retroreflective
-                        nodeCollector.submitText(poseStack,
-                                -textWidth / 2.0f, -font.lineHeight / 2.0f,
-                                text, false, Font.DisplayMode.POLYGON_OFFSET,
-                                textLight, renderState.streetSignTextColor, 0, 0);
+                        int textLight = 0xF000F0;
+                        float yStart = -totalH / 2.0f;
+                        int li = 0;
+                        if (hasL1) {
+                            nodeCollector.submitText(poseStack,
+                                    -w1 / 2.0f, yStart + li * font.lineHeight,
+                                    line1, false, Font.DisplayMode.POLYGON_OFFSET,
+                                    textLight, renderState.streetSignTextColor, 0, 0);
+                            li++;
+                        }
+                        if (hasL2) {
+                            nodeCollector.submitText(poseStack,
+                                    -w2 / 2.0f, yStart + li * font.lineHeight,
+                                    line2, false, Font.DisplayMode.POLYGON_OFFSET,
+                                    textLight, renderState.streetSignTextColor, 0, 0);
+                        }
                         poseStack.popPose();
                     }
                 }
@@ -785,14 +812,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         if (shiftToPole && isTrafficLight) {
             shouldRenderPole = renderState.extendPoleUp && renderState.extendPoleDown;
         }
-        // Street signs: render pole only when standalone (not mounted on any pole)
-        if (isStreetSign) {
-            if (renderState.mountedOnPole) {
-                shouldRenderPole = false;
-            } else {
-                shouldRenderPole = true; // standalone needs a support pole
-            }
-        }
+        // Street signs never render the center pole — they float standalone
+        // or mount on external poles (CG pole/HP provides the support)
+        if (isStreetSign) shouldRenderPole = false;
         if ((isTrafficLight || isSign) && !isHangingStreetSign && shouldRenderPole) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             BlockStateModel poleModel = modelManager.getStandaloneModel(BACK_POLE_MODEL_KEY);
