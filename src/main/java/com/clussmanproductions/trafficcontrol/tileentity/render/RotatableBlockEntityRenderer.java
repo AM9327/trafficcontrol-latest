@@ -514,7 +514,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 : RenderTypes.entitySolidZOffsetForward(TextureAtlas.LOCATION_BLOCKS);
 
         boolean isTrafficLight = state.getBlock() instanceof BlockTrafficLight;
-        boolean sideBySide = isTrafficLight && renderState.hasSideBySideNeighbor;
+        boolean isHorizTL = isTrafficLight && state.getBlock().getDescriptionId().contains("horiz");
+        // Side-by-side: vertical TLs get connect model, horizontal TLs get spacing shift
+        boolean sideBySide = isTrafficLight && !isHorizTL && renderState.hasSideBySideNeighbor;
 
         // Pick body model: always use the block's own model so all variants render correctly
         BlockStateModel bodyModel = baseModel;
@@ -574,6 +576,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
                         poleDir.getStepZ() * poleShiftAmount);
             }
+
+            // Horizontal TLs: models extend slightly beyond block (X -1.3 to 16.2)
+            // Small overlap between adjacent frames is acceptable
 
             poseStack.translate(0.5f, 0.0f, 0.5f);
             poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
@@ -797,7 +802,10 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         // --- Bridge: render connect model halfway toward adjacent TL to fill the gap ---
-        if (sideBySide && renderState.sideBySidePoleDirection != null && connectModel != null) {
+        // Skip for horizontal TLs (models already extend beyond block, no bridge needed)
+        boolean isHorizontalTL = sideBySide && state.getBlock() instanceof BlockTrafficLight
+                && state.getBlock().getDescriptionId().contains("horiz");
+        if (sideBySide && !isHorizontalTL && renderState.sideBySidePoleDirection != null && connectModel != null) {
             Direction poleDir = renderState.sideBySidePoleDirection;
             poseStack.pushPose();
             // Translate halfway toward the adjacent TL
