@@ -577,8 +577,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         poleDir.getStepZ() * poleShiftAmount);
             }
 
-            // Horizontal TLs: models extend slightly beyond block (X -1.3 to 16.2)
-            // Small overlap between adjacent frames is acceptable
+            // Horizontal TLs: no shifting — overlap between adjacent frames is acceptable
 
             poseStack.translate(0.5f, 0.0f, 0.5f);
             poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
