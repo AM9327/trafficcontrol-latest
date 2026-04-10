@@ -463,6 +463,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     if (neighborRot != rotation) {
                         renderState.adjacentTrafficLightConnection = true;
                     }
+                    // TODO: Side-by-side detection for TLs on same HP (needs careful implementation)
                 }
             }
 
