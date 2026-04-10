@@ -529,7 +529,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         // When TLs are adjacent or between two poles, keep centered.
         // Street signs always shift when mounted (both HP and CG pole).
         // Regular signs only shift on CG pole (HP provides flush mount).
-        boolean shiftToPole = (isTrafficLight && renderState.mountedOnPole
+        // Back-to-back TLs always shift (bridge bar connects them).
+        // Regular TLs shift when no horizontal bars and no side-by-side adjacent TLs.
+        boolean shiftToPole = (isTrafficLight && renderState.backToBackTLDir != null
+                && renderState.horizontalBarDirection != null)
+                || (isTrafficLight && renderState.mountedOnPole
                 && renderState.horizontalBarDirection != null
                 && (!renderState.hasAdjacentTrafficLight || renderState.backToBackTLDir != null)
                 && renderState.horizontalPoleDirs.isEmpty())
