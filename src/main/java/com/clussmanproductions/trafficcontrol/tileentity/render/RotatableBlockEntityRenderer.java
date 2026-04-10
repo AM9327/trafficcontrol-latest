@@ -463,7 +463,14 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     if (neighborRot != rotation) {
                         renderState.adjacentTrafficLightConnection = true;
                     }
-                    // TODO: Side-by-side detection for TLs on same HP (needs careful implementation)
+                    // Side-by-side: both TLs on HP, same rotation, adjacent perpendicular to HP
+                    if (neighborRot == rotation
+                            && renderState.mountedOnHorizontalPole
+                            && renderState.horizontalBarDirection != null
+                            && dir.getAxis() != renderState.horizontalBarDirection.getAxis()) {
+                        renderState.hasSideBySideNeighbor = true;
+                        renderState.sideBySidePoleDirection = dir;
+                    }
                 }
             }
 
@@ -789,12 +796,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // --- Bridge: render connect model at the pole block position to fill the gap ---
+        // --- Bridge: render connect model halfway toward adjacent TL to fill the gap ---
         if (sideBySide && renderState.sideBySidePoleDirection != null && connectModel != null) {
             Direction poleDir = renderState.sideBySidePoleDirection;
             poseStack.pushPose();
-            // Translate to the pole block in world space
-            poseStack.translate(poleDir.getStepX(), 0, poleDir.getStepZ());
+            // Translate halfway toward the adjacent TL
+            poseStack.translate(poleDir.getStepX() * 0.5f, 0, poleDir.getStepZ() * 0.5f);
             // Apply same rotation as the body
             poseStack.translate(0.5f, 0.0f, 0.5f);
             poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
