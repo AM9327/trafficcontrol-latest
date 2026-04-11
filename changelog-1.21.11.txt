@@ -133,13 +133,18 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Tooltip: "Hold SHIFT for more info" expands to full description
 - Sign GUI suppressed when holding screwdriver (block checks for screwdriver in hand)
 
-### Horizontal Traffic Light Frames (WIP) (Beta 1)
+### Horizontal Traffic Light Frames (Fixed) (WIP) (Beta 2)
 - Added 9 new horizontal/sideways traffic light frame variants:
   - 3-bulb, 4-bulb, and 5-bulb sizes
   - Black, yellow, and orange colors
 - Models rotated 90° around Z axis from vertical versions with vertical back pole
 - Registered as BlockTrafficLight with same placement behavior as vertical frames
 - Added to creative tab after orange doghouse frame
+- Fixed back pole cross piece: centered and sized correctly per frame width (2/4/5-bulb)
+- Fixed hitbox: horizontal frames use wider VoxelShape matching model bounds
+- Horizontal frames no longer shift toward pole when mounted on horizontal poles
+- HP extends full-length bar into horizontal TL frame blocks for proper connection
+- Horizontal frames excluded from shiftToPole, bar-through-frame, and pole-shifted hitbox logic
 
 ### 3D Inventory Icons (4/6/26)
 - Upgraded all 21 vertical traffic light frame inventory icons from 2D sprites to 3D models

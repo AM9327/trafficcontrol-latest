@@ -39,6 +39,10 @@ public class BlockTrafficLight extends Block implements EntityBlock {
     private static final VoxelShape SHAPE_NORTH = Block.box(2, 0, 2, 14, 16, 12);
     private static final VoxelShape SHAPE_EAST  = Block.box(4, 0, 2, 14, 16, 14);
 
+    // Horizontal TL frame hitboxes — wider to match the sideways model
+    private static final VoxelShape SHAPE_HORIZ_NS = Block.box(-5, 3, 4, 30, 13, 14);
+    private static final VoxelShape SHAPE_HORIZ_EW = Block.box(2, 3, -5, 12, 13, 30);
+
     // Pole-mounted hitboxes — split into top/bottom halves leaving y=5.5-10.5 clear for pole arm clicks
     private static final VoxelShape SHAPE_PAIRED_POLE_EAST  = Shapes.or(
             Block.box(13, 0, 5, 16, 5.5, 11), Block.box(13, 10.5, 5, 16, 16, 11));
@@ -122,6 +126,12 @@ public class BlockTrafficLight extends Block implements EntityBlock {
         int rotation = state.getValue(ROTATION);
         int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
         if (steps < 0) steps += 4;
+
+        // Horizontal TL frames: wider hitbox, no pole shift
+        boolean isHorizTL = state.getBlock().getDescriptionId().contains("horiz");
+        if (isHorizTL) {
+            return (steps == 1 || steps == 3) ? SHAPE_HORIZ_EW : SHAPE_HORIZ_NS;
+        }
 
         // Check for adjacent traffic lights (side-by-side row)
         boolean hasAdjacentTL = false;

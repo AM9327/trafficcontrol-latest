@@ -1059,11 +1059,14 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             BlockStateModel hpModel2 = mm2.getStandaloneModel(HORIZONTAL_POLE_MODEL_KEY);
             if (hpModel2 != null) {
                 for (Direction dir : renderState.horizTLDirs) {
+                    float barYRot3 = DIR_ROTATIONS[dir.get2DDataValue()];
                     poseStack.pushPose();
                     poseStack.translate(dir.getStepX(), 0, dir.getStepZ());
-                    poseStack.translate(0.5f, 0.0f, 0.5f);
-                    poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
-                    poseStack.translate(-0.5f, 0.0f, -0.5f);
+                    if (barYRot3 != 0) {
+                        poseStack.translate(0.5f, 0.0f, 0.5f);
+                        poseStack.mulPose(Axis.YP.rotationDegrees(barYRot3));
+                        poseStack.translate(-0.5f, 0.0f, -0.5f);
+                    }
                     nodeCollector.submitBlockModel(
                             poseStack, renderType, hpModel2,
                             1.0f, 1.0f, 1.0f,
