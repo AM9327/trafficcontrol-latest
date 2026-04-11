@@ -547,9 +547,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         // Regular signs only shift on CG pole (HP provides flush mount).
         // Back-to-back TLs always shift (bridge bar connects them).
         // Regular TLs shift when no horizontal bars and no side-by-side adjacent TLs.
-        boolean shiftToPole = (isTrafficLight && !isHorizTL && renderState.backToBackTLDir != null
-                && renderState.horizontalBarDirection != null)
-                || (isTrafficLight && !isHorizTL && renderState.mountedOnPole
+        boolean shiftToPole = (isTrafficLight && !isHorizTL && renderState.mountedOnPole
                 && renderState.horizontalBarDirection != null
                 && (!renderState.hasAdjacentTrafficLight || renderState.backToBackTLDir != null)
                 && renderState.horizontalPoleDirs.isEmpty())
