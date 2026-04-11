@@ -121,6 +121,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.nonCardinalTLDirs.clear();
         renderState.cardinalTLDirs.clear();
         renderState.signDirs.clear();
+        renderState.horizTLDirs.clear();
         renderState.signToSignDirs.clear();
         renderState.backToBackSignDir = null;
         renderState.backToBackTLDir = null;
@@ -354,6 +355,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 } else {
                     renderState.cardinalTLDirs.add(dir);
                 }
+                // Track horizontal TL frames (they don't shift, need full-length bar)
+                Block tlBlock = level.getBlockState(pos.relative(dir)).getBlock();
+                if (tlBlock.getDescriptionId().contains("horiz")) {
+                    renderState.horizTLDirs.add(dir);
+                }
             }
         }
 
@@ -541,9 +547,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         // Regular signs only shift on CG pole (HP provides flush mount).
         // Back-to-back TLs always shift (bridge bar connects them).
         // Regular TLs shift when no horizontal bars and no side-by-side adjacent TLs.
-        boolean shiftToPole = (isTrafficLight && renderState.backToBackTLDir != null
+        boolean shiftToPole = (isTrafficLight && !isHorizTL && renderState.backToBackTLDir != null
                 && renderState.horizontalBarDirection != null)
-                || (isTrafficLight && renderState.mountedOnPole
+                || (isTrafficLight && !isHorizTL && renderState.mountedOnPole
                 && renderState.horizontalBarDirection != null
                 && (!renderState.hasAdjacentTrafficLight || renderState.backToBackTLDir != null)
                 && renderState.horizontalPoleDirs.isEmpty())
@@ -576,8 +582,6 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
                         poleDir.getStepZ() * poleShiftAmount);
             }
-
-            // Horizontal TLs: no shifting — overlap between adjacent frames is acceptable
 
             poseStack.translate(0.5f, 0.0f, 0.5f);
             poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
@@ -894,8 +898,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // Traffic lights: render bar toward each adjacent horizontal pole
-        if (isTrafficLight && !renderState.horizontalPoleDirs.isEmpty()) {
+        // Traffic lights: render bar toward each adjacent horizontal pole (skip for horizontal frames)
+        if (isTrafficLight && !isHorizTL && !renderState.horizontalPoleDirs.isEmpty()) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
             for (Direction dir : renderState.horizontalPoleDirs) {
                 // If there's a connection on the opposite side (pole or another horizontal pole),
@@ -1002,8 +1006,12 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 boolean isTowardTL = isHorizPole
                         && (renderState.nonCardinalTLDirs.contains(dir)
                             || renderState.cardinalTLDirs.contains(dir));
+                boolean isTowardHorizTL = isHorizPole && renderState.horizTLDirs.contains(dir);
                 StandaloneModelKey<BlockStateModel> modelKey;
-                if (isTowardTL) {
+                if (isTowardHorizTL) {
+                    // Horizontal TL frames don't shift toward the pole, so use full-length bar
+                    modelKey = HORIZONTAL_POLE_MODEL_KEY;
+                } else if (isTowardTL) {
                     modelKey = TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY;
                 } else if (isHorizPole && renderState.signDirs.contains(dir)) {
                     modelKey = TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY;
@@ -1037,6 +1045,27 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                     nodeCollector.submitBlockModel(
                             poseStack, renderType, poleModel,
+                            1.0f, 1.0f, 1.0f,
+                            renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
+                    );
+                    poseStack.popPose();
+                }
+            }
+        }
+
+        // HP: extend bar into adjacent horizontal TL frame blocks (they don't shift toward pole)
+        if (state.getBlock() instanceof BlockHorizontalPole && !renderState.horizTLDirs.isEmpty()) {
+            ModelManager mm2 = Minecraft.getInstance().getModelManager();
+            BlockStateModel hpModel2 = mm2.getStandaloneModel(HORIZONTAL_POLE_MODEL_KEY);
+            if (hpModel2 != null) {
+                for (Direction dir : renderState.horizTLDirs) {
+                    poseStack.pushPose();
+                    poseStack.translate(dir.getStepX(), 0, dir.getStepZ());
+                    poseStack.translate(0.5f, 0.0f, 0.5f);
+                    poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
+                    poseStack.translate(-0.5f, 0.0f, -0.5f);
+                    nodeCollector.submitBlockModel(
+                            poseStack, renderType, hpModel2,
                             1.0f, 1.0f, 1.0f,
                             renderState.lightCoords, OverlayTexture.NO_OVERLAY, 0
                     );

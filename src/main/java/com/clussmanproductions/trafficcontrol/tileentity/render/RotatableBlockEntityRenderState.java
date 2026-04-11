@@ -80,6 +80,9 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
     // Street sign: hanging from block above
     public boolean hanging = false;
 
+    // Horizontal pole: directions toward adjacent horizontal TL frames (no shift, full bar)
+    public List<Direction> horizTLDirs = new ArrayList<>();
+
     // Horizontal pole: directions toward adjacent non-hanging street signs (extend bar into)
     public List<Direction> streetSignDirs = new ArrayList<>();
 

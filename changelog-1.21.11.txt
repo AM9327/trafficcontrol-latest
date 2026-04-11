@@ -223,6 +223,39 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Connection arms rendered via BE renderer using traffic_light_pole_arm model based on NORTH/SOUTH/EAST/WEST properties
 - Keeps existing auto-connect behavior for adjacent blocks (HP, TL, CG poles, signs)
 
+### Street Sign System (full 1.12.2 port) (4/9-4/10/26)
+- Multi-sign stacking: up to 4 plates per block, right-click with street sign item to stack
+- Sneak + place to put sign in adjacent block instead of stacking
+- Per-plate rotation: each plate has independent rotation (0-15), GUI direction button cycles it
+- Per-plate color: each plate has own color (green/red/blue/yellow) from GUI color buttons
+- 2-line text per plate with auto-scaling to fit 4px plate height
+- 1.12.2 texture: original street_sign.png with 4-color UV rows for face colors
+- 3D edge faces: all 6 faces per plate (front/back/top/bottom/left/right) rendered dynamically
+- Edge faces sample white border pixel from sign texture for clean edges
+- GUI overhaul: stacked plate preview, clickable + Tab to switch plates, colored button text
+- Direction button (N/S, E/W, NE/SW, etc.) placed between color buttons and Done button
+- Retroreflective text: always fullbright (0xF000F0) regardless of ambient light
+- Pole mounting: CG pole detection with 7/16 shift so plate edge stops at pole column face
+- Street signs excluded from ALL arm rendering (arm models are full-block height, poke through 4px plate)
+- CG pole arms skip street sign neighbors (same reason)
+- HP doesn't render arms toward street signs
+- Block model skipped for street signs — all plates rendered dynamically as custom geometry
+- Standalone signs float without center pole (like vanilla signs)
+- Hanging signs: plates at Y 15/16 offset, bracket chains connect at Y 19
+- Dynamic hitbox based on plate count and pole detection
+- Backwards compatibility: old single/dual text format auto-converts to 1+ plates
+- Dye interaction: change text color with dye items
+- Glow ink sac: toggle glowing text
+- Screwdriver bypasses GUI for rotation
+
+### Horizontal Traffic Light Frame Pole Fix (4/10/26)
+- Horizontal TL frames no longer shift toward the pole when mounted on horizontal poles
+- Horizontal pole extends full-length bar into horizontal TL frame blocks for proper connection
+- Horizontal TL frames excluded from bar-through-frame rendering (no middle bar shift)
+- Horizontal TL frames excluded from shiftToPole logic entirely
+- Fixes: frames no longer overlap when placed side-by-side on horizontal poles
+- Only affects horizontal TL frames — vertical TLs still shift and connect as before
+
 ### Credits & Authors
 - Added Gamearoo to authors list and credits for contributing items and textures
 - Added AM9327 to credits for helping port the mod to the latest versions of Minecraft
