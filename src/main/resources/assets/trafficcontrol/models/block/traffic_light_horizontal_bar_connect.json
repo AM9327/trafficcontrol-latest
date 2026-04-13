@@ -8,7 +8,7 @@
 		{
 			"name": "Horizontal Bar Connect",
 			"from": [7, 7, 0],
-			"to": [9, 9, 2],
+			"to": [9, 9, 5],
 			"faces": {
 				"north": {"uv": [8, 11, 10, 13], "texture": "#0"},
 				"east": {"uv": [4, 9, 11, 11], "texture": "#0"},

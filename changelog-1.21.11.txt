@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/7/26) (1:50 PM)
+Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/12/26) (9:55 PM)
 ======================================================================================================
 
 ### Commits
@@ -119,10 +119,27 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Hitbox shifts with body when mounted on CG pole/base or chained
 - No collision shape — players walk through signs
 
-### Traffic Light Back-to-Back
-- Adjacent traffic lights facing opposite directions (rotation diff of 8) now snap together
-- Both shift 9/16 toward each other with signal arm bar bridge between poles
-- Horizontal bar skipped between back-to-back TLs (bridge renders instead)
+### Traffic Light & Sign Back-to-Back (Beta 3) (4/10-4/12/26)
+- Adjacent traffic lights facing opposite directions (rotation diff of 8) connect back-to-back
+- Back-to-back detection uses TL's own back direction (rotation-based), not partner position
+- Tiebreaker system: only second TL shifts (8/16), first stays at block center
+- 5px stub (horizontal_bar_connect) with 5/16 offset tiebreaker — stubs meet between frames
+- First TL's stub shifts toward partner, second TL's stub shifts toward own center
+- Bridge bar uses HORIZONTAL_BAR_CONNECT_MODEL_KEY (5px) instead of SIGNAL_ARM_BAR_MODEL_KEY (9px)
+- TL-to-CG pole arm uses TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY (7px)
+- Direct back-to-back paired detection in blockstate (paired: true for adjacent opposite-facing TLs)
+- Across-pole paired check now scans ALL pole directions (not just first)
+
+### Crossing Gate Pole/Base Arms (4/12/26)
+- CG pole arms now use HORIZONTAL_POLE_MODEL_KEY (full-length 25px) — bars pass through TL frames
+- CG base now renders connection arms toward adjacent TLs/signs (same rendering as CG pole)
+- BlockCrossingGateBase added to isVerticalPoleBlock() for mount detection
+- CG base detects adjacent BlockTrafficLight and BlockSign for arm rendering
+
+### HP-Mounted TL Shift (4/12/26)
+- HP-mounted TLs shift 7/16 toward HP (was 9/16)
+- shiftToPole guards bypass for backToBackTLDir only (HP bypass causes side-by-side gaps)
+- HP arm toward TLs stays at TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY (7px)
 
 ### Screwdriver Item
 - Ported screwdriver from 1.12.2 to NeoForge 1.21.11

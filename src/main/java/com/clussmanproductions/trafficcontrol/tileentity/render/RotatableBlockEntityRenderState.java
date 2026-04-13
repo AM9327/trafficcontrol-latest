@@ -69,6 +69,7 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
 
     // Traffic light: direction toward back-to-back paired TL (render bridge bar)
     public @Nullable Direction backToBackTLDir = null;
+    public boolean backToBackOnVerticalPole = false;
 
     // Traffic light: render vertical pole extension up/down toward CG pole
     public boolean extendPoleUp = false;

@@ -104,16 +104,40 @@ public class BlockTrafficLight extends Block implements EntityBlock {
             }
         }
 
-        // Check for across-pole pairing
-        if (poleDir != null && state.hasProperty(ROTATION)) {
+        // Check for across-pole pairing (check all pole directions, not just first)
+        if (state.hasProperty(ROTATION)) {
             int rotation = state.getValue(ROTATION);
-            BlockPos beyondPole = pos.relative(poleDir, 2);
-            BlockState beyondState = level.getBlockState(beyondPole);
-            if (beyondState.getBlock() instanceof BlockTrafficLight
-                    && beyondState.hasProperty(ROTATION)) {
-                int beyondRot = beyondState.getValue(ROTATION);
-                if (Math.abs(beyondRot - rotation) == 8) {
-                    paired = true;
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                if (neighbor instanceof BlockCrossingGatePole
+                        || neighbor instanceof BlockHorizontalPole
+                        || neighbor instanceof BlockCrossingGateBase) {
+                    BlockPos beyondPole = pos.relative(dir, 2);
+                    BlockState beyondState = level.getBlockState(beyondPole);
+                    if (beyondState.getBlock() instanceof BlockTrafficLight
+                            && beyondState.hasProperty(ROTATION)) {
+                        int beyondRot = beyondState.getValue(ROTATION);
+                        if (Math.abs(beyondRot - rotation) == 8) {
+                            paired = true;
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Check for direct back-to-back pairing (adjacent TL facing opposite direction)
+        if (!paired && state.hasProperty(ROTATION)) {
+            int rotation = state.getValue(ROTATION);
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                BlockState neighbor = level.getBlockState(pos.relative(dir));
+                if (neighbor.getBlock() instanceof BlockTrafficLight
+                        && neighbor.hasProperty(ROTATION)) {
+                    int neighborRot = neighbor.getValue(ROTATION);
+                    if (Math.abs(neighborRot - rotation) == 8) {
+                        paired = true;
+                        break;
+                    }
                 }
             }
         }

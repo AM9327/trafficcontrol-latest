@@ -125,6 +125,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         renderState.signToSignDirs.clear();
         renderState.backToBackSignDir = null;
         renderState.backToBackTLDir = null;
+        renderState.backToBackOnVerticalPole = false;
         renderState.extendPoleUp = false;
         renderState.extendPoleDown = false;
         renderState.cgPoleArmDirs.clear();
@@ -306,6 +307,16 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
             }
         }
+        // Crossing gate base: detect adjacent connectable blocks for arm rendering
+        if (state.getBlock() instanceof BlockCrossingGateBase) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                if ((neighbor instanceof BlockTrafficLight || neighbor instanceof BlockSign)
+                        && !(neighbor instanceof BlockStreetSign)) {
+                    renderState.cgPoleArmDirs.add(dir);
+                }
+            }
+        }
 
         // Signal arm: find adjacent traffic lights to render bars toward
         if (state.getBlock() instanceof BlockSignalArm) {
@@ -392,24 +403,30 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 }
             }
 
-            // Back-to-back: adjacent TL facing opposite direction (no pole between)
+            // Back-to-back: detect adjacent opposite-facing TL behind this TL's back
+            // NO shift — TLs stay centered. Connection comes from CG pole/base arms.
             if (poleDir == null && state.hasProperty(BlockStateProperties.ROTATION_16)) {
-                for (Direction dir : Direction.Plane.HORIZONTAL) {
-                    BlockState neighborState = level.getBlockState(pos.relative(dir));
-                    if (neighborState.getBlock() instanceof BlockTrafficLight
-                            && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
-                        int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
-                        if (Math.abs(neighborRot - rotation) == 8) {
-                            renderState.mountedOnPole = true;
-                            renderState.mountedOnHorizontalPole = false;
-                            poleDir = dir;
-                            renderState.horizontalBarDirection = dir;
-                            renderState.backToBackTLDir = dir;
-                            break;
-                        }
+                // Calculate back direction from rotation
+                int snapped = ((rotation + 2) % 16) / 4;
+                Direction backDir = switch (snapped) {
+                    case 0 -> Direction.NORTH;  // facing south, back = north
+                    case 1 -> Direction.EAST;   // facing west, back = east
+                    case 2 -> Direction.SOUTH;  // facing north, back = south
+                    case 3 -> Direction.WEST;   // facing east, back = west
+                    default -> Direction.NORTH;
+                };
+                // Only check the back direction for the partner
+                BlockState neighborState = level.getBlockState(pos.relative(backDir));
+                if (neighborState.getBlock() instanceof BlockTrafficLight
+                        && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                    int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
+                    if (Math.abs(neighborRot - rotation) == 8) {
+                        renderState.backToBackTLDir = backDir;
+                        renderState.horizontalBarDirection = backDir;
                     }
                 }
             }
+
 
             // 2. Check for true back-to-back pair (pairedAcrossPole)
             if (poleDir != null && state.hasProperty(BlockStateProperties.ROTATION_16)) {
@@ -502,6 +519,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
 
     private static boolean isVerticalPoleBlock(Block block) {
         return block instanceof BlockCrossingGatePole
+                || block instanceof BlockCrossingGateBase
                 || block instanceof BlockHorizontalPole;
     }
 
@@ -550,16 +568,21 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         boolean shiftToPole = (isTrafficLight && !isHorizTL && renderState.mountedOnPole
                 && renderState.horizontalBarDirection != null
                 && (!renderState.hasAdjacentTrafficLight || renderState.backToBackTLDir != null)
-                && renderState.horizontalPoleDirs.isEmpty())
+                && (renderState.horizontalPoleDirs.isEmpty() || renderState.backToBackTLDir != null))
                 || (state.getBlock() instanceof BlockSign && renderState.mountedOnPole
                 && !renderState.mountedOnHorizontalPole
                 && renderState.horizontalBarDirection != null)
                 || (isStreetSign && !isHangingStreetSign && renderState.mountedOnPole
                 && !renderState.mountedOnHorizontalPole
                 && renderState.horizontalBarDirection != null);
-        // Street signs use a smaller shift (7/16) so the plate edge stops at the
-        // CG pole column face (at 7/16 into the pole block) instead of overlapping it.
-        float poleShiftAmount = isStreetSign ? 7.0f / 16.0f : 9.0f / 16.0f;
+        // Shift amounts per mount type:
+        // Street signs: 7/16 (plate edge stops at CG pole column face)
+        // HP-mounted TLs: 7/16 (back pole aligns at block boundary with HP arm)
+        // Regular CG pole mount: 9/16 (full shift to pole column)
+        // Back-to-back: no shift (mountedOnPole not set, shiftToPole is false)
+        float poleShiftAmount = isStreetSign ? 7.0f / 16.0f
+                : renderState.mountedOnHorizontalPole ? 7.0f / 16.0f
+                : 9.0f / 16.0f;
 
         // --- Render body (rotated) ---
         // Skip body model for regular signs (BlockSign) when mounted on a pole —
@@ -579,6 +602,18 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 Direction poleDir = renderState.horizontalBarDirection;
                 poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
                         poleDir.getStepZ() * poleShiftAmount);
+            }
+
+            // Back-to-back shift: only the SECOND TL shifts toward the first
+            // Tiebreaker: TL whose back direction has positive step shifts
+            if (!shiftToPole && isTrafficLight && renderState.backToBackTLDir != null) {
+                Direction backDir = renderState.backToBackTLDir;
+                boolean isSecondTL = backDir.getStepX() + backDir.getStepZ() > 0;
+                if (isSecondTL) {
+                    float b2bShift = 8.0f / 16.0f;
+                    poseStack.translate(backDir.getStepX() * b2bShift, 0,
+                            backDir.getStepZ() * b2bShift);
+                }
             }
 
             poseStack.translate(0.5f, 0.0f, 0.5f);
@@ -853,12 +888,18 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 || (isTrafficLight && renderState.backToBackTLDir != null)) {
             Direction b2bDirBridge = isSign ? renderState.backToBackSignDir : renderState.backToBackTLDir;
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
-            BlockStateModel barModel = modelManager.getStandaloneModel(SIGNAL_ARM_BAR_MODEL_KEY);
+            // Always 2px stub for back-to-back TL connections
+            StandaloneModelKey<BlockStateModel> b2bKey = HORIZONTAL_BAR_CONNECT_MODEL_KEY;
+            BlockStateModel barModel = modelManager.getStandaloneModel(b2bKey);
             if (barModel != null) {
                 poseStack.pushPose();
-                // Shift with body toward the neighbor
-                poseStack.translate(b2bDirBridge.getStepX() * poleShiftAmount, 0,
-                        b2bDirBridge.getStepZ() * poleShiftAmount);
+                // First TL: shift stub toward partner (into the middle)
+                // Second TL: shift stub toward own center (already in the middle due to body shift)
+                boolean isSecondStub = b2bDirBridge.getStepX() + b2bDirBridge.getStepZ() > 0;
+                Direction stubShiftDir = isSecondStub ? b2bDirBridge : b2bDirBridge.getOpposite();
+                float stubOffset = 5.0f / 16.0f;
+                poseStack.translate(stubShiftDir.getStepX() * stubOffset, 0,
+                        stubShiftDir.getStepZ() * stubOffset);
                 // Rotate the bar to face the neighbor direction
                 float barYRot = DIR_ROTATIONS[b2bDirBridge.get2DDataValue()];
                 if (barYRot != 0) {
@@ -1096,10 +1137,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // Crossing gate pole: render connection arms
-        if (state.getBlock() instanceof BlockCrossingGatePole && !renderState.cgPoleArmDirs.isEmpty()) {
+        // Crossing gate pole/base: render connection arms (full-length through TL frames)
+        if ((state.getBlock() instanceof BlockCrossingGatePole || state.getBlock() instanceof BlockCrossingGateBase)
+                && !renderState.cgPoleArmDirs.isEmpty()) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
-            BlockStateModel armModel = modelManager.getStandaloneModel(TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY);
+            BlockStateModel armModel = modelManager.getStandaloneModel(HORIZONTAL_POLE_MODEL_KEY);
             if (armModel != null) {
                 for (Direction dir : renderState.cgPoleArmDirs) {
                     float barYRot = DIR_ROTATIONS[dir.get2DDataValue()];
