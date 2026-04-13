@@ -1,5 +1,8 @@
 {
     "variants": {
-        "": { "model": "trafficcontrol:block/sign_block" }
+        "horizontal_bar=false,paired=false": { "model": "trafficcontrol:block/sign_block" },
+        "horizontal_bar=true,paired=false": { "model": "trafficcontrol:block/sign_block" },
+        "horizontal_bar=false,paired=true": { "model": "trafficcontrol:block/sign_block" },
+        "horizontal_bar=true,paired=true": { "model": "trafficcontrol:block/sign_block" }
     }
 }

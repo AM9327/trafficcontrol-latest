@@ -212,25 +212,19 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Back-to-back: detect adjacent opposite-facing sign behind this sign's back
-            // Same as TL: uses own back direction, no mountedOnPole
+            // Back-to-back: detect adjacent opposite-facing sign in ALL directions
+            // Do NOT set mountedOnPole — matches TL behavior (back-to-back stays centered)
             if (!renderState.mountedOnPole && state.hasProperty(BlockStateProperties.ROTATION_16)) {
-                int snapped = ((rotation + 2) % 16) / 4;
-                Direction backDir = switch (snapped) {
-                    case 0 -> Direction.NORTH;
-                    case 1 -> Direction.EAST;
-                    case 2 -> Direction.SOUTH;
-                    case 3 -> Direction.WEST;
-                    default -> Direction.NORTH;
-                };
-                BlockState neighborState = level.getBlockState(pos.relative(backDir));
-                if ((neighborState.getBlock() instanceof BlockSign || neighborState.getBlock() instanceof BlockStreetSign)
-                        && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
-                    int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
-                    if (Math.abs(neighborRot - rotation) == 8) {
-                        renderState.mountedOnPole = true;
-                        renderState.backToBackSignDir = backDir;
-                        renderState.horizontalBarDirection = backDir;
+                for (Direction dir : Direction.Plane.HORIZONTAL) {
+                    BlockState neighborState = level.getBlockState(pos.relative(dir));
+                    if ((neighborState.getBlock() instanceof BlockSign || neighborState.getBlock() instanceof BlockStreetSign)
+                            && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                        int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
+                        if (Math.abs(neighborRot - rotation) == 8) {
+                            renderState.backToBackSignDir = dir;
+                            renderState.horizontalBarDirection = dir;
+                            break;
+                        }
                     }
                 }
             }
