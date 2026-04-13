@@ -212,20 +212,25 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     }
                 }
             }
-            // Back-to-back: adjacent sign-like block facing opposite direction (rotation diff of 8)
+            // Back-to-back: detect adjacent opposite-facing sign behind this sign's back
+            // Same as TL: uses own back direction, no mountedOnPole
             if (!renderState.mountedOnPole && state.hasProperty(BlockStateProperties.ROTATION_16)) {
-                for (Direction dir : Direction.Plane.HORIZONTAL) {
-                    BlockState neighborState = level.getBlockState(pos.relative(dir));
-                    if ((neighborState.getBlock() instanceof BlockSign || neighborState.getBlock() instanceof BlockStreetSign)
-                            && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
-                        int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
-                        if (Math.abs(neighborRot - rotation) == 8) {
-                            renderState.mountedOnPole = true;
-                            renderState.mountedOnHorizontalPole = false;
-                            renderState.horizontalBarDirection = dir;
-                            renderState.backToBackSignDir = dir;
-                            break;
-                        }
+                int snapped = ((rotation + 2) % 16) / 4;
+                Direction backDir = switch (snapped) {
+                    case 0 -> Direction.NORTH;
+                    case 1 -> Direction.EAST;
+                    case 2 -> Direction.SOUTH;
+                    case 3 -> Direction.WEST;
+                    default -> Direction.NORTH;
+                };
+                BlockState neighborState = level.getBlockState(pos.relative(backDir));
+                if ((neighborState.getBlock() instanceof BlockSign || neighborState.getBlock() instanceof BlockStreetSign)
+                        && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                    int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
+                    if (Math.abs(neighborRot - rotation) == 8) {
+                        renderState.mountedOnPole = true;
+                        renderState.backToBackSignDir = backDir;
+                        renderState.horizontalBarDirection = backDir;
                     }
                 }
             }
@@ -303,6 +308,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     Block neighbor = level.getBlockState(pos.relative(dirs[i])).getBlock();
                     if (!(neighbor instanceof BlockStreetSign)) {
                         renderState.cgPoleArmDirs.add(dirs[i]);
+                        if (neighbor instanceof BlockSign) {
+                            renderState.signDirs.add(dirs[i]);
+                        }
                     }
                 }
             }
@@ -314,6 +322,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 if ((neighbor instanceof BlockTrafficLight || neighbor instanceof BlockSign)
                         && !(neighbor instanceof BlockStreetSign)) {
                     renderState.cgPoleArmDirs.add(dir);
+                    if (neighbor instanceof BlockSign) {
+                        renderState.signDirs.add(dir);
+                    }
                 }
             }
         }
@@ -604,15 +615,16 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         poleDir.getStepZ() * poleShiftAmount);
             }
 
-            // Back-to-back shift: only the SECOND TL shifts toward the first
-            // Tiebreaker: TL whose back direction has positive step shifts
-            if (!shiftToPole && isTrafficLight && renderState.backToBackTLDir != null) {
-                Direction backDir = renderState.backToBackTLDir;
-                boolean isSecondTL = backDir.getStepX() + backDir.getStepZ() > 0;
-                if (isSecondTL) {
+            // Back-to-back shift for TLs AND signs: only SECOND block shifts
+            Direction b2bDir = null;
+            if (isTrafficLight) b2bDir = renderState.backToBackTLDir;
+            else if (isSign) b2bDir = renderState.backToBackSignDir;
+            if (!shiftToPole && b2bDir != null) {
+                boolean isSecondBlock = b2bDir.getStepX() + b2bDir.getStepZ() > 0;
+                if (isSecondBlock) {
                     float b2bShift = 8.0f / 16.0f;
-                    poseStack.translate(backDir.getStepX() * b2bShift, 0,
-                            backDir.getStepZ() * b2bShift);
+                    poseStack.translate(b2bDir.getStepX() * b2bShift, 0,
+                            b2bDir.getStepZ() * b2bShift);
                 }
             }
 
@@ -888,13 +900,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 || (isTrafficLight && renderState.backToBackTLDir != null)) {
             Direction b2bDirBridge = isSign ? renderState.backToBackSignDir : renderState.backToBackTLDir;
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
-            // Always 2px stub for back-to-back TL connections
+            // Same tiebreaker stub system for both TLs and signs
             StandaloneModelKey<BlockStateModel> b2bKey = HORIZONTAL_BAR_CONNECT_MODEL_KEY;
             BlockStateModel barModel = modelManager.getStandaloneModel(b2bKey);
             if (barModel != null) {
                 poseStack.pushPose();
-                // First TL: shift stub toward partner (into the middle)
-                // Second TL: shift stub toward own center (already in the middle due to body shift)
                 boolean isSecondStub = b2bDirBridge.getStepX() + b2bDirBridge.getStepZ() > 0;
                 Direction stubShiftDir = isSecondStub ? b2bDirBridge : b2bDirBridge.getOpposite();
                 float stubOffset = 5.0f / 16.0f;
@@ -1036,7 +1046,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         // Signal arm / horizontal pole / sign: render ext arm toward each adjacent block
-        if ((state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole
+        // Skip for signs shifted toward CG pole — arms poke through sign face
+        boolean skipSignArms = isSign && shiftToPole && !renderState.mountedOnHorizontalPole;
+        if (!skipSignArms && (state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole
                 || state.getBlock() instanceof BlockSign || (state.getBlock() instanceof BlockStreetSign && !renderState.hanging))
                 && !renderState.signalArmTrafficLightDirs.isEmpty()) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
@@ -1137,13 +1149,15 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
         }
 
-        // Crossing gate pole/base: render connection arms (full-length through TL frames)
+        // Crossing gate pole/base: render connection arms (7px, reaches back pole)
         if ((state.getBlock() instanceof BlockCrossingGatePole || state.getBlock() instanceof BlockCrossingGateBase)
                 && !renderState.cgPoleArmDirs.isEmpty()) {
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
-            BlockStateModel armModel = modelManager.getStandaloneModel(HORIZONTAL_POLE_MODEL_KEY);
+            BlockStateModel armModel = modelManager.getStandaloneModel(TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY);
             if (armModel != null) {
                 for (Direction dir : renderState.cgPoleArmDirs) {
+                    // Skip arms toward signs — signs shift 9/16 and arms poke through
+                    if (renderState.signDirs.contains(dir)) continue;
                     float barYRot = DIR_ROTATIONS[dir.get2DDataValue()];
                     poseStack.pushPose();
                     if (barYRot != 0) {
@@ -1193,6 +1207,16 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
                                 poleDir.getStepZ() * poleShiftAmount);
                     }
+                    // Back-to-back: shift sign face with body (second sign only)
+                    if (!shiftToPole && renderState.backToBackSignDir != null) {
+                        Direction b2bBack = renderState.backToBackSignDir;
+                        boolean isSecond = b2bBack.getStepX() + b2bBack.getStepZ() > 0;
+                        if (isSecond) {
+                            float signB2bShift = 8.0f / 16.0f;
+                            poseStack.translate(b2bBack.getStepX() * signB2bShift, 0,
+                                    b2bBack.getStepZ() * signB2bShift);
+                        }
+                    }
                     poseStack.translate(0.5f, 0.0f, 0.5f);
                     poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
                     poseStack.translate(-0.5f, 0.0f, -0.5f);
@@ -1224,6 +1248,16 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         Direction poleDir = renderState.horizontalBarDirection;
                         poseStack.translate(poleDir.getStepX() * poleShiftAmount, 0,
                                 poleDir.getStepZ() * poleShiftAmount);
+                    }
+                    // Back-to-back: shift back face with body (second sign only)
+                    if (!shiftToPole && renderState.backToBackSignDir != null) {
+                        Direction b2bBack = renderState.backToBackSignDir;
+                        boolean isSecond = b2bBack.getStepX() + b2bBack.getStepZ() > 0;
+                        if (isSecond) {
+                            float signB2bShift = 8.0f / 16.0f;
+                            poseStack.translate(b2bBack.getStepX() * signB2bShift, 0,
+                                    b2bBack.getStepZ() * signB2bShift);
+                        }
                     }
                     poseStack.translate(0.5f, 0.0f, 0.5f);
                     poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
