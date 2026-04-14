@@ -70,6 +70,7 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
     // Traffic light: direction toward back-to-back paired TL (render bridge bar)
     public @Nullable Direction backToBackTLDir = null;
     public boolean backToBackOnVerticalPole = false;
+    public boolean chainedSignMount = false;
 
     // Traffic light: render vertical pole extension up/down toward CG pole
     public boolean extendPoleUp = false;
@@ -77,6 +78,8 @@ public class RotatableBlockEntityRenderState extends BlockEntityRenderState {
 
     // Crossing gate pole: directions with connection arms
     public List<Direction> cgPoleArmDirs = new ArrayList<>();
+    // CG pole/base: directions toward TLs (use shorter arm to prevent poke-through)
+    public List<Direction> cgArmTLDirs = new ArrayList<>();
 
     // Street sign: hanging from block above
     public boolean hanging = false;

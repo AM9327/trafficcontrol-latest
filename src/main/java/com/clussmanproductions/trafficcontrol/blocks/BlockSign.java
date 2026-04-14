@@ -112,26 +112,48 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
         int rotation = state.getValue(ROTATION);
         boolean isCardinal = (rotation % 4) == 0; // 0, 4, 8, 12 are cardinal
 
-        // Check for adjacent CG pole/base — sign shifts toward it (not toward HP)
+        // Check for adjacent pole — HP first, then CG pole/base
         Direction shiftDir = null;
+        boolean isChainedMount = false;
+        boolean isHPMount = false;
+        // HP mount (priority)
         for (Direction dir : Direction.Plane.HORIZONTAL) {
             Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
-            if (neighbor instanceof BlockCrossingGatePole || neighbor instanceof BlockCrossingGateBase) {
+            if (neighbor instanceof BlockHorizontalPole) {
                 shiftDir = dir;
+                isHPMount = true;
                 break;
             }
         }
-        // Chained: adjacent sign with CG pole behind it
+        // CG pole/base mount
+        if (shiftDir == null) {
+            for (Direction dir : Direction.Plane.HORIZONTAL) {
+                Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+                if (neighbor instanceof BlockCrossingGatePole || neighbor instanceof BlockCrossingGateBase) {
+                    shiftDir = dir;
+                    break;
+                }
+            }
+        }
+        // Chained: adjacent sign with CG pole/base behind it — shift 1px less
         if (shiftDir == null) {
             for (Direction dir : Direction.Plane.HORIZONTAL) {
                 Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
                 if (neighbor instanceof BlockSign) {
                     Block beyond = level.getBlockState(pos.relative(dir, 2)).getBlock();
-                    if (beyond instanceof BlockCrossingGatePole) {
+                    if (beyond instanceof BlockCrossingGatePole || beyond instanceof BlockCrossingGateBase) {
                         shiftDir = dir;
+                        isChainedMount = true;
                         break;
                     }
                 }
+            }
+        }
+        // Detect chained mount by checking if shift target is a sign (not a pole)
+        if (!isChainedMount && shiftDir != null && !isHPMount) {
+            Block shiftTarget = level.getBlockState(pos.relative(shiftDir)).getBlock();
+            if (shiftTarget instanceof BlockSign) {
+                isChainedMount = true;
             }
         }
         // Back-to-back: only SECOND sign shifts (tiebreaker, same as TL frames)
@@ -173,7 +195,7 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
 
         if (!isCardinal) {
             if (shiftDir != null) {
-                double shiftAmount = isB2BShift ? 8.0 : 9.0;
+                double shiftAmount = isB2BShift ? 8.0 : isHPMount ? 7.0 : isChainedMount ? 8.0 : 9.0;
                 double offsetX = shiftDir.getStepX() * shiftAmount;
                 double offsetZ = shiftDir.getStepZ() * shiftAmount;
                 return Block.box(offsetX, 0, offsetZ, 16 + offsetX, 16, 16 + offsetZ);
@@ -191,7 +213,7 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
             } else {
                 minX = 0; minZ = 5; maxX = 16; maxZ = 11;
             }
-            double shiftAmt = isB2BShift ? 8.0 : 9.0;
+            double shiftAmt = isB2BShift ? 8.0 : isHPMount ? 7.0 : isChainedMount ? 8.0 : 9.0;
             double offsetX = shiftDir.getStepX() * shiftAmt;
             double offsetZ = shiftDir.getStepZ() * shiftAmt;
             return Block.box(minX + offsetX, 0, minZ + offsetZ, maxX + offsetX, 16, maxZ + offsetZ);

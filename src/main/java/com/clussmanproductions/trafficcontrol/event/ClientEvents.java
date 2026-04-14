@@ -66,6 +66,12 @@ public class ClientEvents {
                 )
         );
         event.register(
+                RotatableBlockEntityRenderer.CG_POLE_ARM_MODEL_KEY,
+                SimpleUnbakedStandaloneModel.blockStateModel(
+                        Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "block/cg_pole_arm")
+                )
+        );
+        event.register(
                 RotatableBlockEntityRenderer.TRAFFIC_LIGHT_PAIRED_MODEL_KEY,
                 SimpleUnbakedStandaloneModel.blockStateModel(
                         Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "block/traffic_light_paired")
