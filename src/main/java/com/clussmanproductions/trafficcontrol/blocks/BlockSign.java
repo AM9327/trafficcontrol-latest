@@ -156,7 +156,7 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
                 isChainedMount = true;
             }
         }
-        // Back-to-back: only SECOND sign shifts (tiebreaker, same as TL frames)
+        // Back-to-back: only SECOND sign shifts (tiebreaker matches renderer)
         // Skip when pole adjacent (pole shift takes priority)
         boolean isB2BShift = false;
         if (shiftDir == null) {
@@ -169,24 +169,20 @@ public class BlockSign extends Block implements IHorizontalPoleConnectable, Enti
                 }
             }
             if (!hasPole) {
-                // Use back direction (rotation-based)
-                int snapped = ((rotation + 2) % 16) / 4;
-                Direction backDir = switch (snapped) {
-                    case 0 -> Direction.NORTH;
-                    case 1 -> Direction.EAST;
-                    case 2 -> Direction.SOUTH;
-                    case 3 -> Direction.WEST;
-                    default -> Direction.NORTH;
-                };
-                BlockState neighborState = level.getBlockState(pos.relative(backDir));
-                if (neighborState.getBlock() instanceof BlockSign
-                        && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
-                    int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
-                    if (Math.abs(neighborRot - rotation) == 8) {
-                        boolean isSecond = backDir.getStepX() + backDir.getStepZ() > 0;
-                        if (isSecond) {
-                            shiftDir = backDir;
-                            isB2BShift = true;
+                // Check ALL directions for opposite-facing sign (matches renderer detection)
+                for (Direction dir : Direction.Plane.HORIZONTAL) {
+                    BlockState neighborState = level.getBlockState(pos.relative(dir));
+                    if (neighborState.getBlock() instanceof BlockSign
+                            && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
+                        int neighborRot = neighborState.getValue(BlockStateProperties.ROTATION_16);
+                        if (Math.abs(neighborRot - rotation) == 8) {
+                            // Tiebreaker: same as renderer (dir toward partner)
+                            boolean isSecond = dir.getStepX() + dir.getStepZ() > 0;
+                            if (isSecond) {
+                                shiftDir = dir;
+                                isB2BShift = true;
+                            }
+                            break;
                         }
                     }
                 }

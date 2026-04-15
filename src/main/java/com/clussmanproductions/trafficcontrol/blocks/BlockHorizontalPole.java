@@ -110,16 +110,23 @@ public class BlockHorizontalPole extends Block implements EntityBlock, IHorizont
         // Base pole shape — single block only, no axis extension
         VoxelShape shape = isEW ? SHAPE_EW : SHAPE_NS;
 
-        // Add ext arm hitboxes where traffic lights are adjacent
-        // Arms extend into TL blocks so the pole is clickable through TL hitboxes
-        if (level.getBlockState(pos.relative(Direction.NORTH)).getBlock() instanceof BlockTrafficLight)
-            shape = Shapes.or(shape, ARM_NORTH);
-        if (level.getBlockState(pos.relative(Direction.SOUTH)).getBlock() instanceof BlockTrafficLight)
-            shape = Shapes.or(shape, ARM_SOUTH);
-        if (level.getBlockState(pos.relative(Direction.EAST)).getBlock() instanceof BlockTrafficLight)
-            shape = Shapes.or(shape, ARM_EAST);
-        if (level.getBlockState(pos.relative(Direction.WEST)).getBlock() instanceof BlockTrafficLight)
-            shape = Shapes.or(shape, ARM_WEST);
+        // Add ext arm hitboxes where connectable blocks are adjacent
+        // Arms extend into neighbor blocks so the pole arm is clickable
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+            if (neighbor instanceof BlockTrafficLight || neighbor instanceof BlockCrossingGatePole
+                    || neighbor instanceof BlockCrossingGateBase || neighbor instanceof BlockSign
+                    || neighbor instanceof BlockStreetSign || neighbor instanceof BlockHorizontalPole) {
+                VoxelShape arm = switch (dir) {
+                    case NORTH -> ARM_NORTH;
+                    case SOUTH -> ARM_SOUTH;
+                    case EAST -> ARM_EAST;
+                    case WEST -> ARM_WEST;
+                    default -> null;
+                };
+                if (arm != null) shape = Shapes.or(shape, arm);
+            }
+        }
 
         return shape;
     }

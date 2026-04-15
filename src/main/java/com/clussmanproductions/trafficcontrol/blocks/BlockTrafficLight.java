@@ -39,9 +39,34 @@ public class BlockTrafficLight extends Block implements EntityBlock {
     private static final VoxelShape SHAPE_NORTH = Block.box(2, 0, 2, 14, 16, 12);
     private static final VoxelShape SHAPE_EAST  = Block.box(4, 0, 2, 14, 16, 14);
 
-    // Horizontal TL frame hitboxes — wider to match the sideways model
-    private static final VoxelShape SHAPE_HORIZ_NS = Block.box(-5, 3, 4, 30, 13, 14);
-    private static final VoxelShape SHAPE_HORIZ_EW = Block.box(2, 3, -5, 12, 13, 30);
+    // 4-bulb (quad): y=0 to 32 (extends 1 block above)
+    private static final VoxelShape SHAPE_QUAD_SOUTH = Block.box(2, 0, 4, 14, 32, 14);
+    private static final VoxelShape SHAPE_QUAD_WEST  = Block.box(2, 0, 2, 12, 32, 14);
+    private static final VoxelShape SHAPE_QUAD_NORTH = Block.box(2, 0, 2, 14, 32, 12);
+    private static final VoxelShape SHAPE_QUAD_EAST  = Block.box(4, 0, 2, 14, 32, 14);
+
+    // 5-bulb: y=-5 to 32 (extends below and above)
+    private static final VoxelShape SHAPE_FIVE_SOUTH = Block.box(2, -5, 4, 14, 32, 14);
+    private static final VoxelShape SHAPE_FIVE_WEST  = Block.box(2, -5, 2, 12, 32, 14);
+    private static final VoxelShape SHAPE_FIVE_NORTH = Block.box(2, -5, 2, 14, 32, 12);
+    private static final VoxelShape SHAPE_FIVE_EAST  = Block.box(4, -5, 2, 14, 32, 14);
+
+    // Arm hitboxes extending into adjacent blocks (same as HP arms)
+    private static final VoxelShape TL_ARM_NORTH = Block.box(5.5, 5.5, -16, 10.5, 10.5, 7);
+    private static final VoxelShape TL_ARM_SOUTH = Block.box(5.5, 5.5, 9, 10.5, 10.5, 32);
+    private static final VoxelShape TL_ARM_EAST  = Block.box(9, 5.5, 5.5, 32, 10.5, 10.5);
+    private static final VoxelShape TL_ARM_WEST  = Block.box(-16, 5.5, 5.5, 7, 10.5, 10.5);
+
+    // Horizontal TL frame hitboxes — per variant width
+    // 3-bulb: x=-3 to 27 (30px)
+    private static final VoxelShape SHAPE_HORIZ_3_NS = Block.box(-3, 3, 4, 27, 13, 14);
+    private static final VoxelShape SHAPE_HORIZ_3_EW = Block.box(2, 3, -3, 12, 13, 27);
+    // 4-bulb: x=1 to 29.5 (28.5px)
+    private static final VoxelShape SHAPE_HORIZ_4_NS = Block.box(1, 3, 4, 29.5, 13, 14);
+    private static final VoxelShape SHAPE_HORIZ_4_EW = Block.box(2, 3, 1, 12, 13, 29.5);
+    // 5-bulb: x=-5 to 29.5 (34.5px)
+    private static final VoxelShape SHAPE_HORIZ_5_NS = Block.box(-5, 3, 4, 29.5, 13, 14);
+    private static final VoxelShape SHAPE_HORIZ_5_EW = Block.box(2, 3, -5, 12, 13, 29.5);
 
     // Pole-mounted hitboxes — split into top/bottom halves leaving y=5.5-10.5 clear for pole arm clicks
     private static final VoxelShape SHAPE_PAIRED_POLE_EAST  = Shapes.or(
@@ -145,16 +170,48 @@ public class BlockTrafficLight extends Block implements EntityBlock {
         return state.setValue(HAS_HORIZONTAL_BAR, hasBar).setValue(PAIRED_ACROSS_POLE, paired);
     }
 
+    private VoxelShape getBaseShape(int steps) {
+        String id = this.getDescriptionId();
+        boolean isQuad = id.contains("_4");
+        boolean isFive = id.contains("_5");
+        if (isFive) {
+            return switch (steps) {
+                case 1 -> SHAPE_FIVE_WEST;
+                case 2 -> SHAPE_FIVE_NORTH;
+                case 3 -> SHAPE_FIVE_EAST;
+                default -> SHAPE_FIVE_SOUTH;
+            };
+        } else if (isQuad) {
+            return switch (steps) {
+                case 1 -> SHAPE_QUAD_WEST;
+                case 2 -> SHAPE_QUAD_NORTH;
+                case 3 -> SHAPE_QUAD_EAST;
+                default -> SHAPE_QUAD_SOUTH;
+            };
+        }
+        return switch (steps) {
+            case 1 -> SHAPE_WEST;
+            case 2 -> SHAPE_NORTH;
+            case 3 -> SHAPE_EAST;
+            default -> SHAPE_SOUTH;
+        };
+    }
+
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         int rotation = state.getValue(ROTATION);
         int steps = Math.round(RotationSegment.convertToDegrees(rotation) / 90.0f) % 4;
         if (steps < 0) steps += 4;
 
-        // Horizontal TL frames: wider hitbox, no pole shift
+        // Horizontal TL frames: wider hitbox per variant, no pole shift
         boolean isHorizTL = state.getBlock().getDescriptionId().contains("horiz");
         if (isHorizTL) {
-            return (steps == 1 || steps == 3) ? SHAPE_HORIZ_EW : SHAPE_HORIZ_NS;
+            String hId = state.getBlock().getDescriptionId();
+            boolean is5 = hId.contains("_5");
+            boolean is4 = hId.contains("_4");
+            if (is5) return (steps == 1 || steps == 3) ? SHAPE_HORIZ_5_EW : SHAPE_HORIZ_5_NS;
+            if (is4) return (steps == 1 || steps == 3) ? SHAPE_HORIZ_4_EW : SHAPE_HORIZ_4_NS;
+            return (steps == 1 || steps == 3) ? SHAPE_HORIZ_3_EW : SHAPE_HORIZ_3_NS;
         }
 
         // Check for adjacent traffic lights (side-by-side row)
@@ -179,29 +236,57 @@ public class BlockTrafficLight extends Block implements EntityBlock {
             if (shiftDir == null) {
                 for (Direction dir : Direction.Plane.HORIZONTAL) {
                     Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
-                    if (neighbor instanceof BlockCrossingGatePole) {
+                    if (neighbor instanceof BlockCrossingGatePole
+                            || neighbor instanceof BlockCrossingGateBase) {
                         shiftDir = dir;
                         break;
                     }
                 }
             }
             if (shiftDir != null) {
-                return switch (shiftDir) {
-                    case EAST -> SHAPE_PAIRED_POLE_EAST;
-                    case WEST -> SHAPE_PAIRED_POLE_WEST;
-                    case SOUTH -> SHAPE_PAIRED_POLE_SOUTH;
-                    case NORTH -> SHAPE_PAIRED_POLE_NORTH;
-                    default -> SHAPE_SOUTH;
-                };
+                // Shift full TL frame shape toward pole (9/16 for CG pole, 7/16 for HP)
+                VoxelShape baseShape = getBaseShape(steps);
+                boolean isHP = level.getBlockState(pos.relative(shiftDir)).getBlock() instanceof BlockHorizontalPole;
+                double shiftAmt = isHP ? 7.0 / 16.0 : 9.0 / 16.0;
+                return baseShape.move(shiftDir.getStepX() * shiftAmt, 0, shiftDir.getStepZ() * shiftAmt);
             }
         }
 
-        return switch (steps) {
-            case 1 -> SHAPE_WEST;
-            case 2 -> SHAPE_NORTH;
-            case 3 -> SHAPE_EAST;
-            default -> SHAPE_SOUTH;
-        };
+        // Back-to-back: second TL shifts 8px toward partner (matches renderer tiebreaker)
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            BlockState neighborState = level.getBlockState(pos.relative(dir));
+            if (neighborState.getBlock() instanceof BlockTrafficLight
+                    && neighborState.hasProperty(ROTATION)) {
+                int neighborRot = neighborState.getValue(ROTATION);
+                if (Math.abs(neighborRot - rotation) == 8) {
+                    boolean isSecond = dir.getStepX() + dir.getStepZ() > 0;
+                    if (isSecond) {
+                        VoxelShape baseShape = getBaseShape(steps);
+                        return baseShape.move(dir.getStepX() * 0.5, 0, dir.getStepZ() * 0.5);
+                    }
+                    break;
+                }
+            }
+        }
+
+        // Add arm hitboxes toward connected neighbors (HP, CG poles, adjacent TLs, signs)
+        VoxelShape result = getBaseShape(steps);
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
+            if (neighbor instanceof BlockHorizontalPole || neighbor instanceof BlockCrossingGatePole
+                    || neighbor instanceof BlockCrossingGateBase || neighbor instanceof BlockTrafficLight
+                    || neighbor instanceof BlockSign || neighbor instanceof BlockStreetSign) {
+                VoxelShape arm = switch (dir) {
+                    case NORTH -> TL_ARM_NORTH;
+                    case SOUTH -> TL_ARM_SOUTH;
+                    case EAST -> TL_ARM_EAST;
+                    case WEST -> TL_ARM_WEST;
+                    default -> null;
+                };
+                if (arm != null) result = Shapes.or(result, arm);
+            }
+        }
+        return result;
     }
 
     @Override

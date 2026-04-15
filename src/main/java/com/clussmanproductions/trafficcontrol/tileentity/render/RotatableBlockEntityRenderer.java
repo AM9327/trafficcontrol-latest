@@ -68,6 +68,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":traffic_light_pole_arm");
     public static final StandaloneModelKey<BlockStateModel> CG_POLE_ARM_MODEL_KEY =
             new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":cg_pole_arm");
+    public static final StandaloneModelKey<BlockStateModel> B2B_STUB_MODEL_KEY =
+            new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":b2b_stub");
     public static final StandaloneModelKey<BlockStateModel> HANGING_BRACKET_MODEL_KEY =
             new StandaloneModelKey<>(() -> ModTrafficControl.MODID + ":hanging_bracket");
 
@@ -608,7 +610,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         // Skip body model for regular signs (BlockSign) when mounted on a pole —
         // the model only contains a center pole element; the sign face renders as a quad separately
         // Never skip sign body — always render center post
-        boolean skipBodyModel = isStreetSign; // street sign plates are rendered dynamically
+        boolean skipBodyModel = isStreetSign;
         if (!skipBodyModel) {
             poseStack.pushPose();
 
@@ -909,8 +911,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 || (isTrafficLight && renderState.backToBackTLDir != null)) {
             Direction b2bDirBridge = isSign ? renderState.backToBackSignDir : renderState.backToBackTLDir;
             ModelManager modelManager = Minecraft.getInstance().getModelManager();
-            // Same tiebreaker stub system for both TLs and signs
-            StandaloneModelKey<BlockStateModel> b2bKey = TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY;
+            // Short b2b stub (4px) — with 5/16 stub offset, tip stays behind sign face (z=0.5625 < 0.569)
+            StandaloneModelKey<BlockStateModel> b2bKey = B2B_STUB_MODEL_KEY;
             BlockStateModel barModel = modelManager.getStandaloneModel(b2bKey);
             if (barModel != null) {
                 poseStack.pushPose();
@@ -1023,8 +1025,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         }
 
         // Signal arm / horizontal pole / sign: render ext arm toward each adjacent block
-        // Skip for signs shifted toward CG pole — arms poke through sign face
-        boolean skipSignArms = isSign && shiftToPole && !renderState.mountedOnHorizontalPole;
+        // Skip for signs shifted toward pole OR in b2b pair — arms don't shift with b2b body, poke through
+        boolean skipSignArms = isSign && (shiftToPole && !renderState.mountedOnHorizontalPole
+                || renderState.backToBackSignDir != null);
         if (!skipSignArms && (state.getBlock() instanceof BlockSignalArm || state.getBlock() instanceof BlockHorizontalPole
                 || state.getBlock() instanceof BlockSign || (state.getBlock() instanceof BlockStreetSign && !renderState.hanging))
                 && !renderState.signalArmTrafficLightDirs.isEmpty()) {

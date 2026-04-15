@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/14/26) (1:20 AM)
+Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/14/26) (10:20 PM)
 ======================================================================================================
 
 ### Commits
@@ -119,36 +119,47 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Hitbox shifts with body when mounted on CG pole/base or chained
 - No collision shape — players walk through signs
 
-### Traffic Light & Sign Back-to-Back (Beta 3.1) (4/10-4/14/26)
+### Traffic Light & Sign Back-to-Back (Beta 3.2) (4/10-4/14/26)
 - Adjacent traffic lights facing opposite directions (rotation diff of 8) connect back-to-back
 - Back-to-back detection uses TL's own back direction (rotation-based), not partner position
-- Tiebreaker system: only second TL shifts (8/16), first stays at block center
-- 5px stub (horizontal_bar_connect) with 5/16 offset tiebreaker — stubs meet between frames
-- First TL's stub shifts toward partner, second TL's stub shifts toward own center
-- Bridge bar uses HORIZONTAL_BAR_CONNECT_MODEL_KEY (5px) instead of SIGNAL_ARM_BAR_MODEL_KEY (9px)
+- Tiebreaker system: only second TL/sign shifts (8/16), first stays at block center
+- Bridge bar uses B2B_STUB_MODEL_KEY (b2b_stub.json, 4px) — tip stays behind sign face with 5/16 offset
+- Created separate b2b_stub.json model (z=0-4) to prevent poke-through without affecting CG pole arms
+- 5/16 offset tiebreaker — stubs meet between frames
 - TL-to-CG pole arm removed — CG pole handles arm rendering (DO NOT #6)
-- Direct back-to-back paired detection in blockstate (paired: true for adjacent opposite-facing TLs)
+- Direct back-to-back paired detection in blockstate (paired: true for adjacent opposite-facing TLs/signs)
 - Across-pole paired check now scans ALL pole directions (not just first)
-- Signs now support back-to-back connections matching TL frame behavior:
-  - BlockSign: added HAS_HORIZONTAL_BAR and PAIRED blockstate properties
-  - BlockSign: added updateConnections() with direct + across-pole pairing
-  - BlockSign hitbox: tiebreaker shift (8px for b2b, 9px for CG pole, 7px for HP, 8px for chained)
-  - BlockSign hitbox: HP mount detection added for hitbox shift
-  - sign.json blockstate: explicit variants for horizontal_bar/paired combos
-  - Renderer: sign back-to-back detection works even when mounted on a pole
-  - Renderer: chainedSignMount flag for second sign in chain (1px pullback)
-- Sign body model (center post) always renders — skipBodyModel only for street signs
-- Sign shiftToPole now includes HP mounts (removed !mountedOnHorizontalPole guard)
+- Sign back-to-back arms skipped (skipSignArms) when backToBackSignDir is set — prevents unshifted arms poking through shifted sign face
+- TL back-to-back hitbox: second TL shifts 8px toward partner using full TL frame shape + baseShape.move()
+- Sign b2b hitbox tiebreaker fixed: now checks ALL directions for partner (matches renderer), not just back direction
 
-### Crossing Gate Pole/Base Arms (Beta 3.1) (4/12-4/14/26)
-- CG pole/base arms now use HORIZONTAL_BAR_CONNECT_MODEL_KEY (5px connect model)
+### Sign Pole Connections & Mounting (Beta 3.2) (4/14/26)
+- Signs now support back-to-back connections matching TL frame behavior
+- BlockSign: added HAS_HORIZONTAL_BAR and PAIRED blockstate properties
+- BlockSign: added updateConnections() with direct + across-pole pairing
+- BlockSign hitbox: HP mount detection added, shift amounts per mount type (HP=7px, CG=9px, chained=8px, b2b=8px)
+- sign.json blockstate: explicit variants for horizontal_bar/paired combos
+- Renderer: sign back-to-back detection works even when mounted on a pole (removed !mountedOnPole guard)
+- Renderer: chainedSignMount flag for second sign in chain
+- Sign body model (center post) always renders — skipBodyModel only for street signs
+- BlockCrossingGateBase added to sign renderer mount detection (was missing, only checked CG pole)
+
+### Crossing Gate Pole/Base Arms (Beta 3.2) (4/12-4/14/26)
+- CG pole/base arms now use HORIZONTAL_BAR_CONNECT_MODEL_KEY (7px connect model)
 - Removed signDirs skip — CG pole arms render toward signs AND TLs (not skipped)
 - CG base now renders connection arms toward adjacent TLs/signs (same rendering as CG pole)
-- BlockCrossingGateBase added to sign renderer mount detection (was missing, only checked CG pole)
 - BlockCrossingGateBase added to isVerticalPoleBlock() for mount detection
 - CG base detects adjacent BlockTrafficLight and BlockSign for arm rendering
-- Created cg_pole_arm.json (z=1-7, 6px) and CG_POLE_ARM_MODEL_KEY — registered for future use
+- Created cg_pole_arm.json (z=0.5-7, 6.5px) and CG_POLE_ARM_MODEL_KEY — registered for future use
 - Mount priority: HP first, CG pole/base second (same for signs and TLs)
+
+### Hitbox Improvements (Beta 3.2) (4/14/26)
+- TL frame hitboxes: 4-bulb (y=0-32) and 5-bulb (y=-5 to 32) taller shapes matching model height
+- TL frame hitboxes: pole-mounted uses full frame shape shifted toward pole (9/16 CG, 7/16 HP)
+- TL frame hitboxes: arm extensions toward all connected neighbors (HP, CG poles, TLs, signs)
+- Horizontal TL frame hitboxes: per-variant width (3-bulb: 30px, 4-bulb: 28.5px, 5-bulb: 34.5px)
+- HP hitboxes: arm extensions now include CG poles, CG bases, signs, street signs, and adjacent HPs (was TL-only)
+- getBaseShape() helper selects correct shape per TL variant (3/4/5-bulb)
 
 ### HP-Mounted TL Shift (4/12/26)
 - HP-mounted TLs shift 7/16 toward HP (was 9/16)

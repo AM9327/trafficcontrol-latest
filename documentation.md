@@ -238,21 +238,25 @@ boolean shiftToPole =
 18. **Use `cg_pole_arm.json` (z=1-7, 6px) for CG pole/base arms** — model file created and `CG_POLE_ARM_MODEL_KEY` registered. Using it for ALL `cgPoleArmDirs` breaks HP connections. Using it ONLY toward TLs (via `cgArmTLDirs` tracking) still creates visible gaps between CG arm and TL back pole. The 1px poke-through is a catch-22: 7px = pokes, 6px = gap. Known minor visual issue — accept as-is.
 19. **Sign arms and back-to-back TL frame connections use `traffic_light_horizontal_bar_connect.json`** — NOT `traffic_light_pole_arm.json` or `horizontal_pole.json`. Confirmed by texture-break test.
 
-### WORKING FIX — CG pole arm poke-through for signs (4/14/26):
-The 1px CG arm poke-through was fixed by combining these changes:
-1. **CG pole/base arms use `CG_POLE_ARM_MODEL_KEY` (`cg_pole_arm.json`, z=1-7)** — tip stops 1px before block boundary (z=15 after rotation, not z=16). Sign/TL back pole at z=14-16 bridges the gap.
-2. **Removed `signDirs` skip from CG pole arm rendering** — CG pole now renders arms toward signs AND TLs (previously signs were skipped).
-3. **Removed TL-side arm toward CG pole** — CG pole handles all arm rendering. No double-arm, no shifted arm poking through.
-4. **Sign body always renders** — `skipBodyModel` = `isStreetSign` only. Center post is never skipped for BlockSign (needed to bridge gap between arm tip and sign face).
-5. **Sign `shiftToPole` includes HP mounts** — removed `!mountedOnHorizontalPole` from sign shiftToPole condition. Signs on HP also shift toward the pole.
-6. **HP hitbox detection added to BlockSign.getShape()** — hitbox now shifts toward HP (7px), CG pole (9px), or chained (8px).
-Apply the same pattern for TL frames back-to-back.
+### WORKING FIX — B2b sign poke-through (4/14/26):
+Root cause: bridge bar (TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY, 7px) + 5/16 stub offset = tip at z=16.3 (past boundary).
+Fix: Created separate `b2b_stub.json` (4px, z=0-4) with `B2B_STUB_MODEL_KEY`. Tip at z=4/16 + 5/16 offset = z=0.5625 < sign face at z=0.569.
+Also: `skipSignArms` now skips when `backToBackSignDir != null` (b2b arms don't shift with body).
 
-### Failed attempts — applying sign fix to TL frames (4/14/26):
-- **CG_POLE_ARM_MODEL_KEY for b2b bridge bar** — changed b2b bridge bar from `TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY` to `CG_POLE_ARM_MODEL_KEY` (z=1-7). Breaks TL back-to-back connections (visible gap). Reverted.
-- **CG_POLE_ARM_MODEL_KEY for CG pole/base arms** — changed CG pole arms from `HORIZONTAL_BAR_CONNECT_MODEL_KEY` to `CG_POLE_ARM_MODEL_KEY`. Breaks HP connections. Reverted back to `HORIZONTAL_BAR_CONNECT_MODEL_KEY`.
-- **CG_POLE_ARM_MODEL_KEY for TL end-of-run arms** — changed `SIGNAL_ARM_BAR_MODEL_KEY` fallback in `horizontalPoleDirs` to `CG_POLE_ARM_MODEL_KEY`. Breaks TL-to-CG pole connections. Reverted.
-- **Key difference:** Signs don't have a `horizontalPoleDirs` section — their arms are handled entirely by `signalArmTrafficLightDirs` (which is skipped via `skipSignArms`). TLs have additional arm rendering via `horizontalPoleDirs` using `HORIZONTAL_POLE_MODEL_KEY` (16px pass-through) and `SIGNAL_ARM_BAR_MODEL_KEY` (9px end-of-run). These TL-specific bars cannot simply be swapped to shorter models without breaking connections. TL back-to-back poke-through remains unsolved.
+### WORKING FIX — CG pole arm rendering (4/14/26):
+- Removed `signDirs` skip from CG pole arm rendering — arms render toward ALL connected blocks
+- CG pole/base arms use `HORIZONTAL_BAR_CONNECT_MODEL_KEY` (7px) for connections
+- Sign body always renders (`skipBodyModel = isStreetSign` only)
+- `skipSignArms` skips for ALL shifted signs AND b2b signs
+
+### WORKING FIX — Hitbox system overhaul (4/14/26):
+- TL b2b hitbox: uses `getBaseShape(steps)` + `baseShape.move()` toward partner (8/16)
+- TL pole hitbox: uses `getBaseShape(steps)` + `baseShape.move()` toward pole (9/16 CG, 7/16 HP)
+- TL `getBaseShape()`: selects correct shape per variant (3/4/5-bulb, standard height or tall)
+- Sign b2b hitbox: tiebreaker fixed to match renderer (check ALL dirs, use dir toward partner)
+- HP arm hitboxes: extended to ALL connected blocks (was TL-only)
+- TL arm hitboxes: added extensions toward all connected neighbors
+- Horizontal TL hitboxes: per-variant width (3-bulb=30px, 4-bulb=28.5px, 5-bulb=34.5px)
 8. **Horizontal TL frame back pole sticking out — UNSOLVED (4/11/26)**
    - **Problem:** Horizontal TL frames have a built-in back pole at Y 3-13, plus the renderer adds a `BACK_POLE_MODEL_KEY` (Y 0-16, X 7-9, Z 7-9) when blocks are above/below. The renderer's Y 0-3 extension sticks out visibly below the frame body. Additionally, horizontal TL models had their back poles at different X positions per frame size (2-bulb: X 8-10, 3-bulb: X 7-9, 4-bulb: X 14-16, 5-bulb: X 11-13), causing XZ mismatch with the renderer's always-centered pole.
    - **Failed approach 1 (4/11/26):** Add `!isHorizTL` to renderer's pole rendering condition at line ~839. Removed the renderer's duplicate pole, but created a 3px gap (Y 0-3) when stacking horizontal TLs with vertical TLs below. The vertical TL's pole stops at its block boundary, and the horizontal TL's built-in pole starts at Y 3. Reverted.

@@ -72,6 +72,12 @@ public class ClientEvents {
                 )
         );
         event.register(
+                RotatableBlockEntityRenderer.B2B_STUB_MODEL_KEY,
+                SimpleUnbakedStandaloneModel.blockStateModel(
+                        Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "block/b2b_stub")
+                )
+        );
+        event.register(
                 RotatableBlockEntityRenderer.TRAFFIC_LIGHT_PAIRED_MODEL_KEY,
                 SimpleUnbakedStandaloneModel.blockStateModel(
                         Identifier.fromNamespaceAndPath(ModTrafficControl.MODID, "block/traffic_light_paired")
