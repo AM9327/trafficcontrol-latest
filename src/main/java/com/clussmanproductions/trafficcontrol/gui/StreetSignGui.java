@@ -64,17 +64,45 @@ public class StreetSignGui extends Screen {
         }
     }
 
+    // Cached layout values (computed in init, used in render/mouseClicked)
+    private int layoutPlateW, layoutPlateH, layoutPlateGap, layoutBaseY;
+
     @Override
     protected void init() {
         int cx = this.width / 2;
-        int cy = this.height / 2;
 
         rebuildFields();
 
-        // Position buttons below all stacked plates
+        // Calculate available height and scale layout to fit
+        int margin = 6;
+        int btnSectionH = 20 + 6 + 20 + 6 + 20; // color row + gap + direction + gap + done
+        int availableH = this.height - margin * 2 - btnSectionH - 6;
+
+        // Default plate sizes
         int platePH = 40;
-        int previewBaseY = cy - 70;
-        int bottomOfPlates = previewBaseY + signCount * (platePH + 10);
+        int plateGap = 10;
+        int platePW = 200;
+
+        // Scale down plates if they don't fit
+        int neededH = signCount * (platePH + plateGap);
+        if (neededH > availableH) {
+            // Reduce plate height and gap proportionally
+            float scale = (float) availableH / neededH;
+            platePH = Math.max(16, (int)(platePH * scale));
+            plateGap = Math.max(2, (int)(plateGap * scale));
+            platePW = Math.max(100, (int)(platePW * scale));
+        }
+
+        // Cache layout for render/mouseClicked
+        layoutPlateW = platePW;
+        layoutPlateH = platePH;
+        layoutPlateGap = plateGap;
+
+        int totalPlateH = signCount * (platePH + plateGap);
+        int totalContentH = totalPlateH + 6 + btnSectionH;
+        layoutBaseY = Math.max(margin, (this.height - totalContentH) / 2);
+
+        int bottomOfPlates = layoutBaseY + totalPlateH;
 
         int btnW = 50, gap = 2;
         int rowW = 4 * btnW + 3 * gap;
@@ -139,14 +167,13 @@ public class StreetSignGui extends Screen {
         super.render(graphics, mouseX, mouseY, partialTicks);
 
         int cx = this.width / 2;
-        int cy = this.height / 2;
 
         // --- All plates stacked ---
-        int platePW = 200, platePH = 40;
-        int previewBaseY = cy - 70;
+        int platePW = layoutPlateW, platePH = layoutPlateH;
+        int previewBaseY = layoutBaseY;
 
         for (int i = signCount - 1; i >= 0; i--) {
-            int py = previewBaseY + (signCount - 1 - i) * (platePH + 10);
+            int py = previewBaseY + (signCount - 1 - i) * (platePH + layoutPlateGap);
             int px = cx - platePW / 2;
 
             // Active plate highlight border
@@ -202,7 +229,7 @@ public class StreetSignGui extends Screen {
         int cbtnW = 50, cbtnGap = 2;
         int cbtnRowW = 4 * cbtnW + 3 * cbtnGap;
         int cbtnStartX = cx - cbtnRowW / 2;
-        int bottomOfPlates2 = previewBaseY + signCount * (platePH + 10);
+        int bottomOfPlates2 = previewBaseY + signCount * (platePH + layoutPlateGap);
         int cbtnY = bottomOfPlates2 + 6;
         int sel = colors[editIndex];
         int bx = cbtnStartX + sel * (cbtnW + cbtnGap);
@@ -214,18 +241,17 @@ public class StreetSignGui extends Screen {
         double mouseX = event.x();
         double mouseY = event.y();
         int cx = this.width / 2;
-        int cy = this.height / 2;
-        int platePW = 200, platePH = 40;
-        int previewBaseY = cy - 70;
+        int platePW = layoutPlateW, platePH = layoutPlateH;
+        int previewBaseY = layoutBaseY;
 
         for (int i = signCount - 1; i >= 0; i--) {
-            int py = previewBaseY + (signCount - 1 - i) * (platePH + 10);
+            int py = previewBaseY + (signCount - 1 - i) * (platePH + layoutPlateGap);
             int px = cx - platePW / 2;
             if (mouseX >= px - 2 && mouseX <= px + platePW + 2 && mouseY >= py - 2 && mouseY <= py + platePH + 2) {
                 if (i != editIndex) {
                     editIndex = i;
                     activeLine = 0;
-                    rebuildFields();
+                    rebuildWidgets();
                     return true;
                 }
             }
@@ -250,7 +276,7 @@ public class StreetSignGui extends Screen {
         if (event.isCycleFocus()) {
             editIndex = (editIndex + 1) % signCount;
             activeLine = 0;
-            rebuildFields();
+            rebuildWidgets();
             return true;
         }
         // Up/Down switches lines within the active plate
