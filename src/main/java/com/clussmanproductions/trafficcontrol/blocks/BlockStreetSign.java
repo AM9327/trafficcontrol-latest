@@ -62,7 +62,7 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
     public BlockState getStateForPlacement(BlockPlaceContext context) {
         boolean hanging = context.getClickedFace() == Direction.DOWN;
         return this.defaultBlockState()
-                .setValue(ROTATION, RotationSegment.convertToSegment(context.getRotation()))
+                .setValue(ROTATION, RotationSegment.convertToSegment(context.getRotation() + 180.0F))
                 .setValue(HANGING, hanging);
     }
 
