@@ -372,7 +372,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 } else if (neighbor instanceof BlockStreetSign
                         && (!neighborState.hasProperty(BlockStreetSign.HANGING)
                             || !neighborState.getValue(BlockStreetSign.HANGING))) {
-                    // No arm or bar — street sign shifts toward HP instead
+                    renderState.signalArmTrafficLightDirs.add(dir);
+                    renderState.streetSignDirs.add(dir);
                 }
             }
             // Second pass: add TLs, but skip back-to-back pairs (opposite dirs, rotation diff of 8)
