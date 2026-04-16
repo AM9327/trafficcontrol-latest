@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/14/26) (10:20 PM)
+Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/14-16/26)
 ======================================================================================================
 
 ### Commits
@@ -302,6 +302,20 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Horizontal TL frames excluded from shiftToPole logic entirely
 - Fixes: frames no longer overlap when placed side-by-side on horizontal poles
 - Only affects horizontal TL frames — vertical TLs still shift and connect as before
+
+### Street Sign GUI Scaling Fix (4/14/26)
+- GUI dynamically scales plate sizes for high GUI scale settings (scale 5+)
+- Cached layout values computed in init(), shared with render()/mouseClicked()
+- Direction button now updates per-plate when switching via click or Tab
+
+### Street Sign HP Mounting (4/14-16/26)
+- Street signs mount on horizontal poles: plates center on HP bar (Y 6-10)
+- Front-only rendering when HP-mounted (back face, edges, and back text hidden)
+- Sign shifts 13/16 toward HP for flush mounting
+- Placement rotation +180 so sign faces toward player
+- HP no longer renders arm/bar toward signs or street signs (signs shift to pole instead)
+- Hitbox matches rendered position (Y offset + 13px shift toward HP)
+- CG pole arms still skip street signs (arm models poke through 4px plate)
 
 ### Credits & Authors
 - Added Gamearoo to authors list and credits for contributing items and textures
