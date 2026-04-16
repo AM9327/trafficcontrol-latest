@@ -362,13 +362,11 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         && neighborState.hasProperty(BlockStateProperties.ROTATION_16)) {
                     adjacentTLRotations.put(dir, neighborState.getValue(BlockStateProperties.ROTATION_16));
                 } else if (neighbor instanceof BlockCrossingGatePole
-                        || neighbor instanceof BlockCrossingGateBase
-                        || neighbor instanceof BlockSign) {
+                        || neighbor instanceof BlockCrossingGateBase) {
                     renderState.signalArmTrafficLightDirs.add(dir);
-                    if (neighbor instanceof BlockSign) {
-                        renderState.signDirs.add(dir);
-                        renderState.streetSignDirs.add(dir);
-                    }
+                } else if (neighbor instanceof BlockSign) {
+                    // No arm — sign shifts toward HP instead
+                    renderState.signDirs.add(dir);
                 } else if (neighbor instanceof BlockStreetSign
                         && (!neighborState.hasProperty(BlockStreetSign.HANGING)
                             || !neighborState.getValue(BlockStreetSign.HANGING))) {
