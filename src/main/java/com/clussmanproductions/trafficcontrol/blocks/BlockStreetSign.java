@@ -125,9 +125,18 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
                     : Block.box(0, hYMin, 5, 16, hYMax, 11);
         }
 
+        // Check for HP mount (affects Y position)
+        boolean isHPMount = false;
+        for (Direction dir : Direction.Plane.HORIZONTAL) {
+            if (level.getBlockState(pos.relative(dir)).getBlock() instanceof BlockHorizontalPole) {
+                isHPMount = true;
+                break;
+            }
+        }
+
         // Check for adjacent CG pole/base — sign shifts toward it
         Direction shiftDir = null;
-        double shiftPixels = 7.0; // stops at CG pole column face (7/16 into pole block)
+        double shiftPixels = 7.0;
         for (Direction dir : Direction.Plane.HORIZONTAL) {
             Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
             if (neighbor instanceof BlockCrossingGatePole || neighbor instanceof BlockCrossingGateBase) {
@@ -168,8 +177,14 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
         if (be instanceof StreetSignBlockEntity ssbe) {
             plateCount = Math.max(1, ssbe.getSignCount());
         }
-        double yMin = 0;
-        double yMax = plateCount * 4.0;
+        double yMin, yMax;
+        if (isHPMount) {
+            yMin = 8.0 - plateCount * 2.0;
+            yMax = 8.0 + plateCount * 2.0;
+        } else {
+            yMin = 0;
+            yMax = plateCount * 4.0;
+        }
 
         if (!isCardinal) {
             if (shiftDir != null) {

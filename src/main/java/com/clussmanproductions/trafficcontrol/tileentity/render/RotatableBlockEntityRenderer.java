@@ -595,7 +595,6 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 || (state.getBlock() instanceof BlockSign && renderState.mountedOnPole
                 && renderState.horizontalBarDirection != null)
                 || (isStreetSign && !isHangingStreetSign && renderState.mountedOnPole
-                && !renderState.mountedOnHorizontalPole
                 && renderState.horizontalBarDirection != null);
         // Shift amounts per mount type:
         // Street signs: 7/16 (plate edge stops at CG pole column face)
@@ -667,9 +666,15 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             Font font = Minecraft.getInstance().font;
             float maxUsableWidth = 0.875f; // 14/16 blocks
 
+            // HP-mounted: center plates on the HP bar (Y 8/16)
+            float hpPlateOffset = (!isHangingStreetSign && renderState.mountedOnHorizontalPole)
+                    ? (8f - plateCount * 2f) / 16f : 0f;
+            // HP-mounted: only show front face
+            boolean hpMounted = !isHangingStreetSign && renderState.mountedOnHorizontalPole;
+
             for (int plateIdx = 0; plateIdx < plateCount; plateIdx++) {
-                // Y position: stack from bottom up, sitting on whatever is below
-                float plateY1 = plateIdx * 4f / 16f;
+                // Y position: stack from bottom up, with HP offset baked in
+                float plateY1 = plateIdx * 4f / 16f + hpPlateOffset;
                 float plateY2 = plateY1 + 4f / 16f;
                 float plateCenterY = (plateY1 + plateY2) / 2f;
 
@@ -731,7 +736,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                             .setUv(1, uv2).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
                     consumer.addVertex(m, x2, fy2, zSouth).setColor(255, 255, 255, 255)
                             .setUv(1, uv1).setOverlay(overlay).setLight(light).setNormal(nS.x, nS.y, nS.z);
-                    // North face (back)
+                    // North face (back) — skip when HP-mounted (only front visible)
+                    if (!hpMounted) {
                     Vector3f nN = pose.transformNormal(0, 0, -1, new Vector3f());
                     consumer.addVertex(m, x2, fy2, zNorth).setColor(255, 255, 255, 255)
                             .setUv(0, uv1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
@@ -741,8 +747,10 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                             .setUv(1, uv2).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
                     consumer.addVertex(m, x1, fy2, zNorth).setColor(255, 255, 255, 255)
                             .setUv(1, uv1).setOverlay(overlay).setLight(light).setNormal(nN.x, nN.y, nN.z);
-                    // All edges solid white — sample from center of top border (pure white pixel)
-                    float wu = 0.5f, wv = rowV + 0.03f; // center of white border area
+                    }
+                    // All edges - skip when HP-mounted
+                    if (!hpMounted) {
+                    float wu = 0.5f, wv = rowV + 0.03f;
                     // Top edge
                     Vector3f nUp = pose.transformNormal(0, 1, 0, new Vector3f());
                     consumer.addVertex(m, x1, fy2, zNorth).setColor(255, 255, 255, 255)
@@ -783,6 +791,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                             .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
                     consumer.addVertex(m, x2, fy2, zNorth).setColor(255, 255, 255, 255)
                             .setUv(wu, wv).setOverlay(overlay).setLight(light).setNormal(nE.x, nE.y, nE.z);
+                    } // end !hpMounted edges
                 });
 
                 // 4. Text rendering (2 lines, both faces)
@@ -809,7 +818,9 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                     float finalScale = textScale;
                     float totalH = lineCount * font.lineHeight;
 
-                    for (int face = 0; face < 2; face++) {
+                    // HP-mounted: front text only
+                    int textFaces = hpMounted ? 1 : 2;
+                    for (int face = 0; face < textFaces; face++) {
                         poseStack.pushPose();
                         poseStack.translate(0.5f, plateCenterY, 0.5f);
                         if (face == 1) {
