@@ -1,6 +1,7 @@
 {
-    "parent": "item/generated",
+    "parent": "block/cube_all",
     "textures": {
-        "layer0": "trafficcontrol:items/street_light_single"
+        "all": "trafficcontrol:block/silver",
+        "particle": "trafficcontrol:block/silver"
     }
 }

@@ -16,17 +16,21 @@ public class ModCreativeTab {
 
     public static final DeferredHolder<CreativeModeTab, CreativeModeTab> TRAFFIC_CONTROL_TAB =
             CREATIVE_TABS.register("trafficcontrol", () -> CreativeModeTab.builder()
-                    // The tab icon — shows a cone in the tab
                     .icon(() -> new ItemStack(ModItems.CONE.get()))
-                    // The tab title — pulled from the lang file
                     .title(Component.translatable("itemGroup.trafficcontrol"))
-                    // Add all our items to this tab
                     .displayItems((parameters, output) -> {
+                        // Cones / channelizers
                         output.accept(ModItems.CONE.get());
                         output.accept(ModItems.DRUM.get());
                         output.accept(ModItems.CHANNELIZER.get());
+                        // Type 3 barriers, then guardrail, then signs
                         output.accept(ModItems.TYPE_3_BARRIER.get());
+                        output.accept(ModItems.TYPE_3_BARRIER_RIGHT.get());
                         output.accept(ModItems.TRAFFIC_RAIL.get());
+                        output.accept(ModItems.SIGN.get());
+                        output.accept(ModItems.STREET_SIGN.get());
+                        output.accept(ModItems.ILLUMINATED_STREET_SIGN.get());
+                        // All concrete barriers
                         output.accept(ModItems.CONCRETE_BARRIER_WHITE.get());
                         output.accept(ModItems.CONCRETE_BARRIER_ORANGE.get());
                         output.accept(ModItems.CONCRETE_BARRIER_MAGENTA.get());
@@ -43,6 +47,35 @@ public class ModCreativeTab {
                         output.accept(ModItems.CONCRETE_BARRIER_GREEN.get());
                         output.accept(ModItems.CONCRETE_BARRIER_RED.get());
                         output.accept(ModItems.CONCRETE_BARRIER_BLACK.get());
+                        // Tools — screwdriver, tuner, crossing gate relay, control box
+                        output.accept(ModItems.SCREWDRIVER.get());
+                        output.accept(ModItems.CROSSING_RELAY_TUNER.get());
+                        output.accept(ModItems.CROSSING_RELAY_BOX.get());
+                        output.accept(ModItems.TRAFFIC_LIGHT_CONTROL_BOX.get());
+                        // Poles
+                        output.accept(ModItems.CROSSING_GATE_BASE.get());
+                        output.accept(ModItems.STAND.get());
+                        output.accept(ModItems.CROSSING_GATE_POLE.get());
+                        output.accept(ModItems.HORIZONTAL_POLE.get());
+                        // Crossing gate components
+                        output.accept(ModItems.CROSSING_GATE_GATE.get());
+                        output.accept(ModItems.CROSSING_GATE_LAMPS.get());
+                        output.accept(ModItems.CROSSING_GATE_CROSSBUCK.get());
+                        // Overheads
+                        output.accept(ModItems.OVERHEAD_POLE.get());
+                        output.accept(ModItems.OVERHEAD.get());
+                        output.accept(ModItems.OVERHEAD_LAMPS.get());
+                        output.accept(ModItems.OVERHEAD_CROSSBUCK.get());
+                        // Bells
+                        output.accept(ModItems.SAFETRAN_TYPE_3.get());
+                        output.accept(ModItems.SAFETRAN_MECHANICAL.get());
+                        output.accept(ModItems.WCH_MECHANICAL_BELL.get());
+                        output.accept(ModItems.WCH_BELL.get());
+                        // Wig wags
+                        output.accept(ModItems.WIG_WAG.get());
+                        output.accept(ModItems.VERTICAL_WIG_WAG.get());
+                        // Pedestrian button before TL frames
+                        output.accept(ModItems.PEDESTRIAN_BUTTON.get());
                         // Black Traffic Light Frames (vertical + horizontal)
                         output.accept(ModItems.BLACK_TL_SINGLE_FRAME.get());
                         output.accept(ModItems.BLACK_TL_DOUBLE_FRAME.get());
@@ -79,27 +112,6 @@ public class ModCreativeTab {
                         output.accept(ModItems.ORANGE_TL_TRIPLE_HORIZ_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_QUAD_HORIZ_FRAME.get());
                         output.accept(ModItems.ORANGE_TL_FIVE_HORIZ_FRAME.get());
-                        // Tools
-                        output.accept(ModItems.SCREWDRIVER.get());
-                        output.accept(ModItems.CROSSING_GATE_BASE.get());
-                        output.accept(ModItems.STAND.get());
-                        output.accept(ModItems.CROSSING_GATE_POLE.get());
-                        output.accept(ModItems.HORIZONTAL_POLE.get());
-                        // After poles
-                        output.accept(ModItems.PEDESTRIAN_BUTTON.get());
-                        output.accept(ModItems.CROSSING_GATE_GATE.get());
-                        output.accept(ModItems.CROSSING_GATE_LAMPS.get());
-                        output.accept(ModItems.OVERHEAD_POLE.get());
-                        output.accept(ModItems.OVERHEAD.get());
-                        output.accept(ModItems.OVERHEAD_LAMPS.get());
-                        output.accept(ModItems.OVERHEAD_CROSSBUCK.get());
-                        output.accept(ModItems.SIGN.get());
-                        output.accept(ModItems.WIG_WAG.get());
-                        output.accept(ModItems.SAFETRAN_TYPE_3.get());
-                        output.accept(ModItems.SAFETRAN_MECHANICAL.get());
-                        output.accept(ModItems.WCH_MECHANICAL_BELL.get());
-                        output.accept(ModItems.WCH_BELL.get());
-                        output.accept(ModItems.VERTICAL_WIG_WAG.get());
                         // Traffic Light Bulbs
                         output.accept(ModItems.BULB_RED.get());
                         output.accept(ModItems.BULB_YELLOW.get());
@@ -119,13 +131,21 @@ public class ModCreativeTab {
                         output.accept(ModItems.BULB_NO_LEFT_TURN.get());
                         output.accept(ModItems.BULB_TUNNEL_GREEN.get());
                         output.accept(ModItems.BULB_TUNNEL_RED.get());
-                        // Street sign after bulbs
-                        output.accept(ModItems.STREET_SIGN.get());
-                        output.accept(ModItems.ILLUMINATED_STREET_SIGN.get());
-                        // Traffic sensors after street sign
+                        // Traffic sensors
                         output.accept(ModItems.TRAFFIC_SENSOR_LEFT.get());
                         output.accept(ModItems.TRAFFIC_SENSOR_STRAIGHT.get());
                         output.accept(ModItems.TRAFFIC_SENSOR_RIGHT.get());
+                        // Traffic Light Cards (after sensors)
+                        output.accept(ModItems.TRAFFIC_LIGHT_CARD_CREATIVE.get());
+                        output.accept(ModItems.TRAFFIC_LIGHT_CARD_TIER1.get());
+                        output.accept(ModItems.TRAFFIC_LIGHT_CARD_TIER2.get());
+                        output.accept(ModItems.TRAFFIC_LIGHT_CARD_TIER3.get());
+                        // Shunts
+                        output.accept(ModItems.SHUNT_BORDER.get());
+                        output.accept(ModItems.SHUNT_ISLAND.get());
+                        // Street lights — last
+                        output.accept(ModItems.STREET_LIGHT_SINGLE.get());
+                        output.accept(ModItems.STREET_LIGHT_DOUBLE.get());
                     })
                     .build());
 }

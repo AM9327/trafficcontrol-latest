@@ -25,6 +25,7 @@ public class ModBlockEntities {
                             ModBlocks.DRUM.get(),
                             ModBlocks.CHANNELIZER.get(),
                             ModBlocks.TYPE_3_BARRIER.get(),
+                            ModBlocks.TYPE_3_BARRIER_RIGHT.get(),
                             ModBlocks.CONCRETE_BARRIER_WHITE.get(),
                             ModBlocks.CONCRETE_BARRIER_ORANGE.get(),
                             ModBlocks.CONCRETE_BARRIER_MAGENTA.get(),

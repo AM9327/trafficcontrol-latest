@@ -1,9 +1,17 @@
 package com.clussmanproductions.trafficcontrol;
 
+import com.clussmanproductions.trafficcontrol.item.ItemCone;
+import com.clussmanproductions.trafficcontrol.item.ItemCrossingRelayBox;
+import com.clussmanproductions.trafficcontrol.item.ItemCrossingRelayTuner;
 import com.clussmanproductions.trafficcontrol.item.ItemScrewdriver;
+import com.clussmanproductions.trafficcontrol.item.ItemTrafficLightCard;
+import com.clussmanproductions.trafficcontrol.item.ItemTrafficLightControlBox;
 import com.clussmanproductions.trafficcontrol.item.ItemTrafficLightFrame;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.equipment.Equippable;
 import net.neoforged.neoforge.registries.DeferredItem;
 import net.neoforged.neoforge.registries.DeferredRegister;
 
@@ -16,9 +24,18 @@ public class ModItems {
 
     // BlockItem for the cone — links the item to the block
     // registerSimpleBlockItem auto-creates a BlockItem tied to the block
-    public static final DeferredItem<BlockItem> CONE = ITEMS.registerSimpleBlockItem("cone", ModBlocks.CONE);
-    public static final DeferredItem<BlockItem> DRUM = ITEMS.registerSimpleBlockItem("drum", ModBlocks.DRUM);
-    public static final DeferredItem<BlockItem> CHANNELIZER = ITEMS.registerSimpleBlockItem("channelizer", ModBlocks.CHANNELIZER);
+    public static final DeferredItem<BlockItem> CONE = ITEMS.registerItem("cone",
+            p -> new ItemCone(ModBlocks.CONE.get(),
+                    p.useBlockDescriptionPrefix()
+                     .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).build())));
+    public static final DeferredItem<BlockItem> DRUM = ITEMS.registerItem("drum",
+            p -> new ItemCone(ModBlocks.DRUM.get(),
+                    p.useBlockDescriptionPrefix()
+                     .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).build())));
+    public static final DeferredItem<BlockItem> CHANNELIZER = ITEMS.registerItem("channelizer",
+            p -> new ItemCone(ModBlocks.CHANNELIZER.get(),
+                    p.useBlockDescriptionPrefix()
+                     .component(DataComponents.EQUIPPABLE, Equippable.builder(EquipmentSlot.HEAD).build())));
     public static final DeferredItem<BlockItem> TYPE_3_BARRIER = ITEMS.registerSimpleBlockItem("type_3_barrier", ModBlocks.TYPE_3_BARRIER);
 
     public static final DeferredItem<BlockItem> CONCRETE_BARRIER_WHITE = ITEMS.registerSimpleBlockItem("concrete_barrier_white", ModBlocks.CONCRETE_BARRIER_WHITE);
@@ -129,7 +146,7 @@ public class ModItems {
     public static final DeferredItem<BlockItem> OVERHEAD_CROSSBUCK = ITEMS.registerSimpleBlockItem("overhead_crossbuck", ModBlocks.OVERHEAD_CROSSBUCK);
 
     // Signs and signals
-    public static final DeferredItem<BlockItem> SIGN = ITEMS.registerSimpleBlockItem("sign", ModBlocks.SIGN);
+    public static final DeferredItem<BlockItem> SIGN = ITEMS.registerSimpleBlockItem("road_sign", ModBlocks.SIGN);
     public static final DeferredItem<BlockItem> WIG_WAG = ITEMS.registerSimpleBlockItem("wig_wag", ModBlocks.WIG_WAG);
     public static final DeferredItem<BlockItem> SAFETRAN_TYPE_3 = ITEMS.registerSimpleBlockItem("safetran_type_3", ModBlocks.SAFETRAN_TYPE_3);
     public static final DeferredItem<BlockItem> SAFETRAN_MECHANICAL = ITEMS.registerSimpleBlockItem("safetran_mechanical", ModBlocks.SAFETRAN_MECHANICAL);
@@ -179,4 +196,47 @@ public class ModItems {
     // Tools
     public static final DeferredItem<Item> SCREWDRIVER = ITEMS.registerItem("screwdriver",
             props -> new ItemScrewdriver(props.stacksTo(1).durability(128)));
+
+    // Street lights
+    public static final DeferredItem<BlockItem> STREET_LIGHT_SINGLE = ITEMS.registerSimpleBlockItem("street_light_single", ModBlocks.STREET_LIGHT_SINGLE);
+    public static final DeferredItem<BlockItem> STREET_LIGHT_DOUBLE = ITEMS.registerSimpleBlockItem("street_light_double", ModBlocks.STREET_LIGHT_DOUBLE);
+
+    // Traffic light control box
+    public static final DeferredItem<BlockItem> TRAFFIC_LIGHT_CONTROL_BOX = ITEMS.registerItem("traffic_light_control_box",
+            p -> new ItemTrafficLightControlBox(ModBlocks.TRAFFIC_LIGHT_CONTROL_BOX.get(), p.useBlockDescriptionPrefix()));
+
+    // Crossing relay boxes
+    public static final DeferredItem<BlockItem> CROSSING_RELAY_NE = ITEMS.registerSimpleBlockItem("crossing_relay_ne", ModBlocks.CROSSING_RELAY_NE);
+    public static final DeferredItem<BlockItem> CROSSING_RELAY_NW = ITEMS.registerSimpleBlockItem("crossing_relay_nw", ModBlocks.CROSSING_RELAY_NW);
+    public static final DeferredItem<BlockItem> CROSSING_RELAY_SE = ITEMS.registerSimpleBlockItem("crossing_relay_se", ModBlocks.CROSSING_RELAY_SE);
+    public static final DeferredItem<BlockItem> CROSSING_RELAY_SW = ITEMS.registerSimpleBlockItem("crossing_relay_sw", ModBlocks.CROSSING_RELAY_SW);
+    public static final DeferredItem<BlockItem> CROSSING_RELAY_TOP_NE = ITEMS.registerSimpleBlockItem("crossing_relay_top_ne", ModBlocks.CROSSING_RELAY_TOP_NE);
+    public static final DeferredItem<BlockItem> CROSSING_RELAY_TOP_NW = ITEMS.registerSimpleBlockItem("crossing_relay_top_nw", ModBlocks.CROSSING_RELAY_TOP_NW);
+    public static final DeferredItem<BlockItem> CROSSING_RELAY_TOP_SE = ITEMS.registerSimpleBlockItem("crossing_relay_top_se", ModBlocks.CROSSING_RELAY_TOP_SE);
+    public static final DeferredItem<BlockItem> CROSSING_RELAY_TOP_SW = ITEMS.registerSimpleBlockItem("crossing_relay_top_sw", ModBlocks.CROSSING_RELAY_TOP_SW);
+
+    // Shunts
+    public static final DeferredItem<BlockItem> SHUNT_BORDER = ITEMS.registerSimpleBlockItem("shunt_border", ModBlocks.SHUNT_BORDER);
+    public static final DeferredItem<BlockItem> SHUNT_ISLAND = ITEMS.registerSimpleBlockItem("shunt_island", ModBlocks.SHUNT_ISLAND);
+
+    // Type 3 Barrier Right
+    public static final DeferredItem<BlockItem> TYPE_3_BARRIER_RIGHT = ITEMS.registerSimpleBlockItem("type_3_barrier_right", ModBlocks.TYPE_3_BARRIER_RIGHT);
+
+    // Crossing relay tuner (tool)
+    public static final DeferredItem<Item> CROSSING_RELAY_TUNER = ITEMS.registerItem("crossing_relay_tuner",
+            p -> new ItemCrossingRelayTuner(p.stacksTo(1)));
+
+    // Crossing Gate Relay — single item, places full 2x2x2 structure (matches 1.12.2 behavior)
+    public static final DeferredItem<Item> CROSSING_RELAY_BOX = ITEMS.registerItem("crossing_relay_box",
+            props -> new ItemCrossingRelayBox(props));
+
+    // Traffic light cards — programming cards for Traffic Light Control Box (each gets its own shift-hold tooltip key)
+    public static final DeferredItem<Item> TRAFFIC_LIGHT_CARD_CREATIVE = ITEMS.registerItem("traffic_light_card_creative",
+            p -> new ItemTrafficLightCard(p.stacksTo(1), "trafficcontrol.tooltip.card_creative"));
+    public static final DeferredItem<Item> TRAFFIC_LIGHT_CARD_TIER1 = ITEMS.registerItem("traffic_light_card_tier1",
+            p -> new ItemTrafficLightCard(p.stacksTo(1), "trafficcontrol.tooltip.card_tier1"));
+    public static final DeferredItem<Item> TRAFFIC_LIGHT_CARD_TIER2 = ITEMS.registerItem("traffic_light_card_tier2",
+            p -> new ItemTrafficLightCard(p.stacksTo(1), "trafficcontrol.tooltip.card_tier2"));
+    public static final DeferredItem<Item> TRAFFIC_LIGHT_CARD_TIER3 = ITEMS.registerItem("traffic_light_card_tier3",
+            p -> new ItemTrafficLightCard(p.stacksTo(1), "trafficcontrol.tooltip.card_tier3"));
 }

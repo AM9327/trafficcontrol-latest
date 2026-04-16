@@ -100,6 +100,53 @@ Traffic Control mod — railroad crossing signals, traffic lights, signs, street
 | `247bfc4` | Fix changelog heading for horizontal TL frames section |
 | `f04063a` | Restore back-to-back TL/sign detection to original logic |
 
+### 4/16/26 — Creative Tab Update, Remaining 1.12.2 Items Registered
+All remaining items that existed in 1.12.2 are now registered and visible in the creative tab. Many still
+need functional behavior (traffic-light signal logic, crossing-gate animation, barriers, shunts, etc.).
+
+**New blocks (placeholders unless noted)**
+- Street Light (Single / Double)
+- Traffic Light Control Box — `BlockTrafficLightControlBox` (HorizontalDirectionalBlock); faces player on placement. Creative icon uses `FACING=SOUTH` default state so the GUI view (rotation `[30, 225, 0]`) shows the front face.
+- Crossing Gate Relay corners (NE/NW/SE/SW) + top variants — 8 blocks placed as a 2x2x2 structure
+- Shunt (Border / Island)
+- Type 3 Barrier (Right) — uses `BlockType3Barrier` (slim hitbox + 16-step rotation, shared with base variant)
+
+**New items**
+- Crossing Gate Relay — single `ItemCrossingRelayBox` item; right-click places the full 2x2x2 structure (the 8 corner blocks are no longer exposed separately in creative)
+- Tuner (`crossing_relay_tuner`) — `ItemCrossingRelayTuner`
+- Traffic Light Cards — Creative, Tier 1, Tier 2, Tier 3 — `ItemTrafficLightCard` with per-tier tooltip (WIP)
+
+**Renamed**
+- `trafficcontrol:sign` → `trafficcontrol:road_sign` (display name was already "Road Sign"). Asset files + lang key updated. Breaks pre-rename saves with placed tc:sign blocks.
+
+**Removed**
+- `light_source` — internal helper in 1.12.2 (spawned programmatically by street lights), was a stale placeholder in the port.
+
+**Shift-hold tooltips**
+Four items + four cards now implement the 1.12.2 "Press SHIFT for more info" pattern:
+- Cone / Drum / Channelizer — "Can be worn as a hat."
+- Tuner — "Use to link components to Crossing Gate Relays or Traffic Light Control Boxes."
+- Crossing Gate Relay — "Uses Shunts or Redstone to control crossing components."
+- Traffic Light Control Box — "Uses Redstone or Traffic Sensors to control traffic signal components."
+- Traffic Light Cards — WIP tooltips per tier.
+
+**Cone/Drum/Channelizer wearable**
+Registered with `DataComponents.EQUIPPABLE` on `EquipmentSlot.HEAD` so they go in the helmet slot.
+
+**Hitbox fixes**
+- Type 3 Barrier (Right) — now uses the slim 16x23x2 hitbox + ROTATION_16 from `BlockType3Barrier` (was a default cube).
+- Horizontal 3-bulb TL — narrowed `SHAPE_HORIZ_3_NS/EW` to the visible backing plate (X −3…18.5). 3-bulb's backing plate is shorter than 4/5-bulb's, so the old 30-px hitbox extended 8 px into empty air.
+
+**1.21 asset plumbing**
+- Rewrote 14 legacy `forge_marker`/`defaults`/`variants` blockstates to 1.21 `variants: { "": {...} }` format.
+- Created the new 1.21-required `assets/trafficcontrol/items/*.json` definitions (16 new files).
+- Moved textures from `textures/blocks/*.png` → `textures/block/*.png` and `textures/items/*.png` → `textures/item/*.png` so 1.21's singular-path resolver finds them. Rewrote model texture refs accordingly.
+- Added `TYPE_3_BARRIER_RIGHT` to the `ROTATABLE` block-entity type list.
+- Control-box model: all six faces now sample `traffic_light_control_box` (front/back central strip, sides/top/bottom edge strips) instead of mixing with `generic.png`.
+
+**Creative-tab order**
+Cones → Drums → Channelizers → Type 3 (+Right) → Guardrail → Road Sign → Street Sign (+Illuminated) → Concrete Barriers → Tools (Screwdriver, Tuner, Crossing Gate Relay, Control Box) → Poles → Crossing gate components → Overheads → Bells → Wig wags → Pedestrian Button → TL frames → Bulbs → Traffic Sensors → Traffic Light Cards → Shunts → Street Lights (last).
+
 ---
 
 ## Pole Rendering System — Technical Guide
@@ -325,16 +372,21 @@ Also: `skipSignArms` now skips when `backToBackSignDir != null` (b2b arms don't 
 ## Current State (4/10/26)
 
 ### Working:
+- **All 1.12.2 items registered + placeable** (creative tab complete as of 4/16/26)
 - Street sign system — full 1.12.2 port (stacking, per-plate rotation/color/text, GUI, hanging, pole mounting)
-- Horizontal TL frames — no shift on HP, wider hitbox, proper back pole models (centered per frame width)
+- Horizontal TL frames — no shift on HP, proper back pole models (centered per frame width), per-variant hitbox (3-bulb narrowed to match backing plate 4/16/26)
 - Side-by-side vertical TLs — connect model between flush neighbors
 - Back-to-back TLs/signs — shift + bridge bar (a785bb4 logic)
 - CG pole arms — short arms toward all connected neighbors
 - HP connections — arms toward TLs, signs, street signs, horizontal TL frames
 - Screwdriver rotation
-- Sign GUI with search/scroll/selection
+- Sign GUI with search/scroll/selection; "Road Sign" renamed from "Sign" (4/16/26)
 - 3D inventory icons for all TL frames
 - 2-bulb horizontal TL frames (all 3 colors)
+- Crossing Gate Relay: single item places full 2x2x2 structure
+- Traffic Light Control Box: faces player on placement (HorizontalDirectionalBlock)
+- Cone/Drum/Channelizer: wearable as hats, shift-tooltip
+- Shift-hold tooltips on tuner, control box, crossing gate relay, cards
 
 ### Known Issues Being Worked On:
 1. **TL-to-CG pole arm sticking out** — TL `horizontalPoleDirs` bars render full-length toward secondary CG poles. CG pole renders its own arm, but TL also renders, causing overshoot.

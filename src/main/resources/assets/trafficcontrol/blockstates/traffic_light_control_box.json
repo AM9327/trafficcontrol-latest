@@ -1,17 +1,8 @@
 {
-    "forge_marker": 1,
-    "defaults": {
-        "model": "trafficcontrol:traffic_light_control_box"
-    },
     "variants": {
-        "normal": [{}],
-        "inventory": 
-        {
-        	"model": "trafficcontrol:traffic_light_control_box"
-        },
-        "facing=north": [{}],
-        "facing=west": { "y": 270 },
-        "facing=south": { "y": 180 },
-        "facing=east": { "y": 90 }
+        "facing=south": { "model": "trafficcontrol:block/traffic_light_control_box" },
+        "facing=west":  { "model": "trafficcontrol:block/traffic_light_control_box", "y": 90 },
+        "facing=north": { "model": "trafficcontrol:block/traffic_light_control_box", "y": 180 },
+        "facing=east":  { "model": "trafficcontrol:block/traffic_light_control_box", "y": 270 }
     }
 }

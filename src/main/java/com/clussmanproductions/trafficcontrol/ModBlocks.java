@@ -10,6 +10,7 @@ import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSignalArm;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLight;
+import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficLightControlBox;
 import com.clussmanproductions.trafficcontrol.blocks.BlockStreetSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockTrafficRail;
 import com.clussmanproductions.trafficcontrol.blocks.BlockType3Barrier;
@@ -171,7 +172,7 @@ public class ModBlocks {
     public static final DeferredBlock<Block> OVERHEAD = BLOCKS.registerBlock("overhead", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> OVERHEAD_LAMPS = BLOCKS.registerBlock("overhead_lamps", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> OVERHEAD_CROSSBUCK = BLOCKS.registerBlock("overhead_crossbuck", Block::new, PLACEHOLDER_PROPS);
-    public static final DeferredBlock<Block> SIGN = BLOCKS.registerBlock("sign", BlockSign::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> SIGN = BLOCKS.registerBlock("road_sign", BlockSign::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> WIG_WAG = BLOCKS.registerBlock("wig_wag", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> SAFETRAN_TYPE_3 = BLOCKS.registerBlock("safetran_type_3", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> SAFETRAN_MECHANICAL = BLOCKS.registerBlock("safetran_mechanical", Block::new, PLACEHOLDER_PROPS);
@@ -185,4 +186,28 @@ public class ModBlocks {
     public static final DeferredBlock<Block> TRAFFIC_SENSOR_LEFT = BLOCKS.registerBlock("traffic_sensor_left", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> TRAFFIC_SENSOR_RIGHT = BLOCKS.registerBlock("traffic_sensor_right", Block::new, PLACEHOLDER_PROPS);
     public static final DeferredBlock<Block> TRAFFIC_SENSOR_STRAIGHT = BLOCKS.registerBlock("traffic_sensor_straight", Block::new, PLACEHOLDER_PROPS);
+
+    // Street lights
+    public static final DeferredBlock<Block> STREET_LIGHT_SINGLE = BLOCKS.registerBlock("street_light_single", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> STREET_LIGHT_DOUBLE = BLOCKS.registerBlock("street_light_double", Block::new, PLACEHOLDER_PROPS);
+
+    // Traffic light control box (horizontal-facing, orients toward player on placement)
+    public static final DeferredBlock<Block> TRAFFIC_LIGHT_CONTROL_BOX = BLOCKS.registerBlock("traffic_light_control_box", BlockTrafficLightControlBox::new, PLACEHOLDER_PROPS);
+
+    // Crossing relay boxes (corner + top variants)
+    public static final DeferredBlock<Block> CROSSING_RELAY_NE = BLOCKS.registerBlock("crossing_relay_ne", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_RELAY_NW = BLOCKS.registerBlock("crossing_relay_nw", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_RELAY_SE = BLOCKS.registerBlock("crossing_relay_se", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_RELAY_SW = BLOCKS.registerBlock("crossing_relay_sw", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_RELAY_TOP_NE = BLOCKS.registerBlock("crossing_relay_top_ne", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_RELAY_TOP_NW = BLOCKS.registerBlock("crossing_relay_top_nw", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_RELAY_TOP_SE = BLOCKS.registerBlock("crossing_relay_top_se", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> CROSSING_RELAY_TOP_SW = BLOCKS.registerBlock("crossing_relay_top_sw", Block::new, PLACEHOLDER_PROPS);
+
+    // Shunts
+    public static final DeferredBlock<Block> SHUNT_BORDER = BLOCKS.registerBlock("shunt_border", Block::new, PLACEHOLDER_PROPS);
+    public static final DeferredBlock<Block> SHUNT_ISLAND = BLOCKS.registerBlock("shunt_island", Block::new, PLACEHOLDER_PROPS);
+
+    // Type 3 Barrier right variant — same behavior/hitbox as TYPE_3_BARRIER
+    public static final DeferredBlock<Block> TYPE_3_BARRIER_RIGHT = BLOCKS.registerBlock("type_3_barrier_right", BlockType3Barrier::new, PLACEHOLDER_PROPS);
 }

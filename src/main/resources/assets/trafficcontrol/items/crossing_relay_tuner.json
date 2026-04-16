@@ -1,0 +1,6 @@
+{
+    "model": {
+        "type": "minecraft:model",
+        "model": "trafficcontrol:item/crossing_relay_tuner"
+    }
+}

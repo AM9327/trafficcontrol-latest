@@ -1,9 +1,8 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "trafficcontrol:blocks/generic",
-		"1": "trafficcontrol:blocks/traffic_light_control_box",
-		"particle": "trafficcontrol:blocks/traffic_light_control_box"
+		"1": "trafficcontrol:block/traffic_light_control_box",
+		"particle": "trafficcontrol:block/traffic_light_control_box"
 	},
 	"elements": [
 		{
@@ -11,12 +10,12 @@
 			"from": [0, 0, 4],
 			"to": [16, 24, 12],
 			"faces": {
-				"north": {"uv": [0, 0, 16, 16], "texture": "#0"},
-				"east": {"uv": [8, 0, 16, 16], "texture": "#0"},
+				"north": {"uv": [3, 0, 13, 16], "texture": "#1"},
+				"east":  {"uv": [0, 0, 3, 16],  "texture": "#1"},
 				"south": {"uv": [3, 0, 13, 16], "texture": "#1"},
-				"west": {"uv": [8, 0, 16, 16], "texture": "#0"},
-				"up": {"uv": [0, 0, 16, 8], "texture": "#0"},
-				"down": {"uv": [0, 0, 16, 8], "texture": "#0"}
+				"west":  {"uv": [13, 0, 16, 16], "texture": "#1"},
+				"up":    {"uv": [3, 0, 13, 3],  "texture": "#1"},
+				"down":  {"uv": [3, 13, 13, 16], "texture": "#1"}
 			}
 		}
 	],

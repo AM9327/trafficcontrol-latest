@@ -58,9 +58,9 @@ public class BlockTrafficLight extends Block implements EntityBlock {
     private static final VoxelShape TL_ARM_WEST  = Block.box(-16, 5.5, 5.5, 7, 10.5, 10.5);
 
     // Horizontal TL frame hitboxes — per variant width
-    // 3-bulb: x=-3 to 27 (30px)
-    private static final VoxelShape SHAPE_HORIZ_3_NS = Block.box(-3, 3, 4, 27, 13, 14);
-    private static final VoxelShape SHAPE_HORIZ_3_EW = Block.box(2, 3, -3, 12, 13, 27);
+    // 3-bulb: backing plate only (X=-3..18.5). Back-pole arm (X=25..27) renders conditionally, so no hitbox for it.
+    private static final VoxelShape SHAPE_HORIZ_3_NS = Block.box(-3, 3, 4, 18.5, 13, 14);
+    private static final VoxelShape SHAPE_HORIZ_3_EW = Block.box(2, 3, -3, 12, 13, 18.5);
     // 4-bulb: x=1 to 29.5 (28.5px)
     private static final VoxelShape SHAPE_HORIZ_4_NS = Block.box(1, 3, 4, 29.5, 13, 14);
     private static final VoxelShape SHAPE_HORIZ_4_EW = Block.box(2, 3, 1, 12, 13, 29.5);

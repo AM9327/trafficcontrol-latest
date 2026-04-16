@@ -1,4 +1,4 @@
-Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/14-16/26)
+Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changelog (4/16/26) (4:47 PM)
 ======================================================================================================
 
 ### Commits
@@ -321,3 +321,56 @@ Traffic Control Mod 1.21.11-2.0.0 (Beta 1) - NeoForge 21.11.42 - Session Changel
 - Added Gamearoo to authors list and credits for contributing items and textures
 - Added AM9327 to credits for helping port the mod to the latest versions of Minecraft
 - Updated authors: CSX8600 (https://github.com/CSX8600), KillerMapper, Gamearoo (https://github.com/GamearooCode), AM9327 (https://github.com/AM9327)
+
+### Creative Tab Update — Remaining 1.12.2 Items (4/16/26)
+Everything from 1.12.2 is now registered and visible in the creative menu. Functional behavior for many
+items (traffic-light signal logic, crossing-gate animation, barrier placement logic, etc.) is still pending.
+
+Newly registered blocks (Block::new placeholders unless noted):
+- Street Light (Single / Double)
+- Traffic Light Control Box — custom `BlockTrafficLightControlBox` (HorizontalDirectionalBlock); faces the player on placement. Creative icon shows the front face via `FACING=SOUTH` default state + `[30, 225, 0]` GUI view.
+- Crossing Gate Relay corners (NE / NW / SE / SW) + top variants — 8 blocks forming the 2x2x2 structure.
+- Shunt (Border / Island)
+- Type 3 Barrier (Right) — now uses the same `BlockType3Barrier` class as the base variant (shares the 2-px slim hitbox + 16-step rotation + rotatable block-entity).
+
+Newly registered items:
+- Crossing Gate Relay — a single `ItemCrossingRelayBox` item that places the full 2x2x2 structure on right-click (matches 1.12.2 behavior). The 8 corner blocks are no longer exposed as separate creative-tab entries.
+- Tuner (`crossing_relay_tuner`) — custom `ItemCrossingRelayTuner`.
+- Traffic Light Cards: Creative, Tier 1, Tier 2, Tier 3 — each with its own tooltip (WIP) describing intended tier behavior.
+
+Renamed:
+- Registry id `trafficcontrol:sign` → `trafficcontrol:road_sign` (display name already "Road Sign"). Asset files moved to `blockstates/road_sign.json` and `items/road_sign.json`; lang key updated. Breaks pre-rename saves that had placed tc:sign blocks.
+
+Removed (internal-only in 1.12.2, shouldn't have been player-facing):
+- `light_source` — stale placeholder; in 1.12.2 it was spawned programmatically by street lights, never in the creative menu.
+
+Creative-tab reorder:
+- Sequence: Cones → Drums → Channelizers → Type 3 (+Right) → Guardrail → Road Sign → Street Sign (+Illuminated) → Concrete Barriers → Tools (Screwdriver, Tuner, Crossing Gate Relay, Control Box) → Poles → Crossing gate components → Overheads → Bells → Wig wags → Pedestrian Button → TL frames → Bulbs → Traffic Sensors → Traffic Light Cards → Shunts → Street Lights (last).
+
+Shift-hold tooltips (matches 1.12.2 "Press SHIFT for more info" pattern):
+- Cone / Drum / Channelizer — "Can be worn as a hat."
+- Tuner — "Use to link components to Crossing Gate Relays or Traffic Light Control Boxes."
+- Crossing Gate Relay — "Uses Shunts or Redstone to control crossing components."
+- Traffic Light Control Box — "Uses Redstone or Traffic Sensors to control traffic signal components."
+- Traffic Light Cards (per tier) — WIP tooltips describing planned tier behavior.
+
+Cone/Drum/Channelizer wearable:
+- All three register with `DataComponents.EQUIPPABLE` bound to `EquipmentSlot.HEAD` so they can be placed in the helmet slot (1.12.2 parity).
+
+Hitbox fixes:
+- Type 3 Barrier (Right) — now uses the slim 16x23x2 hitbox + 16-step rotation from `BlockType3Barrier` (default cube before).
+- Horizontal 3-bulb TL frame — narrowed `SHAPE_HORIZ_3_NS/EW` to match the visible backing plate (X −3…18.5) instead of extending 8 px past the plate into empty air. 4-bulb and 5-bulb frames already matched their plates and were not changed.
+
+Asset plumbing for 1.21 resource system:
+- Rewrote 14 legacy `forge_marker`/`defaults`/`variants` (1.12.2-format) blockstate JSONs to the 1.21 `"variants": { "": {...} }` format.
+- Created the new 1.21-required `assets/trafficcontrol/items/*.json` definitions (16 new files) for every block-item and standalone item introduced this session.
+- Relocated textures: `textures/blocks/*.png` → `textures/block/*.png` and `textures/items/*.png` → `textures/item/*.png` so 1.21's singular-path texture resolver can find them. Rewrote model texture refs (`trafficcontrol:blocks/*` → `trafficcontrol:block/*`, `trafficcontrol:items/*` → `trafficcontrol:item/*`).
+- Control-box model: all six faces now sample from `traffic_light_control_box` texture (front/back: central 10-px strip, sides/top/bottom: thin edge strips) instead of mixing with the generic gray metal texture.
+- Added `TYPE_3_BARRIER_RIGHT` to the `ROTATABLE` block-entity type list so its custom renderer/rotation works.
+
+Still TODO after this session (functionality, not registration):
+- Traffic light signal logic (relay box, sensor, sequencer, control-box cards)
+- Crossing gate arm animation, bell sounds, wig wag motion
+- Street light lighting emission
+- Shunt redstone interaction
+- Recipes for all newly-registered items

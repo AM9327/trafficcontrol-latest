@@ -1,9 +1,9 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"1": "trafficcontrol:blocks/model_hut",
-		"4": "trafficcontrol:blocks/silver",
-		"particle": "trafficcontrol:blocks/model_hut"
+		"1": "trafficcontrol:block/model_hut",
+		"4": "trafficcontrol:block/silver",
+		"particle": "trafficcontrol:block/model_hut"
 	},
 	"elements": [
 		{

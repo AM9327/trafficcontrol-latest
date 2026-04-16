@@ -1,10 +1,10 @@
 {
     "__comment": "Model generated using MrCrayfish's Model Creator (http://mrcrayfish.com/modelcreator/)",
     "textures": {
-        "0": "trafficcontrol:blocks/silver",
-        "1": "trafficcontrol:blocks/relay_sw_south",
-        "2": "trafficcontrol:blocks/generic",
-        "particle": "trafficcontrol:blocks/silver"
+        "0": "trafficcontrol:block/silver",
+        "1": "trafficcontrol:block/relay_sw_south",
+        "2": "trafficcontrol:block/generic",
+        "particle": "trafficcontrol:block/silver"
     },
     "elements": [
         {

@@ -1,8 +1,8 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"0": "trafficcontrol:blocks/shunt",
-		"particle": "trafficcontrol:blocks/shunt"
+		"0": "trafficcontrol:block/shunt",
+		"particle": "trafficcontrol:block/shunt"
 	},
 	"elements": [
 		{

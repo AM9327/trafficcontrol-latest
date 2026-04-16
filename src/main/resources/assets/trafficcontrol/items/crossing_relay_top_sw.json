@@ -1,0 +1,6 @@
+{
+    "model": {
+        "type": "minecraft:model",
+        "model": "trafficcontrol:block/crossing_relay_top_sw"
+    }
+}

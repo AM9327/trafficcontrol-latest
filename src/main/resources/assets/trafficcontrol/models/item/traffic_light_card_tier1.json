@@ -1,6 +1,6 @@
 {
-	"parent": "item/generated",
-	"textures": {
-		"layer0": "trafficcontrol:items/traffic_light_card_tier1"
-	}
+    "parent": "item/generated",
+    "textures": {
+        "layer0": "trafficcontrol:item/traffic_light_card_tier1"
+    }
 }

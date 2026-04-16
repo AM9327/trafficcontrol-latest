@@ -1,14 +1,15 @@
 {
 	"credit": "Made with Blockbench",
 	"textures": {
-		"antenna": "trafficcontrol:items/antenna",
-		"bodyside": "trafficcontrol:items/bodyside",
-		"bodybottom": "trafficcontrol:items/bodybottom",
-		"bodytop": "trafficcontrol:items/bodytop",
-		"bodyfront": "trafficcontrol:items/bodyfront",
-		"bodybutton": "trafficcontrol:items/bodybutton",
-		"antennatop": "trafficcontrol:items/antennatop",
-		"bodyback": "trafficcontrol:items/bodyback"
+		"antenna": "trafficcontrol:item/antenna",
+		"bodyside": "trafficcontrol:item/bodyside",
+		"bodybottom": "trafficcontrol:item/bodybottom",
+		"bodytop": "trafficcontrol:item/bodytop",
+		"bodyfront": "trafficcontrol:item/bodyfront",
+		"bodybutton": "trafficcontrol:item/bodybutton",
+		"antennatop": "trafficcontrol:item/antennatop",
+		"bodyback": "trafficcontrol:item/bodyback",
+		"particle": "trafficcontrol:item/bodyfront"
 	},
 	"elements": [
 		{
