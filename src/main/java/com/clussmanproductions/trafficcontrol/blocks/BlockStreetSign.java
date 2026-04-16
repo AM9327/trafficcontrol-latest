@@ -125,24 +125,28 @@ public class BlockStreetSign extends Block implements IHorizontalPoleConnectable
                     : Block.box(0, hYMin, 5, 16, hYMax, 11);
         }
 
-        // Check for HP mount (affects Y position)
+        // Check for HP mount (affects Y position and shift)
         boolean isHPMount = false;
+        Direction shiftDir = null;
+        double shiftPixels = 7.0;
         for (Direction dir : Direction.Plane.HORIZONTAL) {
             if (level.getBlockState(pos.relative(dir)).getBlock() instanceof BlockHorizontalPole) {
                 isHPMount = true;
+                shiftDir = dir;
+                shiftPixels = 13.0; // matches renderer 13/16
                 break;
             }
         }
 
         // Check for adjacent CG pole/base — sign shifts toward it
-        Direction shiftDir = null;
-        double shiftPixels = 7.0;
+        if (shiftDir == null) {
         for (Direction dir : Direction.Plane.HORIZONTAL) {
             Block neighbor = level.getBlockState(pos.relative(dir)).getBlock();
             if (neighbor instanceof BlockCrossingGatePole || neighbor instanceof BlockCrossingGateBase) {
                 shiftDir = dir;
                 break;
             }
+        }
         }
         // Chained: adjacent sign-like block with CG pole behind it
         if (shiftDir == null) {

@@ -600,7 +600,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         // HP-mounted TLs: 7/16 (back pole aligns at block boundary with HP arm)
         // Regular CG pole mount: 9/16 (full shift to pole column)
         // Back-to-back: no shift (mountedOnPole not set, shiftToPole is false)
-        float poleShiftAmount = isStreetSign ? 13.0f / 16.0f
+        float poleShiftAmount = isStreetSign ? 16.0f / 16.0f
                 : renderState.mountedOnHorizontalPole ? 7.0f / 16.0f
                 : 9.0f / 16.0f;
 
