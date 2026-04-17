@@ -1,5 +1,39 @@
 {
     "variants": {
-        "": { "model": "trafficcontrol:block/pedestrian_button" }
+        "facing=south,above=false,mounted=false,paired=false": { "model": "trafficcontrol:block/pedestrian_button" },
+        "facing=west,above=false,mounted=false,paired=false":  { "model": "trafficcontrol:block/pedestrian_button", "y": 90 },
+        "facing=north,above=false,mounted=false,paired=false": { "model": "trafficcontrol:block/pedestrian_button", "y": 180 },
+        "facing=east,above=false,mounted=false,paired=false":  { "model": "trafficcontrol:block/pedestrian_button", "y": 270 },
+        "facing=south,above=true,mounted=false,paired=false":  { "model": "trafficcontrol:block/pedestrian_button_full" },
+        "facing=west,above=true,mounted=false,paired=false":   { "model": "trafficcontrol:block/pedestrian_button_full", "y": 90 },
+        "facing=north,above=true,mounted=false,paired=false":  { "model": "trafficcontrol:block/pedestrian_button_full", "y": 180 },
+        "facing=east,above=true,mounted=false,paired=false":   { "model": "trafficcontrol:block/pedestrian_button_full", "y": 270 },
+
+        "facing=south,above=false,mounted=false,paired=true": { "model": "trafficcontrol:block/pedestrian_button_paired" },
+        "facing=west,above=false,mounted=false,paired=true":  { "model": "trafficcontrol:block/pedestrian_button_paired_winner", "y": 90 },
+        "facing=north,above=false,mounted=false,paired=true": { "model": "trafficcontrol:block/pedestrian_button_paired_winner", "y": 180 },
+        "facing=east,above=false,mounted=false,paired=true":  { "model": "trafficcontrol:block/pedestrian_button_paired", "y": 270 },
+        "facing=south,above=true,mounted=false,paired=true":  { "model": "trafficcontrol:block/pedestrian_button_paired_full" },
+        "facing=west,above=true,mounted=false,paired=true":   { "model": "trafficcontrol:block/pedestrian_button_paired_winner_full", "y": 90 },
+        "facing=north,above=true,mounted=false,paired=true":  { "model": "trafficcontrol:block/pedestrian_button_paired_winner_full", "y": 180 },
+        "facing=east,above=true,mounted=false,paired=true":   { "model": "trafficcontrol:block/pedestrian_button_paired_full", "y": 270 },
+
+        "facing=south,above=false,mounted=true,paired=false": { "model": "trafficcontrol:block/pedestrian_button_mounted" },
+        "facing=west,above=false,mounted=true,paired=false":  { "model": "trafficcontrol:block/pedestrian_button_mounted", "y": 90 },
+        "facing=north,above=false,mounted=true,paired=false": { "model": "trafficcontrol:block/pedestrian_button_mounted", "y": 180 },
+        "facing=east,above=false,mounted=true,paired=false":  { "model": "trafficcontrol:block/pedestrian_button_mounted", "y": 270 },
+        "facing=south,above=true,mounted=true,paired=false":  { "model": "trafficcontrol:block/pedestrian_button_mounted_full" },
+        "facing=west,above=true,mounted=true,paired=false":   { "model": "trafficcontrol:block/pedestrian_button_mounted_full", "y": 90 },
+        "facing=north,above=true,mounted=true,paired=false":  { "model": "trafficcontrol:block/pedestrian_button_mounted_full", "y": 180 },
+        "facing=east,above=true,mounted=true,paired=false":   { "model": "trafficcontrol:block/pedestrian_button_mounted_full", "y": 270 },
+
+        "facing=south,above=false,mounted=true,paired=true": { "model": "trafficcontrol:block/pedestrian_button_mounted" },
+        "facing=west,above=false,mounted=true,paired=true":  { "model": "trafficcontrol:block/pedestrian_button_mounted", "y": 90 },
+        "facing=north,above=false,mounted=true,paired=true": { "model": "trafficcontrol:block/pedestrian_button_mounted", "y": 180 },
+        "facing=east,above=false,mounted=true,paired=true":  { "model": "trafficcontrol:block/pedestrian_button_mounted", "y": 270 },
+        "facing=south,above=true,mounted=true,paired=true":  { "model": "trafficcontrol:block/pedestrian_button_mounted_full" },
+        "facing=west,above=true,mounted=true,paired=true":   { "model": "trafficcontrol:block/pedestrian_button_mounted_full", "y": 90 },
+        "facing=north,above=true,mounted=true,paired=true":  { "model": "trafficcontrol:block/pedestrian_button_mounted_full", "y": 180 },
+        "facing=east,above=true,mounted=true,paired=true":   { "model": "trafficcontrol:block/pedestrian_button_mounted_full", "y": 270 }
     }
 }

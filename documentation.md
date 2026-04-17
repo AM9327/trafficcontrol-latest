@@ -147,6 +147,43 @@ Registered with `DataComponents.EQUIPPABLE` on `EquipmentSlot.HEAD` so they go i
 **Creative-tab order**
 Cones → Drums → Channelizers → Type 3 (+Right) → Guardrail → Road Sign → Street Sign (+Illuminated) → Concrete Barriers → Tools (Screwdriver, Tuner, Crossing Gate Relay, Control Box) → Poles → Crossing gate components → Overheads → Bells → Wig wags → Pedestrian Button → TL frames → Bulbs → Traffic Sensors → Traffic Light Cards → Shunts → Street Lights (last).
 
+### 4/17/26 — Pedestrian Button B2B / Crosswalk Alignment
+Pedestrian Button is now a real connected block instead of a single static model. It supports facing, pole-above extension, CG/HP mounting, and direct back-to-back placement for crosswalk signs.
+
+**Block/state logic**
+- Added `BlockPedestrianButton` with `FACING`, `ABOVE`, `PAIRED`, `MOUNTED`, `HORIZONTAL_BAR`, and `POWERED`.
+- `MOUNTED` is true when the block behind the button is a real pole: `BlockCrossingGatePole`, `BlockHorizontalPole`, or `BlockCrossingGateBase`.
+- `PAIRED` is true when the block behind the button is another `BlockPedestrianButton` facing the opposite direction.
+- `ABOVE` is true when a pole-like block is above. Real poles and pedestrian buttons count as pole-like for vertical stacking.
+- `HORIZONTAL_BAR` is true when either mounted or paired.
+- Pressing the button sets `POWERED=true`, plays `ped_button`, schedules a 20-tick reset, and updates neighbors.
+
+**Blockstate/model routing**
+- `pedestrian_button.json` now enumerates all facing/above/mounted/paired variants.
+- Normal models:
+  - `pedestrian_button.json` - standalone pole height `Y 0-10`
+  - `pedestrian_button_full.json` - pole height `Y 0-16` when `above=true`
+- Mounted models:
+  - `pedestrian_button_mounted.json` - whole assembly shifted 8px toward the rear pole, pole height `Y 0-10`
+  - `pedestrian_button_mounted_full.json` - same shift, pole height `Y 0-16`
+- Direct b2b models:
+  - `pedestrian_button_paired.json` - non-winner side; local pole enabled at mounted height `Y 0-10`, connector reaches from boundary to pole
+  - `pedestrian_button_paired_full.json` - non-winner side with full-height `Y 0-16` pole for `above=true`
+  - `pedestrian_button_paired_winner.json` - winner side; whole sign/button/pole assembly shifted 8px toward the paired block, pole height `Y 0-10`
+  - `pedestrian_button_paired_winner_full.json` - winner side shifted assembly with full-height `Y 0-16` pole for `above=true`
+
+**B2B winner rule**
+- The paired winner uses the same tiebreaker pattern as TC frames/road signs: NORTH and WEST facings use the shifted winner model; SOUTH and EAST use the non-winner model.
+- The winner side must shift the entire assembly, not only the pole. Leaving the sign/button at the default position and adding a long arm creates the wrong "middle pole plus long bar" look.
+- The non-winner side keeps its own local pole enabled. The connector/stub must run all the way to that pole (`0-7` in SOUTH-default model space) to avoid the visible gap.
+- Normal b2b poles are mounted-height (`Y 0-10`), matching the mounted pedestrian button. Only `*_full` variants use `Y 0-16`.
+
+**Renderer cleanup related to b2b**
+- `RotatableBlockEntityRenderer` now centralizes second-block b2b shifting with:
+  - `getBackToBackShiftDirection(...)`
+  - `applyBackToBackShift(...)`
+- The helper is used for TL/sign body rendering, vertical pole extension, and road sign front/back face custom geometry so the shifted body, face, and pole extension stay aligned.
+
 ---
 
 ## Pole Rendering System — Technical Guide
@@ -260,6 +297,83 @@ boolean shiftToPole =
 - Street sign shift (7/16 = 7px) stops plate edge at CG pole column face
 - HP model (Z 0-25) extends well into adjacent block for full connection
 
+### Pedestrian Button B2B Geometry
+Pedestrian buttons are static blockstate models, not `RotatableBlockEntityRenderer` dynamic models. Fix visual bugs in the JSON models and `BlockPedestrianButton` voxel shapes together.
+
+| Case | Model | Pole position | Pole height | Connector |
+| :--- | :--- | :--- | :--- | :--- |
+| Standalone | `pedestrian_button` | Center `X/Z 7-9` | `Y 0-10` | none |
+| Standalone + above | `pedestrian_button_full` | Center `X/Z 7-9` | `Y 0-16` | none |
+| Mounted | `pedestrian_button_mounted` | Shifted 8px toward rear pole | `Y 0-10` | 6px rear stub |
+| Mounted + above | `pedestrian_button_mounted_full` | Shifted 8px toward rear pole | `Y 0-16` | 6px rear stub |
+| B2B non-winner | `pedestrian_button_paired` | Center `X/Z 7-9` | `Y 0-10` | boundary-to-pole stub |
+| B2B non-winner + above | `pedestrian_button_paired_full` | Center `X/Z 7-9` | `Y 0-16` | boundary-to-pole stub |
+| B2B winner | `pedestrian_button_paired_winner` | Shifted 8px toward paired block | `Y 0-10` | outward stub |
+| B2B winner + above | `pedestrian_button_paired_winner_full` | Shifted 8px toward paired block | `Y 0-16` | outward stub |
+
+SOUTH-default model coordinates:
+- Non-winner pole: `[7,0,7] -> [9,10,9]`
+- Non-winner full pole: `[7,0,7] -> [9,16,9]`
+- Non-winner connector: `[7,4,0] -> [9,6,7]`
+- Winner pole: `[7,0,-1] -> [9,10,1]`
+- Winner full pole: `[7,0,-1] -> [9,16,1]`
+- Winner sign/button/housing are also shifted to the `Z 1.x` side, matching the pole.
+
+---
+
+## Code Path Map — road_sign / TL frame interacting with CG pole
+
+Complete inventory of every file/line that runs when a `road_sign` (BlockSign) or TL frame (BlockTrafficLight) is placed on, next to, or paired across a `crossing_gate_pole` (BlockCrossingGatePole). Use this as a jumping-off point when debugging CG-pole↔sign/TL visuals.
+
+### 1. Block-level logic (state / connections)
+
+| File | Role |
+| :--- | :--- |
+| `BlockCrossingGatePole.shouldConnect` (L81-91) | Returns `true` for adjacent `BlockSign`, `BlockTrafficLight`, `BlockCrossingGatePole`, `BlockHorizontalPole`, non-hanging `BlockStreetSign` → drives N/S/E/W blockstate booleans |
+| `BlockCrossingGatePole.updateConnections` (L73-79) | Called on placement + neighbor change; writes N/S/E/W booleans |
+| `BlockCrossingGatePole.getShape` (L93-114) | Hitbox: adds arm voxels per cardinal boolean |
+| `BlockSign.updateConnections` (L71-108) | Sets `HAS_HORIZONTAL_BAR` (bar toward pole/TL/sign) + `PAIRED` (direct b2b + across-pole) |
+| `BlockTrafficLight.updateHorizontalBar` | Sets `horizontal_bar` + `paired` properties (direct + across-pole) |
+
+### 2. Renderer `extractRenderState` (per-frame read of world state)
+
+| Line | Section | Populates |
+| :--- | :--- | :--- |
+| 180-275 | **Sign detection** (`isSignLike`) | `mountedOnPole`, `horizontalBarDirection`, `chainedSignMount`, `backToBackSignDir`, `signalArmTrafficLightDirs` (CG pole / TL / adjacent-non-b2b-sign), `signToSignDirs` |
+| 282-286 | Street sign below-pole check | `extendPoleDown` |
+| 308-327 | **CG pole detection** (block being rendered IS a CG pole) | Reads N/S/E/W blockstate → `cgPoleArmDirs`, `signDirs` (for adj `BlockSign`), `cgArmTLDirs` (for adj `BlockTrafficLight`) |
+| 328-343 | **CG base detection** | Same as CG pole but for `BlockCrossingGateBase` |
+| 401-532 | **TL detection** (block being rendered IS a TL) | `mountedOnPole`, `mountedOnHorizontalPole`, `horizontalBarDirection`, `backToBackTLDir`, `pairedAcrossPole`, `horizontalPoleDirs`, `hasAdjacentTrafficLight`, `signalArmBarDirection`, `onCrossingGateBase`, `extendPoleUp`, `extendPoleDown` |
+
+### 3. Renderer `submit` (the render draw calls)
+
+| Line | What renders |
+| :--- | :--- |
+| 589-604 | `shiftToPole` computation + `poleShiftAmount` (9/16 for TL/sign on CG pole) |
+| 607-650+ | Sign/TL body shifted by `poleShiftAmount` when `shiftToPole` |
+| 897-916 | Vertical back-pole between TL/sign and pole (via `extendPoleUp` / `extendPoleDown`) |
+| 918-1025 | B2b bridge stub (`B2B_STUB_MODEL_KEY`, 4px, 5/16 offset, tiebreaker) between paired TLs/signs |
+| 1036-1092 | Sign/HP arm rendering loop iterates `signalArmTrafficLightDirs`; for signs, arm shifts with body when `shiftToPole` |
+| 1094-1116 | HP extends bar into horizontal TL frame blocks |
+| 1118-1130 | HP extends bar into street sign blocks |
+| 1140-1210 | CG pole / base arm rendering iterates `cgPoleArmDirs` → uses `HORIZONTAL_POLE_MODEL_KEY` (full 25px, passes through TL/sign bodies) |
+
+### 4. Model / blockstate files (unchanged since Beta 3.2 for these blocks)
+
+- `traffic_light.json`, `traffic_light_*_horiz.json` — no diff
+- `sign.json` → renamed to `road_sign.json` in `692c7f6` (pure rename, same content)
+- `crossing_gate_pole.json` — no diff
+- Shared arm models: `horizontal_pole.json` (25px), `traffic_light_pole_arm.json` (7px), `traffic_light_horizontal_bar_connect.json` (5px), `b2b_stub.json` (4px), `signal_arm_bar.json` (9px)
+
+### Diagnostic hints
+
+Every piece in the CG-pole ↔ (TL or road_sign) interaction chain is either unchanged since Beta 3.2 or its diff is HP-only. If a visual regression appears on a setup that looked correct in Beta 3.2, suspect one of:
+1. A model-key registration change
+2. A world-data issue (e.g. the `sign` → `road_sign` registry rename wiping pre-existing tc:sign blocks in saved worlds)
+3. A flag in `renderState` being populated differently due to a missed branch
+
+When in doubt, `git bisect` the renderer commits between `c4b4a29` (Beta 3.2) and HEAD with a screenshot of the same setup at each step.
+
 ---
 
 ## Common Pitfalls (Developer Warnings)
@@ -284,6 +398,10 @@ boolean shiftToPole =
 17. **Offset CG arm rendering by 1px translate** — adding `poseStack.translate(-dir * 1/16)` to pull CG arms back 1px before rendering. Did not fix the poke-through visually.
 18. **Use `cg_pole_arm.json` (z=1-7, 6px) for CG pole/base arms** — model file created and `CG_POLE_ARM_MODEL_KEY` registered. Using it for ALL `cgPoleArmDirs` breaks HP connections. Using it ONLY toward TLs (via `cgArmTLDirs` tracking) still creates visible gaps between CG arm and TL back pole. The 1px poke-through is a catch-22: 7px = pokes, 6px = gap. Known minor visual issue — accept as-is.
 19. **Sign arms and back-to-back TL frame connections use `traffic_light_horizontal_bar_connect.json`** — NOT `traffic_light_pole_arm.json` or `horizontal_pole.json`. Confirmed by texture-break test.
+20. **Re-add `BlockSign` / `BlockStreetSign` to `signalArmTrafficLightDirs` + `streetSignDirs` in the HP rendering section** (line ~365-374 of `RotatableBlockEntityRenderer`) — this was the Beta 3.2 behavior, removed in `40762b7` (4/16/26). Re-adding it causes HP to render full-length arms and bar extensions toward adjacent signs, which poke through the sign face (since signs also shift toward HP). The result is duplicated/overshot arms visibly punching through road_sign and street_sign bodies on HP poles (image 36, 4/16/26). HP-mounted signs must shift *toward* HP on their own — HP must NOT extend arms or bars into sign blocks. Leave the `40762b7` HP detection as-is.
+21. **For pedestrian button b2b, shift only the pole and leave the sign/button at default position** — this creates a long center arm and does not match TC frames. The winner-side pole, sign plate, button housing, and button must all shift together.
+22. **Use full-height (`Y 0-16`) poles for normal pedestrian b2b** — this makes the tops stick above the mounted-height crosswalk sign. Normal b2b uses `Y 0-10`; only `*_full` variants use `Y 0-16`.
+23. **Shorten the non-winner b2b connector back to 4px** — the connector stops before reaching the local pole and leaves a visible gap. It must reach from the block boundary to the pole (`Z 0-7` in SOUTH-default model space).
 
 ### WORKING FIX — B2b sign poke-through (4/14/26):
 Root cause: bridge bar (TRAFFIC_LIGHT_POLE_ARM_MODEL_KEY, 7px) + 5/16 stub offset = tip at z=16.3 (past boundary).
@@ -369,7 +487,7 @@ Also: `skipSignArms` now skips when `backToBackSignDir != null` (b2b arms don't 
 
 ---
 
-## Current State (4/10/26)
+## Current State (4/17/26)
 
 ### Working:
 - **All 1.12.2 items registered + placeable** (creative tab complete as of 4/16/26)
@@ -387,6 +505,7 @@ Also: `skipSignArms` now skips when `backToBackSignDir != null` (b2b arms don't 
 - Traffic Light Control Box: faces player on placement (HorizontalDirectionalBlock)
 - Cone/Drum/Channelizer: wearable as hats, shift-tooltip
 - Shift-hold tooltips on tuner, control box, crossing gate relay, cards
+- Pedestrian Button: facing/mounted/paired/above states, mounted-height b2b poles, shifted winner-side b2b crosswalk assembly, connected second pole, powered 20-tick button press
 
 ### Known Issues Being Worked On:
 1. **TL-to-CG pole arm sticking out** — TL `horizontalPoleDirs` bars render full-length toward secondary CG poles. CG pole renders its own arm, but TL also renders, causing overshoot.

@@ -1,0 +1,83 @@
+{
+    "__comment": "Pedestrian button paired b2b WINNER with pole above. Whole assembly is shifted -Z to match TC frame and road sign B2B supports.",
+    "textures": {
+        "particle": "trafficcontrol:block/generic",
+        "0": "trafficcontrol:block/generic",
+        "1": "trafficcontrol:block/yellow",
+        "2": "trafficcontrol:block/chrome",
+        "3": "trafficcontrol:block/generic",
+        "4": "trafficcontrol:block/crosswalk_sign"
+    },
+    "elements": [
+        {
+            "name": "OutwardStub",
+            "from": [ 7.0, 4.0, -6.0 ],
+            "to":   [ 9.0, 6.0, -1.0 ],
+            "rotation": { "origin": [ 8.0, 8.0, 8.0 ], "axis": "z", "angle": 0.0 },
+            "faces": {
+                "north": { "texture": "#0", "uv": [ 0.0, 0.0, 2.0, 2.0 ] },
+                "east":  { "texture": "#0", "uv": [ 0.0, 0.0, 5.0, 2.0 ] },
+                "south": { "texture": "#0", "uv": [ 0.0, 0.0, 2.0, 2.0 ] },
+                "west":  { "texture": "#0", "uv": [ 0.0, 0.0, 5.0, 2.0 ] },
+                "up":    { "texture": "#0", "uv": [ 0.0, 0.0, 2.0, 5.0 ] },
+                "down":  { "texture": "#0", "uv": [ 0.0, 0.0, 2.0, 5.0 ] }
+            }
+        },
+        {
+            "name": "Pole",
+            "from": [ 7.0, 0.0, -1.0 ],
+            "to":   [ 9.0, 16.0, 1.0 ],
+            "rotation": { "origin": [ 8.0, 8.0, 8.0 ], "axis": "z", "angle": 0.0 },
+            "faces": {
+                "north": { "texture": "#0", "uv": [ 2.0, 0.0, 4.0, 16.0 ] },
+                "east":  { "texture": "#0", "uv": [ 3.0, 0.0, 5.0, 16.0 ] },
+                "south": { "texture": "#0", "uv": [ 4.0, 0.0, 6.0, 16.0 ] },
+                "west":  { "texture": "#0", "uv": [ 3.0, 0.0, 5.0, 16.0 ] },
+                "up":    { "texture": "#0", "uv": [ 0.0, 0.0, 2.0, 2.0 ] },
+                "down":  { "texture": "#0", "uv": [ 0.0, 0.0, 2.0, 2.0 ] }
+            }
+        },
+        {
+            "name": "Button Housing",
+            "from": [ 7.2, 0.5, 1.0 ],
+            "to":   [ 8.7, 2.0, 1.7 ],
+            "rotation": { "origin": [ 8.0, 8.0, 8.0 ], "axis": "z", "angle": 0.0 },
+            "faces": {
+                "north": { "texture": "#1", "uv": [ 0.0, 0.0, 1.5, 1.5 ] },
+                "east":  { "texture": "#1", "uv": [ 0.0, 0.0, 0.7, 1.5 ] },
+                "south": { "texture": "#1", "uv": [ 0.0, 0.0, 1.5, 1.5 ] },
+                "west":  { "texture": "#1", "uv": [ 0.0, 0.0, 0.7, 1.5 ] },
+                "up":    { "texture": "#1", "uv": [ 0.0, 0.0, 1.5, 0.7 ] },
+                "down":  { "texture": "#1", "uv": [ 0.0, 0.0, 1.5, 0.7 ] }
+            }
+        },
+        {
+            "name": "Button",
+            "from": [ 7.3, 0.6, 1.7 ],
+            "to":   [ 8.6, 1.9, 1.9 ],
+            "rotation": { "origin": [ 8.0, 8.0, 8.0 ], "axis": "z", "angle": 0.0 },
+            "faces": {
+                "north": { "texture": "#2", "uv": [ 8.0, 0.0, 9.3, 1.3 ] },
+                "east":  { "texture": "#2", "uv": [ 0.0, 7.0, 0.2, 8.3 ] },
+                "south": { "texture": "#2", "uv": [ 0.0, 0.0, 5.0, 5.0 ] },
+                "west":  { "texture": "#2", "uv": [ 7.0, 7.0, 7.2, 8.3 ] },
+                "up":    { "texture": "#2", "uv": [ 7.0, 1.0, 8.3, 1.2 ] },
+                "down":  { "texture": "#2", "uv": [ 11.0, 0.0, 12.3, 0.2 ] }
+            }
+        },
+        {
+            "name": "Cube",
+            "from": [ 4.5, 3.0, 1.0 ],
+            "to":   [ 11.5, 9.0, 1.1 ],
+            "rotation": { "origin": [ 8.0, 8.0, 8.0 ], "axis": "z", "angle": 0.0 },
+            "faces": {
+                "north": { "texture": "#3", "uv": [ 0.0, 0.0, 7.0, 6.0 ] },
+                "east":  { "texture": "#4", "uv": [ 0.0, 0.0, 0.1, 6.0 ] },
+                "south": { "texture": "#4", "uv": [ 1.5, 0.0, 14.0, 11.5 ] },
+                "west":  { "texture": "#4", "uv": [ 0.0, 0.0, 0.1, 6.0 ] },
+                "up":    { "texture": "#4", "uv": [ 0.0, 12.0, 7.0, 12.1 ] },
+                "down":  { "texture": "#4", "uv": [ 0.0, 12.0, 7.0, 12.1 ] }
+            }
+        }
+    ]
+}

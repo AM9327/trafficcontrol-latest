@@ -3,6 +3,7 @@ package com.clussmanproductions.trafficcontrol.tileentity.render;
 import com.clussmanproductions.trafficcontrol.ModTrafficControl;
 import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGateBase;
 import com.clussmanproductions.trafficcontrol.blocks.BlockCrossingGatePole;
+import com.clussmanproductions.trafficcontrol.blocks.BlockPedestrianButton;
 import com.clussmanproductions.trafficcontrol.blocks.BlockHorizontalPole;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSign;
 import com.clussmanproductions.trafficcontrol.blocks.BlockSignalArm;
@@ -543,6 +544,28 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                 || block instanceof BlockHorizontalPole;
     }
 
+    private static @Nullable Direction getBackToBackShiftDirection(boolean isTrafficLight, boolean isSign,
+                                                                   RotatableBlockEntityRenderState renderState,
+                                                                   boolean shiftToPole) {
+        if (shiftToPole) {
+            return null;
+        }
+        Direction b2bDir = isTrafficLight ? renderState.backToBackTLDir
+                : isSign ? renderState.backToBackSignDir : null;
+        if (b2bDir != null && b2bDir.getStepX() + b2bDir.getStepZ() > 0) {
+            return b2bDir;
+        }
+        return null;
+    }
+
+    private static void applyBackToBackShift(PoseStack poseStack, @Nullable Direction b2bShiftDirection) {
+        if (b2bShiftDirection != null) {
+            float b2bShift = 8.0f / 16.0f;
+            poseStack.translate(b2bShiftDirection.getStepX() * b2bShift, 0,
+                    b2bShiftDirection.getStepZ() * b2bShift);
+        }
+    }
+
     @Override
     public void submit(
             RotatableBlockEntityRenderState renderState,
@@ -601,6 +624,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
         float poleShiftAmount = isStreetSign ? 16.0f / 16.0f
                 : renderState.mountedOnHorizontalPole ? 7.0f / 16.0f
                 : 9.0f / 16.0f;
+        Direction b2bShiftDirection = getBackToBackShiftDirection(isTrafficLight, isSign, renderState, shiftToPole);
 
         // --- Render body (rotated) ---
         // Skip body model for regular signs (BlockSign) when mounted on a pole —
@@ -623,17 +647,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             }
 
             // Back-to-back shift for TLs AND signs: only SECOND block shifts
-            Direction b2bDir = null;
-            if (isTrafficLight) b2bDir = renderState.backToBackTLDir;
-            else if (isSign) b2bDir = renderState.backToBackSignDir;
-            if (!shiftToPole && b2bDir != null) {
-                boolean isSecondBlock = b2bDir.getStepX() + b2bDir.getStepZ() > 0;
-                if (isSecondBlock) {
-                    float b2bShift = 8.0f / 16.0f;
-                    poseStack.translate(b2bDir.getStepX() * b2bShift, 0,
-                            b2bDir.getStepZ() * b2bShift);
-                }
-            }
+            applyBackToBackShift(poseStack, b2bShiftDirection);
 
             poseStack.translate(0.5f, 0.0f, 0.5f);
             poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
@@ -905,6 +919,8 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
             BlockStateModel poleModel = modelManager.getStandaloneModel(BACK_POLE_MODEL_KEY);
             if (poleModel != null) {
                 poseStack.pushPose();
+                // Stand/pole-stacked B2B: keep the extension aligned with the shifted frame/sign pole.
+                applyBackToBackShift(poseStack, b2bShiftDirection);
                 nodeCollector.submitBlockModel(
                         poseStack, renderType, poleModel,
                         1.0f, 1.0f, 1.0f,
@@ -1197,15 +1213,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         }
                     }
                     // Back-to-back: shift sign face with body (second sign only)
-                    if (!shiftToPole && renderState.backToBackSignDir != null) {
-                        Direction b2bBack = renderState.backToBackSignDir;
-                        boolean isSecond = b2bBack.getStepX() + b2bBack.getStepZ() > 0;
-                        if (isSecond) {
-                            float signB2bShift = 8.0f / 16.0f;
-                            poseStack.translate(b2bBack.getStepX() * signB2bShift, 0,
-                                    b2bBack.getStepZ() * signB2bShift);
-                        }
-                    }
+                    applyBackToBackShift(poseStack, b2bShiftDirection);
                     poseStack.translate(0.5f, 0.0f, 0.5f);
                     poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
                     poseStack.translate(-0.5f, 0.0f, -0.5f);
@@ -1245,15 +1253,7 @@ public class RotatableBlockEntityRenderer implements BlockEntityRenderer<Rotatab
                         }
                     }
                     // Back-to-back: shift back face with body (second sign only)
-                    if (!shiftToPole && renderState.backToBackSignDir != null) {
-                        Direction b2bBack = renderState.backToBackSignDir;
-                        boolean isSecond = b2bBack.getStepX() + b2bBack.getStepZ() > 0;
-                        if (isSecond) {
-                            float signB2bShift = 8.0f / 16.0f;
-                            poseStack.translate(b2bBack.getStepX() * signB2bShift, 0,
-                                    b2bBack.getStepZ() * signB2bShift);
-                        }
-                    }
+                    applyBackToBackShift(poseStack, b2bShiftDirection);
                     poseStack.translate(0.5f, 0.0f, 0.5f);
                     poseStack.mulPose(Axis.YP.rotationDegrees(-renderState.rotationDegrees));
                     poseStack.translate(-0.5f, 0.0f, -0.5f);
